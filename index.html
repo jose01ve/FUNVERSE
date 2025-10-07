@@ -5,17 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FUNVENSER · Reporte Diario</title>
 <style>
-  :root{{--bg:#0f172a;--card:#111827;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a}}
-  *{{box-sizing:border-box}} body{{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}}
-  .wrap{{max-width:900px;margin:auto;padding:16px}}
-  .card{{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.15)}}
-  h1{{margin:.2rem 0 1rem;font-size:1.2rem}}
-  label{{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}}
-  input,select,textarea,button{{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1224;color:var(--text)}}
-  button{{cursor:pointer;margin-top:14px}}
-  .grid{{display:grid;gap:12px}}
-  @media(min-width:720px){{ .grid-2{{grid-template-columns:1fr 1fr}} }}
-  .ok{{color:#58d68d}} .bad{{color:#ff6b6b}} .muted{{color:var(--muted)}}
+  :root{--bg:#0f172a;--card:#111827;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
+  .wrap{max-width:900px;margin:auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+  h1{margin:.2rem 0 1rem;font-size:1.2rem}
+  label{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}
+  input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1224;color:var(--text)}
+  button{cursor:pointer;margin-top:14px}
+  .grid{display:grid;gap:12px}
+  @media(min-width:720px){ .grid-2{grid-template-columns:1fr 1fr} }
+  .ok{color:#58d68d} .bad{color:#ff6b6b} .muted{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -24,7 +24,7 @@
     <h1>Ingresar · FUNVENSER</h1>
     <label>API Key del Asesor</label>
     <input id="apiKey" placeholder="Ingresa tu API Key (ej. ASESOR-TEST-KEY)" />
-    <button onclick="login()">Entrar</button>
+    <button id="btnLogin">Entrar</button>
     <div id="loginMsg" class="muted"></div>
   </div>
 
@@ -95,7 +95,7 @@
         <textarea id="comentario" rows="3" placeholder="Observaciones del día"></textarea>
       </div>
     </div>
-    <button onclick="enviar()">Enviar reporte</button>
+    <button id="btnEnviar">Enviar reporte</button>
     <div id="msg" class="muted"></div>
   </div>
 </div>
@@ -106,17 +106,17 @@ let TOKEN = null;
 let USER = null;
 let LISTAS = null;
 
-function $(id){{ return document.getElementById(id); }}
-function setDateToday(){{ $('fecha').value = new Date().toISOString().slice(0,10); }}
+function $(id){ return document.getElementById(id); }
+function setDateToday(){ $('fecha').value = new Date().toISOString().slice(0,10); }
 
-async function login(){{  
+async function login(){
   const api_key = $('apiKey').value.trim();
   $('loginMsg').textContent = 'Validando...';
-  try{{  
-    const r = await fetch(WEB_APP_URL + '?path=login', {{  
-      method:'POST', headers:{{'Content-Type':'text/plain;charset=utf-8'}},
-      body: JSON.stringify({{ api_key }})
-    }});
+  try{
+    const r = await fetch(WEB_APP_URL + '?path=login', {
+      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ api_key })
+    });
     const j = await r.json();
     if(!j.ok) throw new Error(j.error || 'Error de login');
     TOKEN = j.token; USER = j.user;
@@ -125,12 +125,12 @@ async function login(){{
     setDateToday();
     $('loginCard').style.display='none';
     $('formCard').style.display='block';
-  }}catch(e){{  
+  }catch(e){
     $('loginMsg').innerHTML = '<span class="bad">' + e.message + '</span>';
-  }}
-}}
+  }
+}
 
-async function cargarListas(){{  
+async function cargarListas(){
   const r = await fetch(WEB_APP_URL + '?path=listas');
   const j = await r.json();
   LISTAS = j;
@@ -138,32 +138,32 @@ async function cargarListas(){{
   $('ciudad').addEventListener('change', onCiudadChange);
   $('sede').addEventListener('change', onSedeChange);
   onCiudadChange();
-}}
+}
 
-function fillSelect(id, arr, valueKey, textKey){{  
+function fillSelect(id, arr, valueKey, textKey){
   const sel = $(id); sel.innerHTML = '';
-  arr.forEach(o=>{{  
+  arr.forEach(o=>{
     const opt = document.createElement('option');
     opt.value = o[valueKey]; opt.textContent = o[textKey];
     sel.appendChild(opt);
-  }});
-}}
+  });
+}
 
-function onCiudadChange(){{  
+function onCiudadChange(){
   const cid = $('ciudad').value;
   const sedes = LISTAS.sedes.filter(s => s.ciudad_id === cid);
   fillSelect('sede', sedes, 'id', 'nombre');
   onSedeChange();
-}}
-function onSedeChange(){{  
+}
+function onSedeChange(){
   const sid = $('sede').value;
   const maqs = LISTAS.maquinas.filter(m => m.sede_id === sid);
   fillSelect('maquina', maqs, 'id', 'id');
-}}
+}
 
-async function enviar(){{  
+async function enviar(){
   $('msg').textContent = 'Enviando...';
-  const payload = {{  
+  const payload = {
     fecha: $('fecha').value,
     ciudad_id: $('ciudad').value,
     sede_id: $('sede').value,
@@ -180,21 +180,26 @@ async function enviar(){{
     consignacion: +$('consignacion').value || 0,
     pendiente_consignar: +$('pendiente').value || 0,
     comentario: $('comentario').value || ''
-  }};
-  try{{  
-    const r = await fetch(WEB_APP_URL + '?path=reporte', {{  
-      method:'POST', headers:{{'Content-Type':'text/plain;charset=utf-8'}},
-      body: JSON.stringify({{ token: TOKEN, payload }})
-    }});
+  };
+  try{
+    const r = await fetch(WEB_APP_URL + '?path=reporte', {
+      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ token: TOKEN, payload })
+    });
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || 'Error al registrar');
     $('msg').innerHTML = '<span class="ok">✅ Reporte registrado</span>';
     ['tickets','venta','gastos','qr','efectivo','consignacion','pendiente'].forEach(id=>$(id).value=0);
     $('comentario').value = '';
-  }}catch(e){{  
+  }catch(e){
     $('msg').innerHTML = '<span class="bad">❌ ' + e.message + '</span>';
-  }}
-}}
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('btnLogin').addEventListener('click', login);
+  $('btnEnviar').addEventListener('click', enviar);
+});
 </script>
 </body>
 </html>
