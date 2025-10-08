@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FUNVENSER · Reporte Diario</title>
 <style>
-  :root{--bg:#0f172a;--card:#111827;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#6366f1}
+  :root{--bg:#0f172a;--card:#111827;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#f59e0b}
   *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
   .wrap{max-width:980px;margin:auto;padding:16px}
   .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.15)}
@@ -17,16 +17,24 @@
   .grid{display:grid;gap:12px}
   @media(min-width:900px){ .grid-2{grid-template-columns:1fr 1fr} }
   .ok{color:#58d68d} .bad{color:#ff6b6b} .muted{color:var(--muted)}
-
-  /* Paleta arriba */
-  .palette{display:flex;gap:8px;padding:10px;background:#0b1224;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
-  .swatch{width:28px;height:28px;border-radius:999px;border:2px solid #fff1;cursor:pointer;box-shadow:0 0 0 2px #0006}
+  /* Paleta */
+  .palette{display:flex;gap:10px;align-items:center;padding:10px;background:#0b1224;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+  .swatch{width:20px;height:20px;border-radius:999px;border:2px solid #fff2;cursor:pointer;box-shadow:0 0 0 2px #0006}
   .swatch.active{outline:2px solid #fff8}
+  .spacer{flex:1}
+  .hid{display:none}
 </style>
 </head>
 <body>
-<!-- Paleta de colores -->
-<div class="palette" id="palette"></div>
+<!-- Paleta + selector de fondo -->
+<div class="palette" id="palette">
+  <div class="swatch" data-theme="0" style="background:#6366f1"></div>
+  <div class="swatch" data-theme="1" style="background:#22c55e"></div>
+  <div class="swatch" data-theme="2" style="background:#f59e0b"></div>
+  <div class="swatch" data-theme="3" style="background:#ef4444"></div>
+  <div class="spacer"></div>
+  <label style="color:var(--muted);font-size:.9rem">Fondo: <input id="bgPicker" type="color" value="#0f172a" style="width:36px;height:24px;border:none;vertical-align:middle"></label>
+</div>
 
 <div class="wrap">
   <div class="card" id="loginCard">
@@ -37,23 +45,49 @@
     <div id="loginMsg" class="muted"></div>
   </div>
 
-  <div class="card" id="formCard" style="display:none">
+  <!-- ADMIN (solo Administradora) -->
+  <div class="card hid" id="adminCard">
+    <h1>Admin · Asignación y Meta</h1>
+    <div class="grid grid-2">
+      <div>
+        <label>Ciudad</label>
+        <select id="a_ciudad"></select>
+      </div>
+      <div>
+        <label>Sede</label>
+        <select id="a_sede"></select>
+      </div>
+      <div>
+        <label>Máquina</label>
+        <select id="a_maquina"></select>
+      </div>
+      <div>
+        <label>Asesor</label>
+        <select id="a_asesor"></select>
+      </div>
+      <div>
+        <label>Meta del día</label>
+        <input id="a_meta" type="number" min="0" step="1000" value="0" />
+      </div>
+    </div>
+    <button id="btnAdminGuardar">Guardar asignación/meta</button>
+    <div id="adminMsg" class="muted"></div>
+  </div>
+
+  <div class="card hid" id="formCard">
     <h1>Reporte Diario</h1>
 
     <div class="grid grid-2">
+      <input id="asesorId" class="hid" /> <!-- ID Asesor oculto -->
       <div>
         <label>Asesor</label>
         <input id="asesorNombre" readonly />
       </div>
       <div>
-        <label>ID Asesor</label>
-        <input id="asesorId" readonly />
+        <label>Fecha</label>
+        <input type="date" id="fecha" readonly />
       </div>
 
-      <div>
-        <label>Fecha</label>
-        <input type="date" id="fecha">
-      </div>
       <div>
         <label>Ciudad</label>
         <select id="ciudad"></select>
@@ -80,14 +114,15 @@
         <label>Tickets vendidos</label>
         <input id="tickets" type="number" min="0" value="0" />
       </div>
+
       <div>
-        <label>Venta total</label>
-        <input id="venta" type="number" min="0" step="1000" value="0" />
+        <label>Venta total (auto)</label>
+        <input id="venta" type="number" readonly value="0" />
       </div>
 
       <div>
-        <label>Meta del día (definida por admin)</label>
-        <input id="meta" type="number" min="0" step="1000" value="0" readonly />
+        <label>Meta del día (admin)</label>
+        <input id="meta" type="number" readonly value="0" />
       </div>
       <div>
         <label>Gastos</label>
@@ -132,43 +167,56 @@
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyk_xWSX9zIOr5burAOD00-afS28gTI7QHOba5EP6RZCkoGD1Jb6kyS4544JX_oLl8b/exec'; // <<<<<<<<<<<<<<<<<<<<<<<<<<
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbws0O8_T_7nMZ3ue_zZKuHdDXu0G_wsdFzBs3reYQxjMYlkO5lJoIDY0c1kcL8XMVdE/exec'; // <<<<<<<<<<<<
 
 let TOKEN = null;
 let USER = null;
 let LISTAS = null;
 
-// ---- Paleta de colores (4 temas) ----
+// ====== Temas y fondo ======
 const THEMES = [
-  {bg:'#0f172a', card:'#111827', text:'#e5e7eb', muted:'#9aa4bf', border:'#24304a', accent:'#6366f1'},
+  {bg:'#0f172a', card:'#111827', text:'#e5e7eb', muted:'#9aa4bf', border:'#24304a', accent:'#f59e0b'},
   {bg:'#111111', card:'#1a1a1a', text:'#eaeaea', muted:'#9a9a9a', border:'#333333', accent:'#22c55e'},
-  {bg:'#111827', card:'#0b1224', text:'#e5e7eb', muted:'#9aa4bf', border:'#1f2a44', accent:'#f59e0b'},
+  {bg:'#111827', card:'#0b1224', text:'#e5e7eb', muted:'#9aa4bf', border:'#1f2a44', accent:'#6366f1'},
   {bg:'#0b1224', card:'#0f172a', text:'#dbeafe', muted:'#94a3b8', border:'#1e293b', accent:'#ef4444'}
 ];
 function applyTheme(t){
-  document.documentElement.style.setProperty('--bg', t.bg);
-  document.documentElement.style.setProperty('--card', t.card);
-  document.documentElement.style.setProperty('--text', t.text);
-  document.documentElement.style.setProperty('--muted', t.muted);
-  document.documentElement.style.setProperty('--border', t.border);
-  document.documentElement.style.setProperty('--accent', t.accent);
+  for (const [k,v] of Object.entries(t)) document.documentElement.style.setProperty('--'+(k==='accent'?'accent':'bg'===k?'bg':k), v);
   localStorage.setItem('fun_theme', JSON.stringify(t));
 }
-function renderPalette(){
-  const pal = document.getElementById('palette'); pal.innerHTML='';
-  THEMES.forEach((t)=>{
-    const el = document.createElement('div'); el.className='swatch'; el.style.background=t.accent;
-    el.onclick = ()=>{ applyTheme(t); document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active')); el.classList.add('active'); };
-    pal.appendChild(el);
+function initPalette(){
+  document.querySelectorAll('.swatch').forEach((el,i)=>{
+    el.addEventListener('click', ()=>{
+      applyTheme(THEMES[i]);
+      document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+      el.classList.add('active');
+    });
   });
-  const saved = localStorage.getItem('fun_theme'); if(saved) applyTheme(JSON.parse(saved)); else applyTheme(THEMES[0]);
+  const saved = localStorage.getItem('fun_theme');
+  applyTheme(saved ? JSON.parse(saved) : THEMES[0]);
+  const pick = document.getElementById('bgPicker');
+  pick.value = rgbToHex(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
+  pick.addEventListener('input', e=>{
+    document.documentElement.style.setProperty('--bg', e.target.value);
+  });
+}
+function rgbToHex(rgb){
+  if (rgb.startsWith('#')) return rgb;
+  const m = rgb.match(/(\d+),\s*(\d+),\s*(\d+)/); if(!m) return '#0f172a';
+  return '#'+[m[1],m[2],m[3]].map(x=>('0'+parseInt(x).toString(16)).slice(-2)).join('');
 }
 
-// ---- Helpers
-function $(id){ return document.getElementById(id); }
-function setDateToday(){ $('fecha').value = new Date().toISOString().slice(0,10); }
+// ====== Helpers ======
+const $ = (id)=>document.getElementById(id);
+const todayStr = ()=> new Date().toISOString().slice(0,10);
+function lockToday(){
+  $('fecha').value = todayStr();
+  $('fecha').readOnly = true;
+  $('fecha').addEventListener('keydown', e=>e.preventDefault());
+  $('fecha').addEventListener('input', ()=>{ $('fecha').value = todayStr(); });
+}
 
-// ---- Login
+// ====== Login ======
 async function login(){
   const api_key = $('apiKey').value.trim();
   $('loginMsg').textContent = 'Validando...';
@@ -177,27 +225,37 @@ async function login(){
     const j = await r.json();
     if(!j.ok) throw new Error(j.error || 'Error de login');
     TOKEN = j.token; USER = j.user;
+
     $('asesorNombre').value = USER.nombre || '';
     $('asesorId').value = USER.id || '';
+
     $('loginMsg').innerHTML = '<span class="ok">Acceso concedido</span>';
     await cargarListas();
-    setDateToday();
-    $('loginCard').style.display='none';
-    $('formCard').style.display='block';
+
+    lockToday();
+    // Mostrar módulos
+    if ((USER.rol||'').toLowerCase()==='admin'){
+      $('adminCard').classList.remove('hid');
+      initAdminSelectors();
+    }
+    $('loginCard').classList.add('hid');
+    $('formCard').classList.remove('hid');
+    recalcVenta(); // set inicial
   }catch(e){
     $('loginMsg').innerHTML = '<span class="bad">' + e.message + '</span>';
   }
 }
 
-// ---- Listas (y meta del día)
+// ====== Listas (incluye usuarios para Admin) ======
 async function cargarListas(){
   const r = await fetch(WEB_APP_URL + '?path=listas');
   const j = await r.json();
   LISTAS = j;
+
   fillSelect('ciudad', j.ciudades, 'id', 'nombre');
   $('ciudad').addEventListener('change', onCiudadChange);
   $('sede').addEventListener('change', onSedeChange);
-  onCiudadChange();
+  onCiudadChange(); // y meta
 }
 
 function fillSelect(id, arr, valueKey, textKey){
@@ -219,47 +277,47 @@ function onSedeChange(){
   const sid = $('sede').value;
   const maqs = LISTAS.maquinas.filter(m => m.sede_id === sid);
   fillSelect('maquina', maqs, 'id', 'id');
-  // meta del día leída desde la máquina (columna "meta_sugerida" o "meta")
   setTimeout(()=>{
     const mId = $('maquina').value;
     const m = LISTAS.maquinas.find(x => x.id === mId);
-    const meta = Number(m && (m.meta_sugerida || m.meta || 0)) || 0;
-    $('meta').value = meta; // readonly
+    $('meta').value = Number(m && (m.meta_sugerida || m.meta || 0)) || 0; // readonly
   }, 0);
 }
 
-// ---- Upload a Drive (foto/video)
+// ====== Cálculo de VENTA ======
+['efectivo','qr','consignacion','pendiente','gastos'].forEach(id=>{
+  document.addEventListener('input', (e)=>{
+    if (e.target && e.target.id===id) recalcVenta();
+  });
+});
+function recalcVenta(){
+  const n = id => +($(id).value || 0);
+  const venta = n('efectivo') + n('qr') + n('consignacion') - n('pendiente') - n('gastos');
+  $('venta').value = Math.max(0, venta);
+}
+
+// ====== Upload a Drive ======
 async function uploadFile(file){
   if(!file) return '';
-  const base64 = await toBase64(file);
-  const body = { token: TOKEN, fileName: file.name, mimeType: file.type, data: base64 };
-  const r = await fetch(WEB_APP_URL + '?path=upload', { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body) });
+  const base64 = await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file); });
+  const r = await fetch(WEB_APP_URL + '?path=upload', { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ token:TOKEN, fileName:file.name, mimeType:file.type, data: base64 }) });
   const j = await r.json(); if(!j.ok) throw new Error(j.error || 'No se pudo subir');
   return j.url;
 }
-function toBase64(file){
-  return new Promise((res,rej)=>{
-    const fr = new FileReader();
-    fr.onload=()=>res(String(fr.result).split(',')[1]);
-    fr.onerror=rej;
-    fr.readAsDataURL(file);
-  });
-}
 
-// ---- Enviar reporte
+// ====== Envío ======
 async function enviar(){
   $('msg').textContent = 'Subiendo archivos y enviando...';
   try{
     const foto_url  = await uploadFile($('foto').files[0]);
     const video_url = await uploadFile($('video').files[0]);
-
     const payload = {
       fecha: $('fecha').value,
       ciudad_id: $('ciudad').value,
       sede_id: $('sede').value,
       maquina_id: $('maquina').value,
-      asesor_id: USER.id,
-      marcado: +$('marcado').value || 0,  // dinero
+      asesor_id: $('asesorId').value,
+      marcado: +$('marcado').value || 0,
       error: $('error').value || 'SIN ERROR',
       tickets_vendidos: +$('tickets').value || 0,
       venta_total: +$('venta').value || 0,
@@ -272,19 +330,56 @@ async function enviar(){
       comentario: $('comentario').value || '',
       foto_url, video_url
     };
-
-    const r = await fetch(WEB_APP_URL + '?path=reporte', { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ token: TOKEN, payload }) });
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || 'Error al registrar');
+    const r = await fetch(WEB_APP_URL + '?path=reporte', { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ token:TOKEN, payload }) });
+    const j = await r.json(); if(!j.ok) throw new Error(j.error || 'Error al registrar');
     $('msg').innerHTML = '<span class="ok">✅ Reporte registrado</span>';
   }catch(e){
     $('msg').innerHTML = '<span class="bad">❌ ' + e.message + '</span>';
   }
 }
 
+// ====== Admin UI ======
+function initAdminSelectors(){
+  // opciones base
+  fillSelect('a_ciudad', LISTAS.ciudades, 'id', 'nombre');
+  $('a_ciudad').addEventListener('change', ()=>{
+    const cid = $('a_ciudad').value;
+    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid), 'id', 'nombre');
+    $('a_sede').dispatchEvent(new Event('change'));
+  });
+  $('a_sede').addEventListener('change', ()=>{
+    const sid = $('a_sede').value;
+    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid), 'id', 'id');
+  });
+  // asesores activos
+  const asesores = (LISTAS.usuarios||[]).filter(u => (u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
+  fillSelect('a_asesor', asesores, 'id', 'nombre');
+  $('a_ciudad').dispatchEvent(new Event('change'));
+
+  $('btnAdminGuardar').addEventListener('click', adminGuardar);
+}
+async function adminGuardar(){
+  $('adminMsg').textContent = 'Guardando...';
+  try{
+    const body = {
+      token: TOKEN,
+      ciudad_id: $('a_ciudad').value,
+      sede_id: $('a_sede').value,
+      maquina_id: $('a_maquina').value,
+      asesor_id: $('a_asesor').value,
+      meta_sugerida: +$('a_meta').value || 0
+    };
+    const r = await fetch(WEB_APP_URL + '?path=admin_set', { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body) });
+    const j = await r.json(); if(!j.ok) throw new Error(j.error || 'No se pudo guardar');
+    $('adminMsg').innerHTML = '<span class="ok">✔ Guardado</span>';
+  }catch(e){
+    $('adminMsg').innerHTML = '<span class="bad">❌ ' + e.message + '</span>';
+  }
+}
+
 // Init
 document.addEventListener('DOMContentLoaded', () => {
-  renderPalette();
+  initPalette();
   $('btnLogin').addEventListener('click', login);
   $('btnEnviar').addEventListener('click', enviar);
 });
