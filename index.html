@@ -12,7 +12,7 @@
   h1{margin:.2rem 0 1rem;font-size:1.2rem}
   label{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}
   input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1224;color:var(--text)}
-  input[readonly]{opacity:.85;cursor:not-allowed}
+  input[readonly], select:disabled{opacity:.8;cursor:not-allowed}
   button{cursor:pointer;margin-top:14px;background:var(--accent);border-color:transparent}
   .grid{display:grid;gap:12px}
   @media(min-width:900px){ .grid-2{grid-template-columns:1fr 1fr} }
@@ -128,8 +128,20 @@
   </div>
 </div>
 
+<!-- Modal confirm Envío Reporte -->
+<div class="modal" id="sendModal" role="dialog" aria-modal="true">
+  <div class="content">
+    <h3>Confirmar envío</h3>
+    <p class="muted">¿Estás seguro de enviar tu reporte del día? Después de enviar, no podrás modificarlo (la administradora puede habilitarte si es necesario).</p>
+    <div class="actions">
+      <button class="btn-outline" id="btnSendCancel">Cancelar</button>
+      <button id="btnSendConfirm">Sí, enviar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwuxdxu8BQYR2Z_CQyOSLjpb7geei0O13EknM64YAgFETdcV05rPzYmKxg-XTpd7-rx/exec'; // <<<<<<<<<<<<<<
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpyR-fnKT0QU8F-3JpXWb885I7pXfqzC5v9a_0TFy35BJ5Pf1N2fOwq3DaovZV-N6M/exec'; // <<<<<<<<<<<<<<
 
 let TOKEN=null, USER=null, LISTAS=null;
 
@@ -165,7 +177,15 @@ async function login(){
     TOKEN=j.token; USER=j.user;
     $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
     await cargarListas(); lockToday();
-    if((USER.rol||'').toLowerCase()==='admin'){ $('adminCard').classList.remove('hid'); initAdminSelectors(); }
+
+    if((USER.rol||'').toLowerCase()==='admin'){
+      $('adminCard').classList.remove('hid');
+      initAdminSelectors();
+    }else{
+      // Asesor: precargar su asignación y BLOQUEAR selects
+      preseleccionarAsesorYBloquear();
+    }
+
     $('loginCard').classList.add('hid'); $('formCard').classList.remove('hid'); recalcVenta();
     $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
   }catch(e){ $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>'; }
@@ -182,12 +202,39 @@ function onCiudadChange(){ const cid=$('ciudad').value; fillSelect('sede', LISTA
 function onSedeChange(){ const sid=$('sede').value; fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); setTimeout(()=>syncMeta(),0); }
 function syncMeta(){ const m=LISTAS.maquinas.find(x=>x.id===$('maquina').value); $('meta').value=Number(m&&(m.meta_sugerida||m.meta||0))||0; }
 
+// Para asesor: localizar su máquina asignada y bloquear selects
+function preseleccionarAsesorYBloquear(){
+  // buscar máquina cuyo asesor_id == USER.id
+  const m = (LISTAS.maquinas||[]).find(x => String(x.asesor_id)===String(USER.id));
+  if (m){
+    // ciudad y sede asociadas a esa máquina
+    const ciudad_id = m.ciudad_id;
+    const sede_id   = m.sede_id;
+    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value=ciudad_id;
+    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===ciudad_id),'id','nombre'); $('sede').value=sede_id;
+    fillSelect('maquina', LISTAS.maquinas.filter(mm=>mm.sede_id===sede_id),'id','id'); $('maquina').value=m.id;
+    $('meta').value = Number(m.meta_sugerida || 0) || 0;
+  }
+  // deshabilitar (asesor no puede modificar)
+  $('ciudad').disabled = true;
+  $('sede').disabled = true;
+  $('maquina').disabled = true;
+  // meta ya está readonly
+}
+
 // Venta auto
 ['efectivo','qr','consignacion','pendiente','gastos'].forEach(id=>document.addEventListener('input',e=>{ if(e.target && e.target.id===id) recalcVenta(); }));
 function recalcVenta(){ const n=id=>+($(id).value||0); const venta=n('efectivo')+n('qr')+n('consignacion')-n('pendiente')-n('gastos'); $('venta').value=Math.max(0,venta); }
 
 // Upload
 async function uploadFile(file){ if(!file) return ''; const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);}); const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url; }
+
+// Envío: confirmación previa
+function openSendConfirm(){
+  $('sendModal').style.display='flex';
+  $('btnSendCancel').onclick = ()=> $('sendModal').style.display='none';
+  $('btnSendConfirm').onclick = ()=> { $('sendModal').style.display='none'; enviar(); };
+}
 
 // Enviar reporte
 async function enviar(){
@@ -202,6 +249,8 @@ async function enviar(){
     const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
     $('msg').innerHTML='<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>';
+    // deshabilitar botón para evitar reintento
+    $('btnEnviar').disabled = true;
   }catch(e){ $('msg').innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
 }
 
@@ -217,14 +266,12 @@ function initAdminSelectors(){
   $('a_sede').addEventListener('change', ()=>{
     const sid=$('a_sede').value;
     fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
-    // vista previa: llevarlo abajo al form
     syncPreviewFromAdmin();
   });
   const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
   fillSelect('a_asesor', asesores,'id','nombre');
   $('a_asesor').addEventListener('change', ()=>syncPreviewFromAdmin());
   $('a_meta').addEventListener('input', ()=>{ $('meta').value = +$('a_meta').value || 0; });
-
   $('a_ciudad').dispatchEvent(new Event('change'));
 
   // guardar con confirmación
@@ -237,7 +284,6 @@ function syncPreviewFromAdmin(){
   fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value=cid;
   fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre'); $('sede').value=$('a_sede').value;
   fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===$('a_sede').value),'id','id'); $('maquina').value=$('a_maquina').value;
-  // meta sincronizada (si se digitó en admin, prima ese valor)
   $('meta').value = +$('a_meta').value || (Number((LISTAS.maquinas.find(x=>x.id===$('a_maquina').value)||{}).meta_sugerida)||0);
 }
 
@@ -276,7 +322,8 @@ async function adminGuardar(){
 document.addEventListener('DOMContentLoaded', ()=>{
   initPalette();
   $('btnLogin').addEventListener('click', login);
-  $('btnEnviar').addEventListener('click', enviar);
+  // confirmación de envío
+  $('btnEnviar').addEventListener('click', openSendConfirm);
 });
 </script>
 </body>
