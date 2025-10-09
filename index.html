@@ -23,13 +23,11 @@
   .spacer{flex:1}
   .hid{display:none}
 
-  /* Hero login */
   .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px}
   .logo{width:64px;height:64px;border-radius:16px;background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);box-shadow:0 6px 18px rgba(0,0,0,.35)}
   .title{font-weight:700;font-size:1.4rem}
   .subtitle{color:#9aa4bf;font-size:.95rem}
 
-  /* Modal confirm */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px}
   .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:520px;width:100%;padding:16px}
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
@@ -38,7 +36,7 @@
 </head>
 <body>
 
-<!-- barra de temas y picker de fondo -->
+<!-- temas -->
 <div class="palette" id="palette">
   <div class="swatch" data-i="0" style="background:#7c83ff"></div>
   <div class="swatch" data-i="1" style="background:#22c55e"></div>
@@ -141,7 +139,7 @@
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxP_jh9phAPPu4JpPlPfz9rtJd4zun9erjx6ugqglK_xAVEXOjOn-GS6R6dglgFkSZo/exec'; // <<<<<<<<<<<<<<
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyfioOsUPzD1NAs49ch8szX0hVADRNMUX8Yv6Whhi5S5163jyGfETNiGRK7YA_CbLJ0/exec'; // <<<<<<<<<<<<<<
 
 let TOKEN=null, USER=null, LISTAS=null;
 
@@ -166,7 +164,6 @@ function initPalette(){
 const $=id=>document.getElementById(id);
 const todayStr=()=>new Date().toISOString().slice(0,10);
 function lockToday(){ $('fecha').value=todayStr(); $('fecha').readOnly=true; $('fecha').addEventListener('keydown',e=>e.preventDefault()); $('fecha').addEventListener('input',()=>$('fecha').value=todayStr()); }
-// Num seguro
 const num = id => +((($(id)?.value)||'0').toString().replace(/[, ]/g,'')) || 0;
 
 /* ===== Login ===== */
@@ -183,11 +180,10 @@ async function login(){
     if((USER.rol||'').toLowerCase()==='admin'){
       $('adminCard').classList.remove('hid');
       initAdminSelectors();
-      // primer sync para poblar vista previa
       syncPreviewFromAdmin();
     }else{
-      // Asesor: precargar su asignación y BLOQUEAR selects
-      preseleccionarAsesorYBloquear();
+      // Asesor: trae su asignación de HOY y bloquea selects
+      await cargarAsignacionDelDia();
     }
 
     $('loginCard').classList.add('hid'); $('formCard').classList.remove('hid');
@@ -207,12 +203,34 @@ function onCiudadChange(){ const cid=$('ciudad').value; fillSelect('sede', LISTA
 function onSedeChange(){ const sid=$('sede').value; fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); setTimeout(()=>syncMeta(),0); }
 function syncMeta(){ const m=LISTAS.maquinas.find(x=>x.id===$('maquina').value); $('meta').value=Number(m&&(m.meta_sugerida||m.meta||0))||0; }
 
-/* ===== Cálculos encadenados =====
-   venta   = marcado - error
-   tickets = venta/13 (floor)
-   efectivo= venta - gastos - qr
-   pendiente = efectivo - consignacion
-*/
+/* ===== Asignación del día (ASESOR) ===== */
+async function cargarAsignacionDelDia(){
+  try{
+    const q = new URLSearchParams({ token: TOKEN });
+    const r = await fetch(WEB_APP_URL+'?path=asignacion&'+q.toString());
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error||'Sin asignación');
+
+    const a = j.asignacion;
+    // Pinta en form
+    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
+    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
+    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
+    $('meta').value = Number(a.meta_dia||0) || 0;
+
+    // Bloquear selects para asesor
+    $('ciudad').disabled = true;
+    $('sede').disabled   = true;
+    $('maquina').disabled= true;
+  }catch(e){
+    // Si no hay asignación, deja selects libres pero con meta de máquina si existiese
+    $('ciudad').disabled = false;
+    $('sede').disabled   = false;
+    $('maquina').disabled= false;
+  }
+}
+
+/* ===== Cálculos encadenados ===== */
 function recalcAuto(){
   const marcado = num('marcado');
   const error   = num('error');
@@ -232,8 +250,6 @@ function recalcAuto(){
   const pendiente = Math.max(0, efectivo - cons);
   $('pendiente').value = pendiente;
 }
-
-// dispara recálculo
 ['marcado','error','gastos','qr','consignacion'].forEach(id=>{
   document.addEventListener('input', e=>{ if(e.target && e.target.id===id) recalcAuto(); });
 });
@@ -243,9 +259,9 @@ async function uploadFile(file){ if(!file) return ''; const base64=await new Pro
 
 /* ===== Envío con confirmación ===== */
 function openSendConfirm(){
-  $('sendModal').style.display='flex';
-  $('btnSendCancel').onclick = ()=> $('sendModal').style.display='none';
-  $('btnSendConfirm').onclick = ()=> { $('sendModal').style.display='none'; enviar(); };
+  document.getElementById('sendModal').style.display='flex';
+  document.getElementById('btnSendCancel').onclick = ()=> document.getElementById('sendModal').style.display='none';
+  document.getElementById('btnSendConfirm').onclick = ()=> { document.getElementById('sendModal').style.display='none'; enviar(); };
 }
 async function enviar(){
   $('msg').textContent='Subiendo archivos y enviando...';
@@ -298,7 +314,7 @@ function syncPreviewFromAdmin(){
   fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); $('maquina').value=mid;
 
   const metaAdmin = +$('a_meta').value || 0;
-  const metaMaquina = Number((LISTAS.maquinas.find(x=>x.id===mid)||{}).meta_sugerida)||0;
+  const metaMaquina = Number((LISTAS.maquinas.find(x=>x.id===mid)||{}).meta_sugerida|| (LISTAS.maquinas.find(x=>x.id===mid)||{}).meta || 0);
   $('meta').value = metaAdmin || metaMaquina;
 
   const aSel = $('a_asesor');
@@ -335,26 +351,13 @@ async function adminGuardar(){
     });
     const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
+
+    // Refrescar listas y vista previa (y así también actualizar meta de máquina si cambió)
+    await cargarListas();
     syncPreviewFromAdmin();
+
     msg.innerHTML='<span class="ok">✔ Guardado y notificado por email</span>';
   }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
-}
-
-/* ===== Asesor: preselección + bloqueo ===== */
-function preseleccionarAsesorYBloquear(){
-  const m = (LISTAS.maquinas||[]).find(x => String(x.asesor_id)===String(USER.id));
-  if (m){
-    const ciudad_id = m.ciudad_id;
-    const sede_id   = m.sede_id;
-    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value=ciudad_id;
-    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===ciudad_id),'id','nombre'); $('sede').value=sede_id;
-    fillSelect('maquina', LISTAS.maquinas.filter(mm=>mm.sede_id===sede_id),'id','id'); $('maquina').value=m.id;
-    $('meta').value = Number(m.meta_sugerida || 0) || 0;
-  }
-  $('ciudad').disabled = true;
-  $('sede').disabled   = true;
-  $('maquina').disabled= true;
-  recalcAuto();
 }
 
 /* ===== Init ===== */
