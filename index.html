@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FUNVENSER · Reporte Diario</title>
 <style>
-  :root{--bg:#0f172a;--card:#111827;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#f59e0b}
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
+  :root{--bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#7c83ff}
+  *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1224);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
   .wrap{max-width:980px;margin:auto;padding:16px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+  .card{background:rgba(17,24,39,.85);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter: blur(4px)}
   h1{margin:.2rem 0 1rem;font-size:1.2rem}
   label{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}
   input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1224;color:var(--text)}
@@ -17,148 +17,98 @@
   .grid{display:grid;gap:12px}
   @media(min-width:900px){ .grid-2{grid-template-columns:1fr 1fr} }
   .ok{color:#58d68d} .bad{color:#ff6b6b} .muted{color:var(--muted)}
-  /* Paleta */
   .palette{display:flex;gap:10px;align-items:center;padding:10px;background:#0b1224;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
   .swatch{width:20px;height:20px;border-radius:999px;border:2px solid #fff2;cursor:pointer;box-shadow:0 0 0 2px #0006}
   .swatch.active{outline:2px solid #fff8}
   .spacer{flex:1}
   .hid{display:none}
+
+  /* Hero login */
+  .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px}
+  .logo{width:64px;height:64px;border-radius:16px;background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .title{font-weight:700;font-size:1.4rem}
+  .subtitle{color:#9aa4bf;font-size:.95rem}
+
+  /* Modal confirm */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px}
+  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:520px;width:100%;padding:16px}
+  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  .btn-outline{background:transparent;border:1px solid var(--border)}
 </style>
 </head>
 <body>
-<!-- Paleta + selector de fondo -->
+
+<!-- barra de temas y picker de fondo -->
 <div class="palette" id="palette">
-  <div class="swatch" data-theme="0" style="background:#6366f1"></div>
-  <div class="swatch" data-theme="1" style="background:#22c55e"></div>
-  <div class="swatch" data-theme="2" style="background:#f59e0b"></div>
-  <div class="swatch" data-theme="3" style="background:#ef4444"></div>
+  <div class="swatch" data-i="0" style="background:#7c83ff"></div>
+  <div class="swatch" data-i="1" style="background:#22c55e"></div>
+  <div class="swatch" data-i="2" style="background:#f59e0b"></div>
+  <div class="swatch" data-i="3" style="background:#ef4444"></div>
   <div class="spacer"></div>
   <label style="color:var(--muted);font-size:.9rem">Fondo: <input id="bgPicker" type="color" value="#0f172a" style="width:36px;height:24px;border:none;vertical-align:middle"></label>
 </div>
 
 <div class="wrap">
+  <!-- LOGIN -->
   <div class="card" id="loginCard">
-    <h1>Ingresar · FUNVENSER</h1>
+    <div class="hero">
+      <div class="logo"></div>
+      <div class="title">Ingresar · FUNVENSER</div>
+      <div class="subtitle">Accede con tu API Key para registrar o administrar</div>
+    </div>
     <label>API Key del Asesor</label>
     <input id="apiKey" placeholder="Ingresa tu API Key (ej. ASESOR-TEST-KEY)" />
     <button id="btnLogin">Entrar</button>
     <div id="loginMsg" class="muted"></div>
   </div>
 
-  <!-- ADMIN (solo Administradora) -->
+  <!-- ADMIN -->
   <div class="card hid" id="adminCard">
-    <h1>Admin · Asignación y Meta - FUNVERSE</h1>
+    <h1>Admin · Asignación y Meta · FUNVENSER</h1>
     <div class="grid grid-2">
-      <div>
-        <label>Ciudad</label>
-        <select id="a_ciudad"></select>
-      </div>
-      <div>
-        <label>Sede</label>
-        <select id="a_sede"></select>
-      </div>
-      <div>
-        <label>Máquina</label>
-        <select id="a_maquina"></select>
-      </div>
-      <div>
-        <label>Asesor</label>
-        <select id="a_asesor"></select>
-      </div>
-      <div>
-        <label>Meta del día</label>
-        <input id="a_meta" type="number" min="0" step="1000" value="0" />
-      </div>
+      <div><label>Ciudad</label><select id="a_ciudad"></select></div>
+      <div><label>Sede</label><select id="a_sede"></select></div>
+      <div><label>Máquina</label><select id="a_maquina"></select></div>
+      <div><label>Asesor</label><select id="a_asesor"></select></div>
+      <div><label>Meta del día</label><input id="a_meta" type="number" min="0" step="1000" value="0" /></div>
     </div>
     <button id="btnAdminGuardar">Guardar asignación/meta</button>
     <div id="adminMsg" class="muted"></div>
   </div>
 
+  <!-- FORM -->
   <div class="card hid" id="formCard">
     <h1>Reporte Diario</h1>
-
     <div class="grid grid-2">
-      <input id="asesorId" class="hid" /> <!-- ID Asesor oculto -->
-      <div>
-        <label>Asesor</label>
-        <input id="asesorNombre" readonly />
-      </div>
-      <div>
-        <label>Fecha</label>
-        <input type="date" id="fecha" readonly />
-      </div>
+      <input id="asesorId" class="hid" /> <!-- oculto -->
+      <div><label>Asesor</label><input id="asesorNombre" readonly /></div>
+      <div><label>Fecha</label><input type="date" id="fecha" readonly /></div>
 
-      <div>
-        <label>Ciudad</label>
-        <select id="ciudad"></select>
-      </div>
-      <div>
-        <label>Sede (Centro Comercial)</label>
-        <select id="sede"></select>
-      </div>
-      <div>
-        <label>Máquina</label>
-        <select id="maquina"></select>
-      </div>
+      <div><label>Ciudad</label><select id="ciudad"></select></div>
+      <div><label>Sede (Centro Comercial)</label><select id="sede"></select></div>
+      <div><label>Máquina</label><select id="maquina"></select></div>
 
-      <div>
-        <label>Marcado (monto en $)</label>
-        <input id="marcado" type="number" min="0" step="1000" value="0" />
-      </div>
-      <div>
-        <label>Error</label>
-        <input id="error" placeholder="SIN ERROR si no hubo" />
-      </div>
+      <div><label>Marcado (monto en $)</label><input id="marcado" type="number" min="0" step="1000" value="0" /></div>
+      <div><label>Error</label><input id="error" placeholder="SIN ERROR si no hubo" /></div>
 
-      <div>
-        <label>Tickets vendidos</label>
-        <input id="tickets" type="number" min="0" value="0" />
-      </div>
+      <div><label>Tickets vendidos</label><input id="tickets" type="number" min="0" value="0" /></div>
+      <div><label>Venta total (auto)</label><input id="venta" type="number" readonly value="0" /></div>
 
-      <div>
-        <label>Venta total (auto)</label>
-        <input id="venta" type="number" readonly value="0" />
-      </div>
+      <div><label>Meta del día (admin)</label><input id="meta" type="number" readonly value="0" /></div>
+      <div><label>Gastos</label><input id="gastos" type="number" min="0" step="500" value="0" /></div>
 
-      <div>
-        <label>Meta del día (admin)</label>
-        <input id="meta" type="number" readonly value="0" />
-      </div>
-      <div>
-        <label>Gastos</label>
-        <input id="gastos" type="number" min="0" step="500" value="0" />
-      </div>
-
-      <div>
-        <label>QR</label>
-        <input id="qr" type="number" min="0" step="1000" value="0" />
-      </div>
-      <div>
-        <label>Efectivo</label>
-        <input id="efectivo" type="number" min="0" step="1000" value="0" />
-      </div>
-      <div>
-        <label>Consignación</label>
-        <input id="consignacion" type="number" min="0" step="1000" value="0" />
-      </div>
-      <div>
-        <label>Pendiente por consignar</label>
-        <input id="pendiente" type="number" min="0" step="1000" value="0" />
-      </div>
+      <div><label>QR</label><input id="qr" type="number" min="0" step="1000" value="0" /></div>
+      <div><label>Efectivo</label><input id="efectivo" type="number" min="0" step="1000" value="0" /></div>
+      <div><label>Consignación</label><input id="consignacion" type="number" min="0" step="1000" value="0" /></div>
+      <div><label>Pendiente por consignar</label><input id="pendiente" type="number" min="0" step="1000" value="0" /></div>
 
       <div style="grid-column:1 / -1">
         <label>Comentario</label>
         <textarea id="comentario" rows="3" placeholder="Observaciones del día"></textarea>
       </div>
 
-      <div>
-        <label>Foto (jpg/png)</label>
-        <input id="foto" type="file" accept="image/*" />
-      </div>
-      <div>
-        <label>Video (mp4/quicktime)</label>
-        <input id="video" type="file" accept="video/*" />
-      </div>
+      <div><label>Foto (jpg/png)</label><input id="foto" type="file" accept="image/*" /></div>
+      <div><label>Video (mp4/quicktime)</label><input id="video" type="file" accept="video/*" /></div>
     </div>
 
     <button id="btnEnviar">Enviar reporte</button>
@@ -166,219 +116,164 @@
   </div>
 </div>
 
+<!-- Modal confirm Admin -->
+<div class="modal" id="confirmModal" role="dialog" aria-modal="true">
+  <div class="content">
+    <h3>Confirmar asignación/meta</h3>
+    <p id="confirmText" class="muted"></p>
+    <div class="actions">
+      <button class="btn-outline" id="btnCancel">Cancelar</button>
+      <button id="btnConfirm">Sí, confirmar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbymzU2kwEc9wECmwFeed2bBxlt3JCqeSdPF0IeKoZBsD3RCbUmBonjQwNZNHPLNC1Dm/exec'; // <<<<<<<<<<<<
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzdkIrniUjgcZQYvJYT0BVmKazCv3wj3-bJDokaFLHRG3dfdBZPypxoITEz52jNb6AS/exec'; // <<<<<<<<<<<<<<
 
-let TOKEN = null;
-let USER = null;
-let LISTAS = null;
+let TOKEN=null, USER=null, LISTAS=null;
 
-// ====== Temas y fondo ======
-const THEMES = [
-  {bg:'#0f172a', card:'#111827', text:'#e5e7eb', muted:'#9aa4bf', border:'#24304a', accent:'#f59e0b'},
-  {bg:'#111111', card:'#1a1a1a', text:'#eaeaea', muted:'#9a9a9a', border:'#333333', accent:'#22c55e'},
-  {bg:'#111827', card:'#0b1224', text:'#e5e7eb', muted:'#9aa4bf', border:'#1f2a44', accent:'#6366f1'},
-  {bg:'#0b1224', card:'#0f172a', text:'#dbeafe', muted:'#94a3b8', border:'#1e293b', accent:'#ef4444'}
+// Temas
+const THEMES=[
+  {bg:'#0f172a',card:'#0f172a',text:'#e5e7eb',muted:'#9aa4bf',border:'#24304a',accent:'#7c83ff'},
+  {bg:'#101418',card:'#131a21',text:'#e6f0ff',muted:'#9aa4bf',border:'#263142',accent:'#22c55e'},
+  {bg:'#1b0f2a',card:'#1e1634',text:'#f4eaff',muted:'#b9a9d6',border:'#362f54',accent:'#f59e0b'},
+  {bg:'#0b1724',card:'#0e1d2c',text:'#e5f6ff',muted:'#9cc1d8',border:'#1c2b3a',accent:'#ef4444'}
 ];
-function applyTheme(t){
-  for (const [k,v] of Object.entries(t)) document.documentElement.style.setProperty('--'+(k==='accent'?'accent':'bg'===k?'bg':k), v);
-  localStorage.setItem('fun_theme', JSON.stringify(t));
-}
+function applyTheme(t){ for(const [k,v] of Object.entries(t)) document.documentElement.style.setProperty('--'+k, v); localStorage.setItem('fun_theme',JSON.stringify(t)); }
+function rgbToHex(rgb){ if(rgb.startsWith('#')) return rgb; const m=rgb.match(/(\d+),\s*(\d+),\s*(\d+)/); if(!m) return '#0f172a'; return '#'+[m[1],m[2],m[3]].map(x=>('0'+parseInt(x).toString(16)).slice(-2)).join(''); }
 function initPalette(){
-  document.querySelectorAll('.swatch').forEach((el,i)=>{
-    el.addEventListener('click', ()=>{
-      applyTheme(THEMES[i]);
-      document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
-      el.classList.add('active');
-    });
-  });
-  const saved = localStorage.getItem('fun_theme');
-  applyTheme(saved ? JSON.parse(saved) : THEMES[0]);
-  const pick = document.getElementById('bgPicker');
+  document.querySelectorAll('.swatch').forEach((el,i)=>el.addEventListener('click',()=>{applyTheme(THEMES[i]);document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));el.classList.add('active');}));
+  const saved=localStorage.getItem('fun_theme'); applyTheme(saved?JSON.parse(saved):THEMES[0]);
+  const pick=document.getElementById('bgPicker');
   pick.value = rgbToHex(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
-  pick.addEventListener('input', e=>{
-    document.documentElement.style.setProperty('--bg', e.target.value);
-  });
-}
-function rgbToHex(rgb){
-  if (rgb.startsWith('#')) return rgb;
-  const m = rgb.match(/(\d+),\s*(\d+),\s*(\d+)/); if(!m) return '#0f172a';
-  return '#'+[m[1],m[2],m[3]].map(x=>('0'+parseInt(x).toString(16)).slice(-2)).join('');
+  pick.addEventListener('input', e=>{ document.documentElement.style.setProperty('--bg',e.target.value); });
 }
 
-// ====== Helpers ======
-const $ = (id)=>document.getElementById(id);
-const todayStr = ()=> new Date().toISOString().slice(0,10);
-function lockToday(){
-  $('fecha').value = todayStr();
-  $('fecha').readOnly = true;
-  $('fecha').addEventListener('keydown', e=>e.preventDefault());
-  $('fecha').addEventListener('input', ()=>{ $('fecha').value = todayStr(); });
-}
+// Helpers
+const $=id=>document.getElementById(id);
+const todayStr=()=>new Date().toISOString().slice(0,10);
+function lockToday(){ $('fecha').value=todayStr(); $('fecha').readOnly=true; $('fecha').addEventListener('keydown',e=>e.preventDefault()); $('fecha').addEventListener('input',()=>$('fecha').value=todayStr()); }
 
-// ====== Login ======
+// Login
 async function login(){
-  const api_key = $('apiKey').value.trim();
-  $('loginMsg').textContent = 'Validando...';
+  const api_key=$('apiKey').value.trim();
+  $('loginMsg').textContent='Validando...';
   try{
-    const r = await fetch(WEB_APP_URL + '?path=login', { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ api_key }) });
-    const j = await r.json();
-    if(!j.ok) throw new Error(j.error || 'Error de login');
-    TOKEN = j.token; USER = j.user;
-
-    $('asesorNombre').value = USER.nombre || '';
-    $('asesorId').value = USER.id || '';
-
-    $('loginMsg').innerHTML = '<span class="ok">Acceso concedido</span>';
-    await cargarListas();
-
-    lockToday();
-    // Mostrar módulos
-    if ((USER.rol||'').toLowerCase()==='admin'){
-      $('adminCard').classList.remove('hid');
-      initAdminSelectors();
-    }
-    $('loginCard').classList.add('hid');
-    $('formCard').classList.remove('hid');
-    recalcVenta(); // set inicial
-  }catch(e){
-    $('loginMsg').innerHTML = '<span class="bad">' + e.message + '</span>';
-  }
+    const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({api_key})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
+    TOKEN=j.token; USER=j.user;
+    $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
+    await cargarListas(); lockToday();
+    if((USER.rol||'').toLowerCase()==='admin'){ $('adminCard').classList.remove('hid'); initAdminSelectors(); }
+    $('loginCard').classList.add('hid'); $('formCard').classList.remove('hid'); recalcVenta();
+    $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
+  }catch(e){ $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>'; }
 }
 
-// ====== Listas (incluye usuarios para Admin) ======
+// Listas
 async function cargarListas(){
-  const r = await fetch(WEB_APP_URL + '?path=listas');
-  const j = await r.json();
-  LISTAS = j;
-
-  fillSelect('ciudad', j.ciudades, 'id', 'nombre');
-  $('ciudad').addEventListener('change', onCiudadChange);
-  $('sede').addEventListener('change', onSedeChange);
-  onCiudadChange(); // y meta
+  const r=await fetch(WEB_APP_URL+'?path=listas'); const j=await r.json(); LISTAS=j;
+  fillSelect('ciudad', j.ciudades,'id','nombre'); $('ciudad').addEventListener('change', onCiudadChange);
+  $('sede').addEventListener('change', onSedeChange); onCiudadChange();
 }
+function fillSelect(id,arr,valKey,txtKey){ const sel=$(id); sel.innerHTML=''; arr.forEach(o=>{const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);}); }
+function onCiudadChange(){ const cid=$('ciudad').value; fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre'); onSedeChange(); }
+function onSedeChange(){ const sid=$('sede').value; fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); setTimeout(()=>syncMeta(),0); }
+function syncMeta(){ const m=LISTAS.maquinas.find(x=>x.id===$('maquina').value); $('meta').value=Number(m&&(m.meta_sugerida||m.meta||0))||0; }
 
-function fillSelect(id, arr, valueKey, textKey){
-  const sel = $(id); sel.innerHTML = '';
-  arr.forEach(o=>{
-    const opt = document.createElement('option');
-    opt.value = o[valueKey]; opt.textContent = o[textKey];
-    sel.appendChild(opt);
-  });
-}
+// Venta auto
+['efectivo','qr','consignacion','pendiente','gastos'].forEach(id=>document.addEventListener('input',e=>{ if(e.target && e.target.id===id) recalcVenta(); }));
+function recalcVenta(){ const n=id=>+($(id).value||0); const venta=n('efectivo')+n('qr')+n('consignacion')-n('pendiente')-n('gastos'); $('venta').value=Math.max(0,venta); }
 
-function onCiudadChange(){
-  const cid = $('ciudad').value;
-  const sedes = LISTAS.sedes.filter(s => s.ciudad_id === cid);
-  fillSelect('sede', sedes, 'id', 'nombre');
-  onSedeChange();
-}
-function onSedeChange(){
-  const sid = $('sede').value;
-  const maqs = LISTAS.maquinas.filter(m => m.sede_id === sid);
-  fillSelect('maquina', maqs, 'id', 'id');
-  setTimeout(()=>{
-    const mId = $('maquina').value;
-    const m = LISTAS.maquinas.find(x => x.id === mId);
-    $('meta').value = Number(m && (m.meta_sugerida || m.meta || 0)) || 0; // readonly
-  }, 0);
-}
+// Upload
+async function uploadFile(file){ if(!file) return ''; const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);}); const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url; }
 
-// ====== Cálculo de VENTA ======
-['efectivo','qr','consignacion','pendiente','gastos'].forEach(id=>{
-  document.addEventListener('input', (e)=>{
-    if (e.target && e.target.id===id) recalcVenta();
-  });
-});
-function recalcVenta(){
-  const n = id => +($(id).value || 0);
-  const venta = n('efectivo') + n('qr') + n('consignacion') - n('pendiente') - n('gastos');
-  $('venta').value = Math.max(0, venta);
-}
-
-// ====== Upload a Drive ======
-async function uploadFile(file){
-  if(!file) return '';
-  const base64 = await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file); });
-  const r = await fetch(WEB_APP_URL + '?path=upload', { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ token:TOKEN, fileName:file.name, mimeType:file.type, data: base64 }) });
-  const j = await r.json(); if(!j.ok) throw new Error(j.error || 'No se pudo subir');
-  return j.url;
-}
-
-// ====== Envío ======
+// Enviar reporte
 async function enviar(){
-  $('msg').textContent = 'Subiendo archivos y enviando...';
+  $('msg').textContent='Subiendo archivos y enviando...';
   try{
-    const foto_url  = await uploadFile($('foto').files[0]);
-    const video_url = await uploadFile($('video').files[0]);
-    const payload = {
-      fecha: $('fecha').value,
-      ciudad_id: $('ciudad').value,
-      sede_id: $('sede').value,
-      maquina_id: $('maquina').value,
-      asesor_id: $('asesorId').value,
-      marcado: +$('marcado').value || 0,
-      error: $('error').value || 'SIN ERROR',
-      tickets_vendidos: +$('tickets').value || 0,
-      venta_total: +$('venta').value || 0,
-      meta_dia: +$('meta').value || 0,
-      gastos: +$('gastos').value || 0,
-      qr: +$('qr').value || 0,
-      efectivo: +$('efectivo').value || 0,
-      consignacion: +$('consignacion').value || 0,
-      pendiente_consignar: +$('pendiente').value || 0,
-      comentario: $('comentario').value || '',
-      foto_url, video_url
-    };
-    const r = await fetch(WEB_APP_URL + '?path=reporte', { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ token:TOKEN, payload }) });
-    const j = await r.json(); if(!j.ok) throw new Error(j.error || 'Error al registrar');
-    $('msg').innerHTML = '<span class="ok">✅ Reporte registrado</span>';
-  }catch(e){
-    $('msg').innerHTML = '<span class="bad">❌ ' + e.message + '</span>';
-  }
+    const foto_url=await uploadFile($('foto').files[0]); const video_url=await uploadFile($('video').files[0]);
+    const payload={ fecha:$('fecha').value, ciudad_id:$('ciudad').value, sede_id:$('sede').value, maquina_id:$('maquina').value, asesor_id:$('asesorId').value,
+      marcado:+$('marcado').value||0, error:$('error').value||'SIN ERROR', tickets_vendidos:+$('tickets').value||0,
+      venta_total:+$('venta').value||0, meta_dia:+$('meta').value||0, gastos:+$('gastos').value||0,
+      qr:+$('qr').value||0, efectivo:+$('efectivo').value||0, consignacion:+$('consignacion').value||0, pendiente_consignar:+$('pendiente').value||0,
+      comentario:$('comentario').value||'', foto_url, video_url };
+    const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
+    $('msg').innerHTML='<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>';
+  }catch(e){ $('msg').innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
 }
 
-// ====== Admin UI ======
+// ---------- ADMIN ----------
 function initAdminSelectors(){
-  // opciones base
-  fillSelect('a_ciudad', LISTAS.ciudades, 'id', 'nombre');
+  // llenar combos
+  fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
   $('a_ciudad').addEventListener('change', ()=>{
-    const cid = $('a_ciudad').value;
-    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid), 'id', 'nombre');
+    const cid=$('a_ciudad').value;
+    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre');
     $('a_sede').dispatchEvent(new Event('change'));
   });
   $('a_sede').addEventListener('change', ()=>{
-    const sid = $('a_sede').value;
-    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid), 'id', 'id');
+    const sid=$('a_sede').value;
+    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
+    // vista previa: llevarlo abajo al form
+    syncPreviewFromAdmin();
   });
-  // asesores activos
-  const asesores = (LISTAS.usuarios||[]).filter(u => (u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
-  fillSelect('a_asesor', asesores, 'id', 'nombre');
+  const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
+  fillSelect('a_asesor', asesores,'id','nombre');
+  $('a_asesor').addEventListener('change', ()=>syncPreviewFromAdmin());
+  $('a_meta').addEventListener('input', ()=>{ $('meta').value = +$('a_meta').value || 0; });
+
   $('a_ciudad').dispatchEvent(new Event('change'));
 
-  $('btnAdminGuardar').addEventListener('click', adminGuardar);
+  // guardar con confirmación
+  $('btnAdminGuardar').addEventListener('click', showConfirm);
 }
+
+function syncPreviewFromAdmin(){
+  // ciudad/sede/máquina elegidos arriba -> form de abajo
+  const cid = $('a_ciudad').value;
+  fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value=cid;
+  fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre'); $('sede').value=$('a_sede').value;
+  fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===$('a_sede').value),'id','id'); $('maquina').value=$('a_maquina').value;
+  // meta sincronizada (si se digitó en admin, prima ese valor)
+  $('meta').value = +$('a_meta').value || (Number((LISTAS.maquinas.find(x=>x.id===$('a_maquina').value)||{}).meta_sugerida)||0);
+}
+
+function showConfirm(){
+  const cText = `
+Confirma la asignación/meta:
+• Ciudad: ${$('a_ciudad').options[$('a_ciudad').selectedIndex]?.text}
+• Sede: ${$('a_sede').options[$('a_sede').selectedIndex]?.text}
+• Máquina: ${$('a_maquina').value}
+• Asesor: ${$('a_asesor').options[$('a_asesor').selectedIndex]?.text}
+• Meta del día: $${(+$('a_meta').value||0).toLocaleString('es-CO')}
+  `.trim();
+  $('confirmText').textContent = cText;
+  $('confirmModal').style.display='flex';
+  $('btnCancel').onclick = ()=> $('confirmModal').style.display='none';
+  $('btnConfirm').onclick = ()=> { $('confirmModal').style.display='none'; adminGuardar(); };
+}
+
 async function adminGuardar(){
-  $('adminMsg').textContent = 'Guardando...';
+  const msg=$('adminMsg'); msg.textContent='Guardando...';
   try{
-    const body = {
-      token: TOKEN,
-      ciudad_id: $('a_ciudad').value,
-      sede_id: $('a_sede').value,
-      maquina_id: $('a_maquina').value,
-      asesor_id: $('a_asesor').value,
-      meta_sugerida: +$('a_meta').value || 0
-    };
-    const r = await fetch(WEB_APP_URL + '?path=admin_set', { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body) });
-    const j = await r.json(); if(!j.ok) throw new Error(j.error || 'No se pudo guardar');
-    $('adminMsg').innerHTML = '<span class="ok">✔ Guardado</span>';
-  }catch(e){
-    $('adminMsg').innerHTML = '<span class="bad">❌ ' + e.message + '</span>';
-  }
+    const q=new URLSearchParams({
+      token:TOKEN, ciudad_id:$('a_ciudad').value, sede_id:$('a_sede').value,
+      maquina_id:$('a_maquina').value, asesor_id:$('a_asesor').value,
+      meta_sugerida:String(+$('a_meta').value||0)
+    });
+    const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
+    // Vista previa abajo al momento
+    syncPreviewFromAdmin();
+    msg.innerHTML='<span class="ok">✔ Guardado y notificado por email</span>';
+  }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
 }
 
 // Init
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', ()=>{
   initPalette();
   $('btnLogin').addEventListener('click', login);
   $('btnEnviar').addEventListener('click', enviar);
