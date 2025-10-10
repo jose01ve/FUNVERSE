@@ -78,13 +78,13 @@
   <div class="card hid" id="formCard">
     <h1>Reporte Diario</h1>
     <div class="grid grid-2">
-      <input id="asesorId" class="hid" /> <!-- oculto -->
+      <input id="asesorId" class="hid" />
       <div><label>Asesor</label><input id="asesorNombre" readonly /></div>
       <div><label>Fecha</label><input type="date" id="fecha" readonly /></div>
 
-      <div><label>Ciudad</label><select id="ciudad"></select></div>
-      <div><label>Sede (Centro Comercial)</label><select id="sede"></select></div>
-      <div><label>Máquina</label><select id="maquina"></select></div>
+      <div><label>Ciudad</label><select id="ciudad" disabled></select></div>
+      <div><label>Sede (Centro Comercial)</label><select id="sede" disabled></select></div>
+      <div><label>Máquina</label><select id="maquina" disabled></select></div>
 
       <div><label>Marcado (monto en $)</label><input id="marcado" type="number" min="0" step="1000" value="0" /></div>
       <div><label>Error (monto en $)</label><input id="error" type="number" min="0" step="1000" value="0" placeholder="0 si no hubo" /></div>
@@ -139,7 +139,7 @@
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyeMKwsRh4pFo91SGdba-cns5MDovyKF8mtzq8HNcciHHXyFRT5Q8RF5o-MLK3lvxjR/exec'; // <<<<<<<<<<<<<<
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyCupKt05h771Lz1QMFVom-T3CK2kHAkNfr6lS5Sj_LFnQNwtydrIm7P_jhkXa_BCX3/exec';
 
 let TOKEN=null, USER=null, LISTAS=null;
 
@@ -174,6 +174,14 @@ async function login(){
     const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({api_key})});
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
     TOKEN=j.token; USER=j.user;
+
+    // si el link trae ?aid=USR-xxx debe coincidir con USER.id
+    const linkAid = new URLSearchParams(location.search).get('aid');
+    if (linkAid && linkAid !== (USER.id||'')) {
+      $('loginMsg').innerHTML = '<span class="bad">Este enlace no corresponde a tu usuario.</span>';
+      return;
+    }
+
     $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
     await cargarListas(); lockToday();
 
@@ -181,13 +189,13 @@ async function login(){
       $('adminCard').classList.remove('hid');
       initAdminSelectors();
       syncPreviewFromAdmin();
+      $('formCard').classList.remove('hid');
     }else{
-      // Asesor: trae su asignación de HOY y bloquea selects
+      // Asesor: trae su asignación de HOY (obligatoria)
       await cargarAsignacionDelDia();
     }
 
-    $('loginCard').classList.add('hid'); $('formCard').classList.remove('hid');
-    recalcAuto();
+    $('loginCard').classList.add('hid');
     $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
   }catch(e){ $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>'; }
 }
@@ -195,15 +203,9 @@ async function login(){
 /* ===== Listas ===== */
 async function cargarListas(){
   const r=await fetch(WEB_APP_URL+'?path=listas'); const j=await r.json(); LISTAS=j;
-  fillSelect('ciudad', j.ciudades,'id','nombre'); $('ciudad').addEventListener('change', onCiudadChange);
-  $('sede').addEventListener('change', onSedeChange); onCiudadChange();
 }
-function fillSelect(id,arr,valKey,txtKey){ const sel=$(id); sel.innerHTML=''; arr.forEach(o=>{const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);}); }
-function onCiudadChange(){ const cid=$('ciudad').value; fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre'); onSedeChange(); }
-function onSedeChange(){ const sid=$('sede').value; fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); setTimeout(()=>syncMeta(),0); }
-function syncMeta(){ const m=LISTAS.maquinas.find(x=>x.id===$('maquina').value); $('meta').value=Number(m&&(m.meta_sugerida||m.meta||0))||0; }
 
-/* ===== Asignación del día (ASESOR) ===== */
+/* ===== Asignación del día (ASESOR, obligatoria) ===== */
 async function cargarAsignacionDelDia(){
   try{
     const q = new URLSearchParams({ token: TOKEN });
@@ -212,22 +214,29 @@ async function cargarAsignacionDelDia(){
     if (!j.ok) throw new Error(j.error||'Sin asignación');
 
     const a = j.asignacion;
-    // Pinta en form
-    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
-    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
-    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
-    $('meta').value = Number(a.meta_dia||0) || 0;
 
-    // Bloquear selects para asesor
-    $('ciudad').disabled = true;
-    $('sede').disabled   = true;
-    $('maquina').disabled= true;
+    // Render selects sólo para mostrar (disabled)
+    const selC = LISTAS.ciudades.map(x=>({id:x.id, nombre:x.nombre}));
+    const selS = LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id);
+    const selM = LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id);
+
+    fill('ciudad', selC,'id','nombre', a.ciudad_id, true);
+    fill('sede', selS,'id','nombre', a.sede_id, true);
+    fill('maquina', selM,'id','id', a.maquina_id, true);
+
+    $('meta').value = Number(a.meta_dia||0) || 0;
+    $('formCard').classList.remove('hid');
+
+    recalcAuto();
   }catch(e){
-    // Si no hay asignación, deja selects libres pero con meta de máquina si existiese
-    $('ciudad').disabled = false;
-    $('sede').disabled   = false;
-    $('maquina').disabled= false;
+    $('loginMsg').innerHTML='<span class="bad">No tienes una asignación para hoy. Contacta a la administradora.</span>';
   }
+}
+function fill(id,arr,valKey,txtKey,value,disabled){
+  const sel=$(id); sel.innerHTML='';
+  arr.forEach(o=>{const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);});
+  sel.value = value || '';
+  sel.disabled = !!disabled;
 }
 
 /* ===== Cálculos encadenados ===== */
@@ -303,29 +312,28 @@ function initAdminSelectors(){
 
   $('btnAdminGuardar').addEventListener('click', showConfirm);
 }
-
+function fillSelect(id,arr,valKey,txtKey){ const sel=$(id); sel.innerHTML=''; arr.forEach(o=>{const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);}); }
 function syncPreviewFromAdmin(){
   const cid = $('a_ciudad').value;
   const sid = $('a_sede').value;
   const mid = $('a_maquina').value;
 
-  fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value=cid;
-  fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre'); $('sede').value=sid;
-  fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); $('maquina').value=mid;
+  // Solo vista previa
+  const selS = LISTAS.sedes.filter(s=>s.ciudad_id===cid);
+  const selM = LISTAS.maquinas.filter(m=>m.sede_id===sid);
+  fill('ciudad', LISTAS.ciudades,'id','nombre', cid, true);
+  fill('sede', selS,'id','nombre', sid, true);
+  fill('maquina', selM,'id','id', mid, true);
 
   const metaAdmin = +$('a_meta').value || 0;
-  const metaMaquina = Number((LISTAS.maquinas.find(x=>x.id===mid)||{}).meta_sugerida|| (LISTAS.maquinas.find(x=>x.id===mid)||{}).meta || 0);
-  $('meta').value = metaAdmin || metaMaquina;
+  $('meta').value = metaAdmin || 0;
 
   const aSel = $('a_asesor');
-  const asesorId = aSel.value;
-  const asesorNombre = aSel.options[aSel.selectedIndex]?.text || '';
-  $('asesorId').value = asesorId;
-  $('asesorNombre').value = asesorNombre;
+  $('asesorId').value = aSel.value;
+  $('asesorNombre').value = aSel.options[aSel.selectedIndex]?.text || '';
 
   recalcAuto();
 }
-
 function showConfirm(){
   const cText = `
 Confirma la asignación/meta:
@@ -340,7 +348,6 @@ Confirma la asignación/meta:
   $('btnCancel').onclick = ()=> $('confirmModal').style.display='none';
   $('btnConfirm').onclick = ()=> { $('confirmModal').style.display='none'; adminGuardar(); };
 }
-
 async function adminGuardar(){
   const msg=$('adminMsg'); msg.textContent='Guardando...';
   try{
@@ -351,11 +358,6 @@ async function adminGuardar(){
     });
     const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
-
-    // Refrescar listas y vista previa (y así también actualizar meta de máquina si cambió)
-    await cargarListas();
-    syncPreviewFromAdmin();
-
     msg.innerHTML='<span class="ok">✔ Guardado y notificado por email</span>';
   }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
 }
