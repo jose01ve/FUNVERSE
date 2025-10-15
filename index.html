@@ -6,26 +6,31 @@
 <title>FUNVENSER · Reporte Diario</title>
 <style>
   :root{--bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#7c83ff}
-  *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1224);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1224);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
   .wrap{max-width:980px;margin:auto;padding:16px}
   .card{background:rgba(17,24,39,.85);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter: blur(4px)}
   h1{margin:.2rem 0 1rem;font-size:1.2rem}
   label{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}
   input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1224;color:var(--text)}
-  input[readonly], select:disabled{opacity:.8;cursor:not-allowed}
+  input[readonly], select:disabled, .disabled{opacity:.75;cursor:not-allowed}
   button{cursor:pointer;margin-top:14px;background:var(--accent);border-color:transparent}
   .grid{display:grid;gap:12px}
   @media(min-width:900px){ .grid-2{grid-template-columns:1fr 1fr} }
   .ok{color:#58d68d} .bad{color:#ff6b6b} .muted{color:var(--muted)}
   .hid{display:none}
+
   .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px}
   .logo{width:64px;height:64px;border-radius:16px;background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);box-shadow:0 6px 18px rgba(0,0,0,.35)}
   .title{font-weight:700;font-size:1.4rem}
   .subtitle{color:#9aa4bf;font-size:.95rem}
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px}
-  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;padding:16px}
+
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
+  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:580px;width:100%;padding:16px}
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
   .btn-outline{background:transparent;border:1px solid var(--border)}
+  .preview{background:#0b1224;border:1px dashed var(--border);border-radius:10px;padding:12px;margin-top:8px;font-size:.95rem}
+  .readonly-banner{background:#1f2937;border:1px solid #374151;color:#93c5fd;border-radius:10px;padding:10px;margin-top:12px}
 </style>
 </head>
 <body>
@@ -39,7 +44,7 @@
       <div class="subtitle">Accede con tu API Key para registrar o administrar</div>
     </div>
     <label>API Key del Asesor</label>
-    <input id="apiKey" placeholder="Ingresa tu API Key (ej. 123, admin, etc.)" />
+    <input id="apiKey" placeholder="Ingresa tu API Key" />
     <button id="btnLogin">Entrar</button>
     <div id="loginMsg" class="muted"></div>
   </div>
@@ -55,25 +60,32 @@
       <div><label>Meta del día</label><input id="a_meta" type="number" min="0" step="1000" value="0" /></div>
     </div>
     <button id="btnAdminGuardar">Guardar asignación/meta</button>
-    <div class="grid grid-2">
-      <div><label>Desbloquear asesor (reabrir)</label><select id="unlock_asesor"></select></div>
-      <div style="display:flex;align-items:flex-end"><button id="btnUnlock" class="btn-outline">Desbloquear</button></div>
+
+    <div style="margin-top:14px" class="grid grid-2">
+      <div><label>Desbloquear asesor (reabrir)</label><select id="unlock_select"></select></div>
+      <div style="display:flex;align-items:flex-end"><button id="btnUnlock" class="btn-outline" style="width:100%">Desbloquear</button></div>
     </div>
+
     <div id="adminMsg" class="muted"></div>
   </div>
 
-  <!-- FORM -->
+  <!-- FORM ASESOR -->
   <div class="card hid" id="formCard">
     <h1>Reporte Diario</h1>
-    <div id="yaEnviado" class="muted hid">Ya enviaste este reporte hoy. Si necesitas corregir, pide a la administradora que te habilite.</div>
+
+    <!-- banner de sólo lectura -->
+    <div id="sentBanner" class="readonly-banner hid">
+      Ya enviaste tu reporte hoy. Si necesitas corregirlo, contacta a la administradora para que te habilite nuevamente.
+    </div>
+
     <div class="grid grid-2">
       <input id="asesorId" class="hid" />
       <div><label>Asesor</label><input id="asesorNombre" readonly /></div>
       <div><label>Fecha</label><input type="date" id="fecha" readonly /></div>
 
-      <div><label>Ciudad</label><select id="ciudad"></select></div>
-      <div><label>Sede (Centro Comercial)</label><select id="sede"></select></div>
-      <div><label>Máquina</label><select id="maquina"></select></div>
+      <div><label>Ciudad</label><select id="ciudad" disabled></select></div>
+      <div><label>Sede (Centro Comercial)</label><select id="sede" disabled></select></div>
+      <div><label>Máquina</label><select id="maquina" disabled></select></div>
 
       <div><label>Marcado (monto en $)</label><input id="marcado" type="number" min="0" step="1000" value="0" /></div>
       <div><label>Error (monto en $)</label><input id="error" type="number" min="0" step="1000" value="0" placeholder="0 si no hubo" /></div>
@@ -85,8 +97,9 @@
       <div><label>Gastos</label><input id="gastos" type="number" min="0" step="500" value="0" /></div>
 
       <div><label>QR</label><input id="qr" type="number" min="0" step="1000" value="0" /></div>
+      <div><label>Consignación (la edita Admin)</label><input id="consignacion" type="number" min="0" step="1000" value="0" disabled /></div>
+
       <div><label>Efectivo (auto)</label><input id="efectivo" type="number" readonly value="0" /></div>
-      <div><label>Consignación (la edita Admin)</label><input id="consignacion" type="number" min="0" step="1000" value="0" readonly /></div>
       <div><label>Pendiente por consignar (auto)</label><input id="pendiente" type="number" readonly value="0" /></div>
 
       <div style="grid-column:1 / -1">
@@ -103,11 +116,11 @@
   </div>
 </div>
 
-<!-- Modal de vista previa -->
+<!-- Modal confirm + PREVIEW -->
 <div class="modal" id="sendModal" role="dialog" aria-modal="true">
   <div class="content">
     <h3>Confirmar envío</h3>
-    <div id="preview" class="muted" style="white-space:pre-line;margin:.5rem 0 1rem"></div>
+    <div class="preview" id="previewBox"></div>
     <div class="actions">
       <button class="btn-outline" id="btnSendCancel">Cancelar</button>
       <button id="btnSendConfirm">Sí, enviar</button>
@@ -116,22 +129,17 @@
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyKr-MvZ_vY9Coynm7qepHNrpfRoT_9eLBxzm0XM8gdeC-tvKAZrOICq6iiT9AV0rZX/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxSB76V2O-qF1avkWnTlnm1HWFjPqWs850jk-MVQXxNhzjIyw9FUcTHO1dE4c-mPfz2/exec';
 
-let TOKEN=null, USER=null, LISTAS=null, LINK_AID=(new URL(location.href)).searchParams.get('aid')||null;
+let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
+/* Helpers */
 const $=id=>document.getElementById(id);
 const todayStr=()=>new Date().toISOString().slice(0,10);
-function lockToday(){ $('fecha').value=todayStr(); $('fecha').readOnly=true; }
 const num = id => +((($(id)?.value)||'0').toString().replace(/[, ]/g,'')) || 0;
+function qsParam(name){ const u=new URL(location.href); return u.searchParams.get(name)||''; }
 
-function disableForm(b=true){
-  ['ciudad','sede','maquina','marcado','error','gastos','qr','consignacion','comentario','foto','video']
-    .forEach(id=>{ const el=$(id); if(el){ el.disabled=b; el.readOnly=b; }});
-  $('btnEnviar').disabled = b;
-}
-
-/* ===== Login ===== */
+/* Login */
 async function login(){
   const api_key=$('apiKey').value.trim();
   $('loginMsg').textContent='Validando...';
@@ -139,48 +147,45 @@ async function login(){
     const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({api_key})});
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
     TOKEN=j.token; USER=j.user;
-    $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
-    await cargarListas(); lockToday();
 
-    const isAdmin = (USER.rol||'').toLowerCase()==='admin';
-    if (LINK_AID){ // Link de asesor (con ?aid=)
-      if (String(LINK_AID)!==String(USER.id)){
-        $('loginMsg').innerHTML='<span class="bad">Este enlace no corresponde a tu usuario.</span>';
-        return;
-      }
-      $('loginCard').classList.add('hid');
-      await cargarAsignacionDelDia();
-      $('formCard').classList.remove('hid');
-    }else{
-      // link normal
-      if (isAdmin){
-        $('loginCard').classList.add('hid');
-        $('adminCard').classList.remove('hid');
-        initAdminSelectors();
-        syncPreviewFromAdmin();
-      }else{
-        $('loginCard').classList.add('hid');
-        await cargarAsignacionDelDia();
-        $('formCard').classList.remove('hid');
-      }
+    // Si vino con ?aid=... asegúrate que coincida con el usuario logeado
+    AID_PARAM = qsParam('aid');
+    if (AID_PARAM && String(AID_PARAM)!==String(USER.id)){
+      $('loginMsg').innerHTML='<span class="bad">Este enlace no corresponde a tu usuario.</span>';
+      return;
     }
-    $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
+
+    $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
+    $('fecha').value=todayStr();
+
+    await cargarListas();
+
+    if((USER.rol||'').toLowerCase()==='admin'){
+      // Admin: ver panel + desbloqueo
+      $('adminCard').classList.remove('hid');
+      initAdminSelectors();
+      // además, mostramos el formulario en modo vista previa bloqueado para que vea “cómo lo vería”
+      await cargarAsignacionDelDia(true);
+    }else{
+      await cargarAsignacionDelDia(false);
+    }
+
+    $('loginCard').classList.add('hid');
+    $('formCard').classList.remove('hid');
+    recalcAuto();
   }catch(e){ $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>'; }
 }
 
-/* ===== Listas ===== */
+/* Listas */
 async function cargarListas(){
   const r=await fetch(WEB_APP_URL+'?path=listas'); const j=await r.json(); LISTAS=j;
-  fillSelect('ciudad', j.ciudades,'id','nombre'); $('ciudad').addEventListener('change', onCiudadChange);
-  $('sede').addEventListener('change', onSedeChange); onCiudadChange();
 }
-function fillSelect(id,arr,valKey,txtKey){ const sel=$(id); sel.innerHTML=''; arr.forEach(o=>{const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);}); }
-function onCiudadChange(){ const cid=$('ciudad').value; fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre'); onSedeChange(); }
-function onSedeChange(){ const sid=$('sede').value; fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); setTimeout(()=>syncMeta(),0); }
-function syncMeta(){ const m=LISTAS.maquinas.find(x=>x.id===$('maquina').value); $('meta').value=Number(m&&(m.meta_sugerida||m.meta||0))||0; }
 
-/* ===== Asignación del día (ASESOR) ===== */
-async function cargarAsignacionDelDia(){
+/* Pinta selects */
+function fillSelect(id,arr,valKey,txtKey){ const sel=$(id); sel.innerHTML=''; arr.forEach(o=>{const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);}); }
+
+/* Cargar asignación (y bloquear si ya envió) */
+async function cargarAsignacionDelDia(adminPreview){
   try{
     const q = new URLSearchParams({ token: TOKEN });
     const r = await fetch(WEB_APP_URL+'?path=asignacion&'+q.toString());
@@ -188,29 +193,52 @@ async function cargarAsignacionDelDia(){
     if (!j.ok) throw new Error(j.error||'Sin asignación');
 
     const a = j.asignacion;
+
     fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
     fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
     fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
     $('meta').value = Number(a.meta_dia||0) || 0;
 
-    // Asesor no modifica ubicación
-    $('ciudad').disabled = true; $('sede').disabled = true; $('maquina').disabled= true;
-    $('consignacion').readOnly = true;
+    // bloquear campos no editables para el asesor
+    $('ciudad').disabled = true;
+    $('sede').disabled   = true;
+    $('maquina').disabled= true;
+    $('meta').readOnly   = true;
+    $('consignacion').disabled = true;
 
-    if (a.enviado_hoy){
-      $('yaEnviado').classList.remove('hid');
+    // Si ya envió hoy → bloquear todo envío y mostrar banner
+    if (j.enviado_hoy && !adminPreview){
+      $('sentBanner').classList.remove('hid');
       disableForm(true);
     }else{
-      $('yaEnviado').classList.add('hid');
+      $('sentBanner').classList.add('hid');
       disableForm(false);
     }
   }catch(e){
-    $('msg').innerHTML='<span class="bad">'+e.message+'</span>';
+    // Si no hay asignación, deja disabled igual (no puede reportar sin asignación)
+    $('ciudad').disabled = true;
+    $('sede').disabled   = true;
+    $('maquina').disabled= true;
+    $('meta').readOnly   = true;
+    $('consignacion').disabled = true;
+    $('msg').innerHTML='<span class="bad">'+(e.message||'Sin asignación para hoy')+'</span>';
     disableForm(true);
   }
 }
 
-/* ===== Cálculos (tickets 2 dígitos) ===== */
+/* Habilita/inhabilita los campos editables del asesor */
+function disableForm(lock){
+  ['marcado','error','gastos','qr','comentario','foto','video','btnEnviar'].forEach(id=>{
+    const el=$(id); if(!el) return;
+    if (id==='btnEnviar'){ el.disabled = !!lock; }
+    else{
+      el.disabled = !!lock;
+      if (lock) el.classList.add('disabled'); else el.classList.remove('disabled');
+    }
+  });
+}
+
+/* Cálculos encadenados */
 function recalcAuto(){
   const marcado = num('marcado');
   const error   = num('error');
@@ -221,9 +249,9 @@ function recalcAuto(){
   const venta = Math.max(0, marcado - error);
   $('venta').value = venta;
 
-  const ticketsRaw = Math.max(0, Math.floor(venta / 13));
-  const ticketsTwo = parseInt(String(ticketsRaw).slice(0,2) || '0', 10);
-  $('tickets').value = ticketsTwo;
+  // “dos primeras cifras” ya implementado previamente; si estás usando conteo normal, cambia aquí
+  const tickets = Math.max(0, Math.floor(venta / 13));
+  $('tickets').value = tickets;
 
   const efectivo = Math.max(0, venta - gastos - qr);
   $('efectivo').value = efectivo;
@@ -235,35 +263,44 @@ function recalcAuto(){
   document.addEventListener('input', e=>{ if(e.target && e.target.id===id) recalcAuto(); });
 });
 
-/* ===== Upload a Drive ===== */
-async function uploadFile(file){ if(!file) return ''; const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);}); const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url; }
-
-/* ===== Vista previa + Envío ===== */
-function openSendConfirm(){
-  // Generar resumen
-  const lines = [
-    `Fecha: ${$('fecha').value}`,
-    `Ciudad: ${$('ciudad').options[$('ciudad').selectedIndex]?.text}`,
-    `Sede: ${$('sede').options[$('sede').selectedIndex]?.text}`,
-    `Máquina: ${$('maquina').value}`,
-    `Marcado: $${num('marcado').toLocaleString('es-CO')}`,
-    `Error: $${num('error').toLocaleString('es-CO')}`,
-    `Venta total (auto): $${num('venta').toLocaleString('es-CO')}`,
-    `Tickets vendidos (auto): ${num('tickets')}`,
-    `Gastos: $${num('gastos').toLocaleString('es-CO')}`,
-    `QR: $${num('qr').toLocaleString('es-CO')}`,
-    `Efectivo (auto): $${num('efectivo').toLocaleString('es-CO')}`,
-    `Consignación: $${num('consignacion').toLocaleString('es-CO')}`,
-    `Pendiente por consignar (auto): $${num('pendiente').toLocaleString('es-CO')}`,
-    `Meta del día (admin): $${num('meta').toLocaleString('es-CO')}`,
-    `Comentario: ${$('comentario').value||'-'}`
-  ];
-  $('preview').textContent = lines.join('\n');
-
-  const modal=$('sendModal'); modal.style.display='flex';
-  $('btnSendCancel').onclick = ()=> modal.style.display='none';
-  $('btnSendConfirm').onclick = ()=> { modal.style.display='none'; enviar(); };
+/* Upload */
+async function uploadFile(file){
+  if(!file) return '';
+  const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);});
+  const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})});
+  const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url;
 }
+
+/* Modal con PREVIEW */
+function openSendConfirm(){
+  // construye previsualización
+  const html = `
+  <b>Asesor:</b> ${$('asesorNombre').value}<br/>
+  <b>Fecha:</b> ${$('fecha').value}<br/>
+  <b>Ciudad:</b> ${$('ciudad').options[$('ciudad').selectedIndex]?.text}<br/>
+  <b>Sede:</b> ${$('sede').options[$('sede').selectedIndex]?.text}<br/>
+  <b>Máquina:</b> ${$('maquina').value}<br/>
+  <hr style="border-color:#263142">
+  <b>Marcado:</b> $${num('marcado').toLocaleString('es-CO')}<br/>
+  <b>Error:</b> $${num('error').toLocaleString('es-CO')}<br/>
+  <b>Venta total:</b> $${num('venta').toLocaleString('es-CO')}<br/>
+  <b>Tickets vendidos:</b> ${num('tickets')}<br/>
+  <b>Meta del día:</b> $${num('meta').toLocaleString('es-CO')}<br/>
+  <b>Gastos:</b> $${num('gastos').toLocaleString('es-CO')}<br/>
+  <b>QR:</b> $${num('qr').toLocaleString('es-CO')}<br/>
+  <b>Efectivo:</b> $${num('efectivo').toLocaleString('es-CO')}<br/>
+  <b>Consignación:</b> $${num('consignacion').toLocaleString('es-CO')}<br/>
+  <b>Pendiente:</b> $${num('pendiente').toLocaleString('es-CO')}<br/>
+  <b>Comentario:</b> ${$('comentario').value||'(sin comentario)'}
+  `;
+  $('previewBox').innerHTML = html;
+
+  const m=$('sendModal'); m.style.display='flex';
+  $('btnSendCancel').onclick=()=>m.style.display='none';
+  $('btnSendConfirm').onclick=()=>{ m.style.display='none'; enviar(); };
+}
+
+/* Enviar */
 async function enviar(){
   $('msg').textContent='Subiendo archivos y enviando...';
   try{
@@ -273,34 +310,16 @@ async function enviar(){
       venta_total:num('venta')||0, meta_dia:num('meta')||0, gastos:num('gastos')||0,
       qr:num('qr')||0, efectivo:num('efectivo')||0, consignacion:num('consignacion')||0, pendiente_consignar:num('pendiente')||0,
       comentario:$('comentario').value||'', foto_url, video_url };
-
-    const r = await fetch(WEB_APP_URL+'?path=reporte',{
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({token:TOKEN,payload})
-    });
-
-    // Manejo explícito de 403 (ya envió hoy)
-    if (r.status === 403){
-      $('msg').innerHTML='<span class="bad">Ya enviaste este reporte hoy.</span>';
-      disableForm(true);
-      $('yaEnviado').classList.remove('hid');
-      return;
-    }
-
-    const j=await r.json(); 
-    if(!j.ok) throw new Error(j.error||'Error al registrar');
+    const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
 
     $('msg').innerHTML='<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>';
     disableForm(true);
-    $('yaEnviado').classList.remove('hid');
-
+    $('sentBanner').classList.remove('hid');
   }catch(e){ $('msg').innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
 }
 
-  
-
-/* ===== Admin ===== */
+/* Admin UI */
 function initAdminSelectors(){
   fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
   $('a_ciudad').addEventListener('change', ()=>{
@@ -311,37 +330,18 @@ function initAdminSelectors(){
   $('a_sede').addEventListener('change', ()=>{
     const sid=$('a_sede').value;
     fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
-    syncPreviewFromAdmin();
   });
   const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
   fillSelect('a_asesor', asesores,'id','nombre');
-  fillSelect('unlock_asesor', asesores,'id','nombre');
 
-  $('a_asesor').addEventListener('change', syncPreviewFromAdmin);
-  $('a_meta').addEventListener('input',  syncPreviewFromAdmin);
-
-  $('a_ciudad').dispatchEvent(new Event('change'));
-  syncPreviewFromAdmin();
+  // lista para desbloqueo
+  fillSelect('unlock_select', asesores,'id','nombre');
 
   $('btnAdminGuardar').addEventListener('click', adminGuardar);
   $('btnUnlock').addEventListener('click', adminUnlock);
+  $('a_ciudad').dispatchEvent(new Event('change'));
 }
-function syncPreviewFromAdmin(){
-  const cid = $('a_ciudad').value;
-  const sid = $('a_sede').value;
-  const mid = $('a_maquina').value;
 
-  fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value=cid;
-  fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre'); $('sede').value=sid;
-  fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); $('maquina').value=mid;
-
-  const metaAdmin = +$('a_meta').value || 0;
-  const metaMaquina = Number((LISTAS.maquinas.find(x=>x.id===mid)||{}).meta_sugerida|| (LISTAS.maquinas.find(x=>x.id===mid)||{}).meta || 0);
-  $('meta').value = metaAdmin || metaMaquina;
-
-  const aSel = $('a_asesor'); $('asesorId').value = aSel.value; $('asesorNombre').value = aSel.options[aSel.selectedIndex]?.text || '';
-  recalcAuto();
-}
 async function adminGuardar(){
   const msg=$('adminMsg'); msg.textContent='Guardando...';
   try{
@@ -352,21 +352,23 @@ async function adminGuardar(){
     });
     const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
-    await cargarListas(); // refresca metas de máquinas
-    syncPreviewFromAdmin();
+
     msg.innerHTML='<span class="ok">✔ Guardado y notificado por email</span>';
   }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
 }
 async function adminUnlock(){
   const msg=$('adminMsg'); msg.textContent='Desbloqueando...';
   try{
-    const r=await fetch(WEB_APP_URL+'?path=admin_unlock',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN, asesor_id:$('unlock_asesor').value})});
+    const r=await fetch(WEB_APP_URL+'?path=admin_unlock',{
+      method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({ token:TOKEN, asesor_id:$('unlock_select').value })
+    });
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo desbloquear');
     msg.innerHTML='<span class="ok">✔ Asesor desbloqueado</span>';
   }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
 }
 
-/* ===== Init ===== */
+/* Init */
 document.addEventListener('DOMContentLoaded', ()=>{
   $('btnLogin').addEventListener('click', login);
   $('btnEnviar').addEventListener('click', openSendConfirm);
