@@ -30,6 +30,7 @@
   table.preview td{padding:6px 8px;border-bottom:1px solid #1e293b}
   table.preview td:first-child{color:var(--muted);width:42%}
   .notice{padding:10px;border:1px dashed #64748b;border-radius:10px;background:#0b1224;color:#cbd5e1;margin-top:8px}
+  .row-actions{display:flex;gap:8px;align-items:center}
 </style>
 </head>
 <body>
@@ -47,7 +48,24 @@
     <div id="loginMsg" class="muted"></div>
   </div>
 
-  <!-- FORM -->
+  <!-- ADMIN -->
+  <div class="card hid" id="adminCard">
+    <h1>Admin · Asignación y Meta</h1>
+    <div class="grid grid-2">
+      <div><label>Ciudad</label><select id="a_ciudad"></select></div>
+      <div><label>Sede</label><select id="a_sede"></select></div>
+      <div><label>Máquina</label><select id="a_maquina"></select></div>
+      <div><label>Asesor</label><select id="a_asesor"></select></div>
+      <div><label>Meta del día</label><input id="a_meta" type="number" min="0" step="1000" value="0" /></div>
+    </div>
+    <div class="row-actions">
+      <button id="btnAdminGuardar">Guardar asignación/meta</button>
+      <button class="btn-outline" id="btnUnlock">Desbloquear asesor (hoy)</button>
+      <span id="adminMsg" class="muted"></span>
+    </div>
+  </div>
+
+  <!-- FORM (Asesor o Vista previa del Admin) -->
   <div class="card hid" id="formCard">
     <h1>Reporte Diario</h1>
     <div id="alreadyMsg" class="notice hid">Ya se envió este reporte hoy. Si necesitas reenviarlo, contacta a la administradora para que te habilite.</div>
@@ -103,39 +121,15 @@
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxgQFu38BuIQ0BRhXOjqL6V4HRfeBL8SfdnY2sWAndrOEm8oj1agSjI8fy7XeyluBQN/exec'; // backend
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwvMcWd0WRbBfe_odJbdBGg3GuoCtaNm6wDWjhTv0H13IZRVNCnAfTtwiuPEJEa5jsW/exec';
 
-let TOKEN=null, USER=null, LISTAS=null;
+let TOKEN=null, USER=null, LISTAS=null, IS_ADMIN=false;
 const $=id=>document.getElementById(id);
 const todayStr=()=>new Date().toISOString().slice(0,10);
 function lockToday(){ $('fecha').value=todayStr(); $('fecha').readOnly=true; }
 const num = id => +((($(id)?.value)||'0').toString().replace(/[, ]/g,'')) || 0;
 const qs = new URLSearchParams(location.search);
-const AID = qs.get('aid') || ''; // enlace “desde el correo”
-
-/* ===== Login ===== */
-async function login(){
-  const api_key=$('apiKey').value.trim();
-  $('loginMsg').textContent='Validando...';
-  try{
-    const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({api_key})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
-    TOKEN=j.token; USER=j.user;
-
-    // si el link trae ?aid=..., debe coincidir con el usuario logueado
-    if (AID && AID !== USER.id){
-      throw new Error('Este enlace no corresponde a tu usuario.');
-    }
-
-    $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
-    await cargarListas(); lockToday();
-    await cargarAsignacionDelDia();
-
-    $('loginCard').classList.add('hid');
-    $('formCard').classList.remove('hid');
-    $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
-  }catch(e){ $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>'; }
-}
+const AID = qs.get('aid') || ''; // enlace del correo para Asesor
 
 /* ===== Listas ===== */
 async function cargarListas(){
@@ -147,6 +141,44 @@ function fillSelect(id,arr,valKey,txtKey){ const sel=$(id); sel.innerHTML=''; ar
 function onCiudadChange(){ const cid=$('ciudad').value; fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre'); onSedeChange(); }
 function onSedeChange(){ const sid=$('sede').value; fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); setTimeout(()=>syncMeta(),0); }
 function syncMeta(){ const m=LISTAS.maquinas.find(x=>x.id===$('maquina').value); $('meta').value=Number(m&&(m.meta_sugerida||m.meta||0))||0; }
+
+/* ===== Login ===== */
+async function login(){
+  const api_key=$('apiKey').value.trim();
+  $('loginMsg').textContent='Validando...';
+  try{
+    const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({api_key})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
+    TOKEN=j.token; USER=j.user; IS_ADMIN=((USER.rol||'').toLowerCase()==='admin');
+
+    if (!IS_ADMIN && AID && AID !== USER.id){
+      throw new Error('Este enlace no corresponde a tu usuario.');
+    }
+
+    $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
+    await cargarListas(); lockToday();
+
+    $('loginCard').classList.add('hid');
+
+    if (IS_ADMIN){
+      // Mostrar módulo admin y vista previa bloqueada
+      $('adminCard').classList.remove('hid');
+      initAdminSelectors();
+      initAdminActions();
+      // Vista previa (no se envía)
+      $('formCard').classList.remove('hid');
+      $('btnEnviar').disabled = true;
+      $('msg').textContent = 'Vista previa: el envío lo hace el asesor.';
+      // Campos de preview bloqueados
+      disableForm(true);
+    }else{
+      await cargarAsignacionDelDia();
+      $('formCard').classList.remove('hid');
+    }
+
+    $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
+  }catch(e){ $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>'; }
+}
 
 /* ===== Asignación del día (ASESOR) ===== */
 async function cargarAsignacionDelDia(){
@@ -163,13 +195,17 @@ async function cargarAsignacionDelDia(){
     fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
     $('meta').value = Number(a.meta_dia||0) || 0;
 
-    // Bloquea selects al asesor
+    // Bloquear selects al asesor
     $('ciudad').disabled = true; $('sede').disabled = true; $('maquina').disabled = true;
 
     // Si ya envió hoy: bloquea todo
     if (j.enviado_hoy) {
       $('alreadyMsg').classList.remove('hid');
       disableForm(true);
+      $('btnEnviar').disabled = true;
+    }else{
+      disableForm(false);
+      $('btnEnviar').disabled = false;
     }
   }catch(e){
     // Sin asignación: deja selects libres
@@ -178,9 +214,9 @@ async function cargarAsignacionDelDia(){
 }
 
 function disableForm(flag){
-  // deshabilita todo el formulario para evitar segundos envíos
+  // deshabilita/rehabilita campos del formulario (el asesor no edita consignación)
   ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id => $(id).disabled = flag);
-  $('btnEnviar').disabled = flag;
+  $('consignacion').disabled = true; // siempre para asesor
 }
 
 /* ===== Cálculos encadenados ===== */
@@ -189,13 +225,12 @@ function recalcAuto(){
   const error   = num('error');
   const gastos  = num('gastos');
   const qr      = num('qr');
-  const cons    = num('consignacion'); // lo edita admin; aquí está disabled para asesor
+  const cons    = num('consignacion'); // admin lo edita en DB
 
   const venta = Math.max(0, marcado - error);
   $('venta').value = venta;
 
-  // Tickets: entero con división por 13 (ej. 8, 12, 18, etc.)
-  $('tickets').value = Math.max(0, Math.floor(venta / 13));
+  $('tickets').value = Math.max(0, Math.floor(venta / 13)); // enteros
 
   const efectivo = Math.max(0, venta - gastos - qr);
   $('efectivo').value = efectivo;
@@ -215,9 +250,8 @@ async function uploadFile(file){
   const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url;
 }
 
-/* ===== Confirmación con vista previa ===== */
+/* ===== Confirmación con vista previa (asesor) ===== */
 function openSendConfirm(){
-  // Construye vista previa
   const rows = [
     ['Asesor', $('asesorNombre').value],
     ['Fecha', $('fecha').value],
@@ -258,8 +292,90 @@ async function enviar(){
     if(!j.ok) throw new Error(j.error||'Error al registrar');
 
     $('msg').innerHTML='<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>';
-    disableForm(true); // evita reintentos en UI
+    disableForm(true);
+    $('btnEnviar').disabled = true;
   }catch(e){ $('msg').innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
+}
+
+/* ===== Admin: Selectores + Acciones ===== */
+function initAdminSelectors(){
+  fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
+  $('a_ciudad').addEventListener('change', ()=>{
+    const cid=$('a_ciudad').value;
+    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre');
+    $('a_sede').dispatchEvent(new Event('change'));
+  });
+  $('a_sede').addEventListener('change', ()=>{
+    const sid=$('a_sede').value;
+    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
+    syncPreviewFromAdmin();
+  });
+  const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
+  fillSelect('a_asesor', asesores,'id','nombre');
+
+  $('a_asesor').addEventListener('change', syncPreviewFromAdmin);
+  $('a_meta').addEventListener('input',  syncPreviewFromAdmin);
+
+  $('a_ciudad').dispatchEvent(new Event('change'));
+  syncPreviewFromAdmin();
+}
+
+function syncPreviewFromAdmin(){
+  const cid = $('a_ciudad').value;
+  const sid = $('a_sede').value;
+  const mid = $('a_maquina').value;
+
+  fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value=cid;
+  fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre'); $('sede').value=sid;
+  fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); $('maquina').value=mid;
+
+  const metaAdmin = +$('a_meta').value || 0;
+  const metaMaquina = Number((LISTAS.maquinas.find(x=>x.id===mid)||{}).meta_sugerida|| (LISTAS.maquinas.find(x=>x.id===mid)||{}).meta || 0);
+  $('meta').value = metaAdmin || metaMaquina;
+
+  const aSel = $('a_asesor');
+  const asesorId = aSel.value;
+  const asesorNombre = aSel.options[aSel.selectedIndex]?.text || '';
+  $('asesorId').value = asesorId;
+  $('asesorNombre').value = asesorNombre;
+
+  // Campos de preview sin envío
+  disableForm(true);
+  $('btnEnviar').disabled = true;
+  $('msg').textContent = 'Vista previa: el envío lo hace el asesor.';
+  recalcAuto();
+}
+
+function initAdminActions(){
+  $('btnAdminGuardar').addEventListener('click', adminGuardar);
+  $('btnUnlock').addEventListener('click', adminUnlock);
+}
+
+async function adminGuardar(){
+  const msg=$('adminMsg'); msg.textContent='Guardando...';
+  try{
+    const q=new URLSearchParams({
+      token:TOKEN, ciudad_id:$('a_ciudad').value, sede_id:$('a_sede').value,
+      maquina_id:$('a_maquina').value, asesor_id:$('a_asesor').value,
+      meta_sugerida:String(+$('a_meta').value||0)
+    });
+    const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
+
+    await cargarListas();
+    syncPreviewFromAdmin();
+
+    msg.innerHTML='<span class="ok">✔ Guardado y notificado por email</span>';
+  }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
+}
+
+async function adminUnlock(){
+  const msg=$('adminMsg'); msg.textContent='Desbloqueando...';
+  try{
+    const r=await fetch(WEB_APP_URL+'?path=admin_unlock',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN, asesor_id:$('a_asesor').value})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo desbloquear');
+    msg.innerHTML='<span class="ok">✔ Asesor desbloqueado para hoy</span>';
+  }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
 }
 
 /* ===== Init ===== */
