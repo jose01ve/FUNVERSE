@@ -12,89 +12,50 @@
   h1{margin:.2rem 0 1rem;font-size:1.2rem}
   label{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}
   input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1224;color:var(--text)}
-  input[readonly], select:disabled{opacity:.85;cursor:not-allowed}
+  input[readonly], select:disabled, textarea[readonly]{opacity:.85;cursor:not-allowed}
   button{cursor:pointer;margin-top:14px;background:var(--accent);border-color:transparent}
   .grid{display:grid;gap:12px}
   @media(min-width:900px){ .grid-2{grid-template-columns:1fr 1fr} }
   .ok{color:#58d68d} .bad{color:#ff6b6b} .muted{color:var(--muted)}
-  .palette{display:flex;gap:10px;align-items:center;padding:10px;background:#0b1224;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
-  .swatch{width:20px;height:20px;border-radius:999px;border:2px solid #fff2;cursor:pointer;box-shadow:0 0 0 2px #0006}
-  .swatch.active{outline:2px solid #fff8}
-  .spacer{flex:1}
   .hid{display:none}
+
+  /* login */
   .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px}
   .logo{width:64px;height:64px;border-radius:16px;background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);box-shadow:0 6px 18px rgba(0,0,0,.35)}
   .title{font-weight:700;font-size:1.4rem}
   .subtitle{color:#9aa4bf;font-size:.95rem}
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px}
-  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;padding:16px}
+
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:620px;width:100%;padding:16px}
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
   .btn-outline{background:transparent;border:1px solid var(--border)}
-  table.preview{width:100%;border-collapse:collapse;margin-top:8px}
-  .preview td,.preview th{border:1px solid var(--border);padding:6px}
-  small.note{color:#9aa4bf}
+  .preview{background:#0b1224;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:8px}
+  .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #223}
+  .row:last-child{border-bottom:none}
+  .k{color:#9aa4bf}.v{font-weight:600}
 </style>
 </head>
 <body>
-
-<!-- Paleta / Fondo -->
-<div class="palette" id="palette">
-  <div class="swatch" data-i="0" style="background:#7c83ff"></div>
-  <div class="swatch" data-i="1" style="background:#22c55e"></div>
-  <div class="swatch" data-i="2" style="background:#f59e0b"></div>
-  <div class="swatch" data-i="3" style="background:#ef4444"></div>
-  <div class="spacer"></div>
-  <label style="color:var(--muted);font-size:.9rem">Fondo: <input id="bgPicker" type="color" value="#0f172a" style="width:36px;height:24px;border:none;vertical-align:middle"></label>
-</div>
-
 <div class="wrap">
   <!-- LOGIN -->
   <div class="card" id="loginCard">
     <div class="hero">
       <div class="logo"></div>
       <div class="title">Ingresar · FUNVENSER</div>
-      <div class="subtitle">Accede con tu API Key para registrar o administrar</div>
+      <div class="subtitle">Accede con tu API Key para registrar tu reporte</div>
     </div>
     <label>API Key del Asesor</label>
-    <input id="apiKey" placeholder="Ingresa tu API Key (ej. ASESOR-TEST-KEY)" />
+    <input id="apiKey" placeholder="Ingresa tu API Key (ej. 123, 234, ...)" />
     <button id="btnLogin">Entrar</button>
     <div id="loginMsg" class="muted"></div>
   </div>
 
-  <!-- ADMIN -->
-  <div class="card hid" id="adminCard">
-    <h1>Admin · Asignación y Meta · FUNVENSER</h1>
-    <div class="grid grid-2">
-      <div><label>Ciudad</label><select id="a_ciudad"></select></div>
-      <div><label>Sede</label><select id="a_sede"></select></div>
-      <div><label>Máquina</label><select id="a_maquina"></select></div>
-      <div><label>Asesor</label><select id="a_asesor"></select></div>
-      <div><label>Meta del día</label><input id="a_meta" type="number" min="0" step="1000" value="0" /></div>
-    </div>
-    <button id="btnAdminGuardar">Guardar asignación/meta</button>
-
-    <h3 style="margin-top:18px">Eliminar reporte (limpia bloqueo)</h3>
-    <div class="grid grid-2">
-      <div>
-        <label>Asesor</label>
-        <select id="a_del_asesor"></select>
-        <small class="note">Elimina el reporte del asesor para la fecha seleccionada (default: hoy).</small>
-      </div>
-      <div>
-        <label>Fecha</label>
-        <input type="date" id="a_del_fecha" />
-      </div>
-    </div>
-    <button id="btnDeleteReport" class="btn-outline">Eliminar reporte</button>
-
-    <div id="adminMsg" class="muted" style="margin-top:8px"></div>
-  </div>
-
-  <!-- FORM ASESOR -->
+  <!-- FORM -->
   <div class="card hid" id="formCard">
     <h1>Reporte Diario</h1>
     <div class="grid grid-2">
-      <input id="asesorId" class="hid" />
+      <input id="asesorId" class="hid" /> <!-- oculto -->
       <div><label>Asesor</label><input id="asesorNombre" readonly /></div>
       <div><label>Fecha</label><input type="date" id="fecha" readonly /></div>
 
@@ -105,7 +66,7 @@
       <div><label>Marcado (monto en $)</label><input id="marcado" type="number" min="0" step="1000" value="0" /></div>
       <div><label>Error (monto en $)</label><input id="error" type="number" min="0" step="1000" value="0" placeholder="0 si no hubo" /></div>
 
-      <div><label>Tickets vendidos (auto)</label><input id="tickets" type="number" step="1" readonly value="0" /></div>
+      <div><label>Tickets vendidos (auto)</label><input id="tickets" type="number" readonly value="0" /></div>
       <div><label>Venta total (auto)</label><input id="venta" type="number" readonly value="0" /></div>
 
       <div><label>Meta del día (admin)</label><input id="meta" type="number" readonly value="0" /></div>
@@ -113,13 +74,12 @@
 
       <div><label>QR</label><input id="qr" type="number" min="0" step="1000" value="0" /></div>
       <div><label>Efectivo (auto)</label><input id="efectivo" type="number" readonly value="0" /></div>
-
-      <div><label>Consignación (la edita Admin)</label><input id="consignacion" type="number" min="0" step="1000" value="0" readonly /></div>
+      <div><label>Consignación (la edita Admin)</label><input id="consignacion" type="number" disabled value="0" /></div>
       <div><label>Pendiente por consignar (auto)</label><input id="pendiente" type="number" readonly value="0" /></div>
 
       <div style="grid-column:1 / -1">
         <label>Comentario</label>
-        <textarea id="comentario" rows="3" placeholder="Observaciones del día" readonly></textarea>
+        <textarea id="comentario" rows="3" placeholder="Observaciones del día"></textarea>
       </div>
 
       <div><label>Foto (jpg/png)</label><input id="foto" type="file" accept="image/*" /></div>
@@ -131,12 +91,12 @@
   </div>
 </div>
 
-<!-- Modal confirm envío con PREVIEW -->
+<!-- Modal confirm Envío Reporte (vista previa) -->
 <div class="modal" id="sendModal" role="dialog" aria-modal="true">
   <div class="content">
     <h3>Confirmar envío</h3>
-    <div id="previewBox"></div>
-    <p class="muted" style="margin-top:8px">¿Estás seguro de enviar tu reporte del día? Después de enviar, no podrás modificarlo.</p>
+    <p class="muted">Revisa los valores. Después de enviar, no podrás modificarlo.</p>
+    <div id="preview" class="preview"></div>
     <div class="actions">
       <button class="btn-outline" id="btnSendCancel">Cancelar</button>
       <button id="btnSendConfirm">Sí, enviar</button>
@@ -145,123 +105,84 @@
 </div>
 
 <script>
-/* ==== CONFIG FRONT ==== */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyYLQvj8uf_IfFYjNvD84uFq7-ilJnNy7Q4OhwFvvap7o3TTC0svDQOAUZ9BIAI6AM-/exec'; // <-- TU WEB APP
+/* ===================== CONFIG (edita esta URL) ===================== */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzzooTpZPTtXFLYqpj_hgIhVdOWQkaka79R_W7Kd6CZ-fL7Yvkvne2uO2NuR8k36Sry/exec';
 
+/* ============ Estado global ============ */
 let TOKEN=null, USER=null, LISTAS=null;
+let AID = new URLSearchParams(location.search).get('aid') || ''; // asesor esperado desde el correo
 
-/* ===== Temas ===== */
-const THEMES=[
-  {bg:'#0f172a',card:'#0f172a',text:'#e5e7eb',muted:'#9aa4bf',border:'#24304a',accent:'#7c83ff'},
-  {bg:'#101418',card:'#131a21',text:'#e6f0ff',muted:'#9aa4bf',border:'#263142',accent:'#22c55e'},
-  {bg:'#1b0f2a',card:'#1e1634',text:'#f4eaff',muted:'#b9a9d6',border:'#362f54',accent:'#f59e0b'},
-  {bg:'#0b1724',card:'#0e1d2c',text:'#e5f6ff',muted:'#9cc1d8',border:'#1c2b3a',accent:'#ef4444'}
-];
-function applyTheme(t){ for(const [k,v] of Object.entries(t)) document.documentElement.style.setProperty('--'+k, v); localStorage.setItem('fun_theme',JSON.stringify(t)); }
-function rgbToHex(rgb){ if(rgb.startsWith('#')) return rgb; const m=rgb.match(/(\d+),\s*(\d+),\s*(\d+)/); if(!m) return '#0f172a'; return '#'+[m[1],m[2],m[3]].map(x=>('0'+parseInt(x).toString(16)).slice(-2)).join(''); }
-function initPalette(){
-  document.querySelectorAll('.swatch').forEach((el,i)=>el.addEventListener('click',()=>{applyTheme(THEES[i]);document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));el.classList.add('active');}));
-}
-const THEES = THEMES; // fix scope
-document.addEventListener('DOMContentLoaded', ()=>{
-  const saved=localStorage.getItem('fun_theme'); applyTheme(saved?JSON.parse(saved):THEMES[0]);
-  const pick=document.getElementById('bgPicker');
-  pick.value = rgbToHex(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
-  pick.addEventListener('input', e=>{ document.documentElement.style.setProperty('--bg',e.target.value); });
-});
-
-/* ===== Helpers ===== */
+/* ============ Helpers ============ */
 const $=id=>document.getElementById(id);
 const todayStr=()=>new Date().toISOString().slice(0,10);
 function lockToday(){ $('fecha').value=todayStr(); $('fecha').readOnly=true; }
 const num = id => +((($(id)?.value)||'0').toString().replace(/[, ]/g,'')) || 0;
-function qparam(name){ const u=new URL(location.href); return u.searchParams.get(name)||''; }
-function disableForm(dis){
-  // Solo puede editar: marcado, error, gastos, qr
-  ['marcado','error','gastos','qr','comentario','foto','video','btnEnviar','consignacion']
-    .forEach(id=>{ const el=$(id); if(!el) return;
-      if (id==='btnEnviar') el.disabled=dis;
-      else if (id==='comentario' || id==='consignacion') el.readOnly=true; // siempre readonly
-      else el.readOnly=dis;
-    });
+function money(n){ return (+n||0).toLocaleString('es-CO'); }
+
+function setDisabledSending(reason){
+  $('btnEnviar').disabled = true;
+  $('msg').innerHTML = `<span class="bad">${reason}</span>`;
 }
 
-/* ===== Login ===== */
+/* ============ Login ============ */
 async function login(){
   const api_key=$('apiKey').value.trim();
   $('loginMsg').textContent='Validando...';
   try{
     const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({api_key})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'Error de login');
     TOKEN=j.token; USER=j.user;
 
-    // Validar que el enlace ?aid= coincida con el usuario que inició
-    const aid = qparam('aid');
-    if (aid && aid !== USER.id){
-      $('loginMsg').innerHTML='<span class="bad">Este enlace no corresponde a tu usuario.</span>';
+    // Si el enlace traía ?aid=... debe ser el mismo asesor
+    if (AID && USER.id !== AID){
+      $('loginMsg').innerHTML = '<span class="bad">Este enlace no corresponde a tu usuario.</span>';
+      TOKEN=null; USER=null;
       return;
     }
 
     $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
-    lockToday();
-    await cargarListas();
 
-    if((USER.rol||'').toLowerCase()==='admin'){
-      $('adminCard').classList.remove('hid');
-      initAdminSelectors();
-    }else{
-      await cargarAsignacionDelDia();
-      $('formCard').classList.remove('hid');
+    // Cargar listas y asignación
+    await cargarListas();
+    lockToday();
+    await cargarAsignacionDelDia(); // bloquea ciudad/sede/maquina/meta
+    lockAsesorUI();                // deja activos solo los campos permitidos
+    recalcAuto();                  // pinta auto
+
+    // Anti reenvío (cliente): si ya marcó como enviado en este dispositivo
+    const keySent = localStorage.getItem(sentKey());
+    if (keySent === '1') {
+      setDisabledSending('Ya enviaste este reporte hoy.');
     }
 
-    // --- BLOQUEAR / PERMITIR CAMPOS PARA ASESOR ---
-function lockAsesorUI() {
-  // Bloqueados (siempre)
-  $('asesorNombre').readOnly = true;
-  $('fecha').readOnly = true;
-
-  $('ciudad').disabled = true;
-  $('sede').disabled   = true;
-  $('maquina').disabled= true;
-
-  $('meta').readOnly = true;
-  $('consignacion').disabled = true;
-
-  // Automáticos (solo lectura)
-  $('tickets').readOnly = true;
-  $('venta').readOnly   = true;
-  $('efectivo').readOnly= true;
-  $('pendiente').readOnly = true;
-
-  // Editables
-  ['marcado','error','gastos','qr','comentario','foto','video']
-    .forEach(id=>{
-      const el = $(id);
-      if (!el) return;
-      el.readOnly  = false;
-      el.disabled  = false;
-    });
-}
-
-// Llama a esta función inmediatamente después de pintar la asignación:
-await cargarAsignacionDelDia();
-lockAsesorUI();
-
-
-    $('loginCard').classList.add('hid');
+    $('loginCard').classList.add('hid'); $('formCard').classList.remove('hid');
     $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
-  }catch(e){ $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>'; }
+  }catch(e){
+    $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>';
+  }
 }
 
-/* ===== Listas ===== */
+/* ============ Listas y asignación ============ */
 async function cargarListas(){
-  const r=await fetch(WEB_APP_URL+'?path=listas'); const j=await r.json(); LISTAS=j;
-}
-function fillSelect(id,arr,valKey,txtKey){ const sel=$(id); sel.innerHTML=''; arr.forEach(o=>{const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);}); }
+  const r=await fetch(WEB_APP_URL+'?path=listas'); LISTAS=await r.json();
 
-/* ===== Asignación del día (ASESOR) ===== */
+  // siempre pintamos los selects (aunque queden disable)
+  fillSelect('ciudad', LISTAS.ciudades,'id','nombre');
+  fillSelect('sede', LISTAS.sedes,'id','nombre');
+  fillSelect('maquina', LISTAS.maquinas,'id','id');
+}
+
+function fillSelect(id,arr,valKey,txtKey){
+  const sel=$(id); sel.innerHTML='';
+  (arr||[]).forEach(o=>{
+    const op=document.createElement('option');
+    op.value=o[valKey]; op.textContent=o[txtKey];
+    sel.appendChild(op);
+  });
+}
+
 async function cargarAsignacionDelDia(){
-  $('msg').textContent='Cargando asignación...';
   try{
     const q = new URLSearchParams({ token: TOKEN });
     const r = await fetch(WEB_APP_URL+'?path=asignacion&'+q.toString());
@@ -270,32 +191,46 @@ async function cargarAsignacionDelDia(){
 
     const a = j.asignacion;
 
-    // Pinta los datos ASIGNADOS por Admin y bloquea
-    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id; $('ciudad').disabled = true;
-    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id; $('sede').disabled = true;
-    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id; $('maquina').disabled = true;
+    // Pintar selects con filtro correcto
+    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
+    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
+    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
     $('meta').value = Number(a.meta_dia||0) || 0;
 
-    // Campos que el asesor SI puede editar (otros readonly)
-    $('consignacion').readOnly = true;   // la edita Admin en hoja
-    $('comentario').readOnly   = true;   // según requerimiento, no editable
-    ['marcado','error','gastos','qr'].forEach(id=>$(id).readOnly=false);
+    // Bloquear por ser asignación del día
+    $('ciudad').disabled = true; $('sede').disabled = true; $('maquina').disabled = true; $('meta').readOnly = true;
 
-    if (j.enviado_hoy){
-      $('msg').innerHTML = '<span class="ok">Ya enviaste este reporte hoy.</span>';
-      disableForm(true);
-    }else{
-      $('msg').textContent='';
+    // Anti reenvío (servidor): si el servidor nos dice que ya fue enviado (versión con flag)
+    if (j.enviado_hoy === true || j.asignacion?.enviado_hoy === true){
+      setDisabledSending('Ya enviaste este reporte hoy.');
     }
-
-    recalcAuto();
   }catch(e){
-    $('msg').innerHTML = '<span class="bad">'+e.message+'</span>';
-    disableForm(true);
+    // Sin asignación: bloquea envío (según tu requerimiento)
+    setDisabledSending('No tienes asignación para hoy.');
   }
 }
 
-/* ===== Cálculos encadenados ===== */
+/* ============ Bloqueos UI ============ */
+function lockAsesorUI(){
+  // Siempre bloqueados
+  $('asesorNombre').readOnly = true;
+  $('fecha').readOnly = true;
+  $('consignacion').disabled = true;
+
+  // Auto/solo-lectura
+  $('tickets').readOnly = true;
+  $('venta').readOnly   = true;
+  $('efectivo').readOnly= true;
+  $('pendiente').readOnly = true;
+
+  // Editables
+  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{
+    const el = $(id); if (!el) return;
+    el.readOnly = false; el.disabled = false;
+  });
+}
+
+/* ============ Cálculos encadenados ============ */
 function recalcAuto(){
   const marcado = num('marcado');
   const error   = num('error');
@@ -306,7 +241,9 @@ function recalcAuto(){
   const venta = Math.max(0, marcado - error);
   $('venta').value = venta;
 
-  const tickets = Math.max(0, Math.floor(venta / 13)); // ENTERO
+  // Tickets: entero “2 dígitos” (capado a 99 si lo necesitas). Aquí dejamos entero simple:
+  let tickets = Math.max(0, Math.floor(venta / 13));
+  if (tickets > 99) tickets = 99; // tope visual a dos dígitos
   $('tickets').value = tickets;
 
   const efectivo = Math.max(0, venta - gastos - qr);
@@ -319,118 +256,99 @@ function recalcAuto(){
   document.addEventListener('input', e=>{ if(e.target && e.target.id===id) recalcAuto(); });
 });
 
-/* ===== Upload a Drive ===== */
-async function uploadFile(file){ if(!file) return ''; const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);}); const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url; }
-
-/* ===== Previsualización “linda” ===== */
-function currency(v){ return '$'+(Number(v||0)).toLocaleString('es-CO'); }
-function renderPreview(){
-  return `
-    <table class="preview">
-      <tr><th>Asesor</th><td>${$('asesorNombre').value}</td></tr>
-      <tr><th>Fecha</th><td>${$('fecha').value}</td></tr>
-      <tr><th>Ciudad</th><td>${$('ciudad').options[$('ciudad').selectedIndex]?.text||''}</td></tr>
-      <tr><th>Sede</th><td>${$('sede').options[$('sede').selectedIndex]?.text||''}</td></tr>
-      <tr><th>Máquina</th><td>${$('maquina').value}</td></tr>
-      <tr><th>Meta del día</th><td>${currency($('meta').value)}</td></tr>
-      <tr><th>Marcado</th><td>${currency($('marcado').value)}</td></tr>
-      <tr><th>Error</th><td>${currency($('error').value)}</td></tr>
-      <tr><th>Venta total</th><td>${currency($('venta').value)}</td></tr>
-      <tr><th>Tickets vendidos</th><td>${$('tickets').value}</td></tr>
-      <tr><th>Gastos</th><td>${currency($('gastos').value)}</td></tr>
-      <tr><th>QR</th><td>${currency($('qr').value)}</td></tr>
-      <tr><th>Efectivo</th><td>${currency($('efectivo').value)}</td></tr>
-      <tr><th>Pendiente</th><td>${currency($('pendiente').value)}</td></tr>
-    </table>`;
+/* ============ Upload a Drive ============ */
+async function uploadFile(file){
+  if(!file) return '';
+  const base64=await new Promise((res,rej)=>{
+    const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);
+  });
+  const r=await fetch(WEB_APP_URL+'?path=upload',{
+    method:'POST',headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})
+  });
+  const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir');
+  return j.url;
 }
 
-/* ===== Envío con PREVIEW + confirm ===== */
+/* ============ Confirmación (vista previa) ============ */
 function openSendConfirm(){
-  // Render preview
-  $('previewBox').innerHTML = renderPreview();
-  document.getElementById('sendModal').style.display='flex';
-  $('btnSendCancel').onclick = ()=> document.getElementById('sendModal').style.display='none';
-  $('btnSendConfirm').onclick = ()=> { document.getElementById('sendModal').style.display='none'; enviar(); };
+  // Vista previa
+  const rows = [
+    ['Asesor', $('asesorNombre').value],
+    ['Fecha', $('fecha').value],
+    ['Ciudad', $('ciudad').options[$('ciudad').selectedIndex]?.text || ''],
+    ['Sede', $('sede').options[$('sede').selectedIndex]?.text || ''],
+    ['Máquina', $('maquina').value],
+    ['Marcado', '$ '+money(num('marcado'))],
+    ['Error', '$ '+money(num('error'))],
+    ['Venta total', '$ '+money(num('venta'))],
+    ['Tickets', num('tickets')],
+    ['Meta del día', '$ '+money(num('meta'))],
+    ['Gastos', '$ '+money(num('gastos'))],
+    ['QR', '$ '+money(num('qr'))],
+    ['Efectivo', '$ '+money(num('efectivo'))],
+    ['Consignación (admin)', '$ '+money(num('consignacion'))],
+    ['Pendiente', '$ '+money(num('pendiente'))],
+    ['Comentario', $('comentario').value||'—']
+  ];
+  const html = rows.map(([k,v])=>`<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+  $('preview').innerHTML = html;
+
+  // Mostrar modal
+  $('sendModal').style.display='flex';
+  $('btnSendCancel').onclick = ()=> $('sendModal').style.display='none';
+  $('btnSendConfirm').onclick = ()=> { $('sendModal').style.display='none'; enviar(); };
+}
+
+/* ============ Envío ============ */
+function sentKey(){
+  // bandera local: por fecha + maquina + asesor
+  return `sent_${$('fecha').value}_${$('maquina').value}_${$('asesorId').value}`;
 }
 async function enviar(){
   $('msg').textContent='Subiendo archivos y enviando...';
   try{
-    const foto_url=await uploadFile($('foto').files[0]); const video_url=await uploadFile($('video').files[0]);
-    const payload={ fecha:$('fecha').value, ciudad_id:$('ciudad').value, sede_id:$('sede').value, maquina_id:$('maquina').value, asesor_id:$('asesorId').value,
-      marcado:num('marcado')||0, error:num('error')||0, tickets_vendidos:num('tickets')||0,
-      venta_total:num('venta')||0, meta_dia:num('meta')||0, gastos:num('gastos')||0,
-      qr:num('qr')||0, efectivo:num('efectivo')||0, consignacion:num('consignacion')||0, pendiente_consignar:num('pendiente')||0,
-      comentario:$('comentario').value||'', foto_url, video_url };
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
-    const j=await r.json(); 
-    if(!j.ok){ 
-      if (r.status===409) { $('msg').innerHTML='<span class="bad">Ya enviaste tu reporte hoy o ya existe para esta máquina.</span>'; }
-      else { throw new Error(j.error||'Error al registrar'); }
-      disableForm(true);
+    // Si ya marcado localmente, corta
+    if (localStorage.getItem(sentKey()) === '1'){
+      setDisabledSending('Ya enviaste este reporte hoy.');
       return;
     }
-    $('msg').innerHTML='<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>';
-    disableForm(true);
-  }catch(e){ $('msg').innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
-}
 
-/* ===== Admin ===== */
-function initAdminSelectors(){
-  // Combos
-  fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
-  $('a_ciudad').addEventListener('change', ()=>{
-    const cid=$('a_ciudad').value;
-    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre');
-    $('a_sede').dispatchEvent(new Event('change'));
-  });
-  $('a_sede').addEventListener('change', ()=>{
-    const sid=$('a_sede').value;
-    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
-  });
-
-  const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
-  fillSelect('a_asesor', asesores,'id','nombre');
-  fillSelect('a_del_asesor', asesores,'id','nombre');
-
-  // Fecha default hoy para eliminar
-  $('a_del_fecha').value = todayStr();
-
-  $('a_ciudad').dispatchEvent(new Event('change'));
-
-  $('btnAdminGuardar').addEventListener('click', adminGuardar);
-  $('btnDeleteReport').addEventListener('click', adminDeleteReport);
-}
-async function adminGuardar(){
-  const msg=$('adminMsg'); msg.textContent='Guardando...';
-  try{
-    const q=new URLSearchParams({
-      token:TOKEN, ciudad_id:$('a_ciudad').value, sede_id:$('a_sede').value,
-      maquina_id:$('a_maquina').value, asesor_id:$('a_asesor').value,
-      meta_sugerida:String(+$('a_meta').value||0)
+    const foto_url=await uploadFile($('foto').files[0]);
+    const video_url=await uploadFile($('video').files[0]);
+    const payload={
+      fecha:$('fecha').value,
+      ciudad_id:$('ciudad').value, sede_id:$('sede').value, maquina_id:$('maquina').value,
+      asesor_id:$('asesorId').value,
+      marcado:num('marcado')||0, error:num('error')||0, tickets_vendidos:num('tickets')||0,
+      venta_total:num('venta')||0, meta_dia:num('meta')||0, gastos:num('gastos')||0,
+      qr:num('qr')||0, efectivo:num('efectivo')||0, consignacion:num('consignacion')||0,
+      pendiente_consignar:num('pendiente')||0, comentario:$('comentario').value||'',
+      foto_url, video_url
+    };
+    const r=await fetch(WEB_APP_URL+'?path=reporte',{
+      method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({token:TOKEN,payload})
     });
-    const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
-    msg.innerHTML='<span class="ok">✔ Asignación guardada y notificada por email</span>';
-  }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
-}
-async function adminDeleteReport(){
-  const msg=$('adminMsg'); msg.textContent='Eliminando reporte...';
-  try{
-    const body={ token:TOKEN, asesor_id:$('a_del_asesor').value, fecha:$('a_del_fecha').value||todayStr() };
-    const r=await fetch(WEB_APP_URL+'?path=admin_delete_report',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo eliminar');
-    msg.innerHTML='<span class="ok">✔ Reporte eliminado y bloqueo limpiado</span>';
-  }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
+    const j=await r.json();
+    if(!j.ok){
+      // Duplicado del servidor (por máquina/fecha) o bloqueo
+      if (j.error) throw new Error(j.error);
+      throw new Error('Error al registrar');
+    }
+
+    // Marca local para que el mismo enlace ya no sirva en este dispositivo
+    localStorage.setItem(sentKey(), '1');
+
+    $('msg').innerHTML='<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>';
+    $('btnEnviar').disabled = true;
+  }catch(e){
+    $('msg').innerHTML='<span class="bad">❌ '+e.message+'</span>';
+  }
 }
 
-/* ===== Init ===== */
+/* ============ Init ============ */
 document.addEventListener('DOMContentLoaded', ()=>{
-  // Paleta
-  document.querySelectorAll('.swatch').forEach((el,i)=>el.addEventListener('click',()=>{applyTheme(THEMES[i]);document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));el.classList.add('active');}));
-  const pick=document.getElementById('bgPicker');
-  pick.addEventListener('input', e=>{ document.documentElement.style.setProperty('--bg',e.target.value); });
-
-  // Botones
   $('btnLogin').addEventListener('click', login);
   $('btnEnviar').addEventListener('click', openSendConfirm);
 });
