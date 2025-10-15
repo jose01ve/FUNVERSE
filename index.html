@@ -116,7 +116,7 @@
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxDq1mYeyN9Lo7gLP-0R1kKIKdA-ZqJE_JUiGsETQA_SE7X3J4p9elKCwBUeai46KkA/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyKr-MvZ_vY9Coynm7qepHNrpfRoT_9eLBxzm0XM8gdeC-tvKAZrOICq6iiT9AV0rZX/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, LINK_AID=(new URL(location.href)).searchParams.get('aid')||null;
 
@@ -273,13 +273,32 @@ async function enviar(){
       venta_total:num('venta')||0, meta_dia:num('meta')||0, gastos:num('gastos')||0,
       qr:num('qr')||0, efectivo:num('efectivo')||0, consignacion:num('consignacion')||0, pendiente_consignar:num('pendiente')||0,
       comentario:$('comentario').value||'', foto_url, video_url };
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
+
+    const r = await fetch(WEB_APP_URL+'?path=reporte',{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({token:TOKEN,payload})
+    });
+
+    // Manejo explícito de 403 (ya envió hoy)
+    if (r.status === 403){
+      $('msg').innerHTML='<span class="bad">Ya enviaste este reporte hoy.</span>';
+      disableForm(true);
+      $('yaEnviado').classList.remove('hid');
+      return;
+    }
+
+    const j=await r.json(); 
+    if(!j.ok) throw new Error(j.error||'Error al registrar');
+
     $('msg').innerHTML='<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>';
     disableForm(true);
     $('yaEnviado').classList.remove('hid');
+
   }catch(e){ $('msg').innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
 }
+
+  
 
 /* ===== Admin ===== */
 function initAdminSelectors(){
