@@ -8,42 +8,31 @@
   :root{--bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#7c83ff}
   *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1224);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
   .wrap{max-width:980px;margin:auto;padding:16px}
-  .card{background:rgba(17,24,39,.85);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter: blur(4px);margin-top:16px}
+  .card{background:rgba(17,24,39,.85);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter: blur(4px)}
   h1{margin:.2rem 0 1rem;font-size:1.2rem}
   label{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}
   input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1224;color:var(--text)}
-  input[readonly], select:disabled{opacity:.8;cursor:not-allowed}
+  input[readonly], select:disabled, input:disabled{opacity:.8;cursor:not-allowed}
   button{cursor:pointer;margin-top:14px;background:var(--accent);border-color:transparent}
   .grid{display:grid;gap:12px}
   @media(min-width:900px){ .grid-2{grid-template-columns:1fr 1fr} }
   .ok{color:#58d68d} .bad{color:#ff6b6b} .muted{color:var(--muted)}
-  .palette{display:flex;gap:10px;align-items:center;padding:10px;background:#0b1224;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
-  .swatch{width:20px;height:20px;border-radius:999px;border:2px solid #fff2;cursor:pointer;box-shadow:0 0 0 2px #0006}
-  .swatch.active{outline:2px solid #fff8}
-  .spacer{flex:1}
   .hid{display:none}
   .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px}
   .logo{width:64px;height:64px;border-radius:16px;background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);box-shadow:0 6px 18px rgba(0,0,0,.35)}
   .title{font-weight:700;font-size:1.4rem}
   .subtitle{color:#9aa4bf;font-size:.95rem}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px}
-  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:520px;width:100%;padding:16px}
+  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:640px;width:100%;padding:16px}
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
   .btn-outline{background:transparent;border:1px solid var(--border)}
+  table.preview{width:100%;border-collapse:collapse;margin:8px 0}
+  table.preview td{padding:6px 8px;border-bottom:1px solid #1e293b}
+  table.preview td:first-child{color:var(--muted);width:42%}
+  .notice{padding:10px;border:1px dashed #64748b;border-radius:10px;background:#0b1224;color:#cbd5e1;margin-top:8px}
 </style>
 </head>
 <body>
-
-<!-- temas -->
-<div class="palette" id="palette">
-  <div class="swatch" data-i="0" style="background:#7c83ff"></div>
-  <div class="swatch" data-i="1" style="background:#22c55e"></div>
-  <div class="swatch" data-i="2" style="background:#f59e0b"></div>
-  <div class="swatch" data-i="3" style="background:#ef4444"></div>
-  <div class="spacer"></div>
-  <label style="color:var(--muted);font-size:.9rem">Fondo: <input id="bgPicker" type="color" value="#0f172a" style="width:36px;height:24px;border:none;vertical-align:middle"></label>
-</div>
-
 <div class="wrap">
   <!-- LOGIN -->
   <div class="card" id="loginCard">
@@ -58,35 +47,13 @@
     <div id="loginMsg" class="muted"></div>
   </div>
 
-  <!-- ADMIN · Asignación -->
-  <div class="card hid" id="adminCard">
-    <h1>Admin · Asignación y Meta · FUNVENSER</h1>
-    <div class="grid grid-2">
-      <div><label>Ciudad</label><select id="a_ciudad"></select></div>
-      <div><label>Sede</label><select id="a_sede"></select></div>
-      <div><label>Máquina</label><select id="a_maquina"></select></div>
-      <div><label>Asesor</label><select id="a_asesor"></select></div>
-      <div><label>Meta del día</label><input id="a_meta" type="number" min="0" step="1000" value="0" /></div>
-    </div>
-    <button id="btnAdminGuardar">Guardar asignación/meta</button>
-    <div id="adminMsg" class="muted"></div>
-  </div>
-
-  <!-- ADMIN · Reabrir asesor -->
-  <div class="card hid" id="unlockCard">
-    <h1>Admin · Reabrir asesor (desbloquear hoy)</h1>
-    <div class="grid grid-2">
-      <div><label>Asesor</label><select id="u_asesor"></select></div>
-      <div><label>&nbsp;</label><button id="btnUnlock">Reabrir acceso</button></div>
-    </div>
-    <div id="unlockMsg" class="muted"></div>
-  </div>
-
   <!-- FORM -->
   <div class="card hid" id="formCard">
     <h1>Reporte Diario</h1>
+    <div id="alreadyMsg" class="notice hid">Ya se envió este reporte hoy. Si necesitas reenviarlo, contacta a la administradora para que te habilite.</div>
+
     <div class="grid grid-2">
-      <input id="asesorId" class="hid" /> <!-- oculto -->
+      <input id="asesorId" class="hid" />
       <div><label>Asesor</label><input id="asesorNombre" readonly /></div>
       <div><label>Fecha</label><input type="date" id="fecha" readonly /></div>
 
@@ -105,7 +72,7 @@
 
       <div><label>QR</label><input id="qr" type="number" min="0" step="1000" value="0" /></div>
       <div><label>Efectivo (auto)</label><input id="efectivo" type="number" readonly value="0" /></div>
-      <div><label>Consignación (lo edita Admin)</label><input id="consignacion" type="number" min="0" step="1000" value="0" disabled /></div>
+      <div><label>Consignación (la edita Admin)</label><input id="consignacion" type="number" min="0" step="1000" value="0" disabled /></div>
       <div><label>Pendiente por consignar (auto)</label><input id="pendiente" type="number" readonly value="0" /></div>
 
       <div style="grid-column:1 / -1">
@@ -122,10 +89,11 @@
   </div>
 </div>
 
-<!-- Modal confirm Envío Reporte -->
+<!-- Modal confirm Envío con vista previa -->
 <div class="modal" id="sendModal" role="dialog" aria-modal="true">
   <div class="content">
     <h3>Confirmar envío</h3>
+    <div id="preview"></div>
     <p class="muted">¿Estás seguro de enviar tu reporte del día? Después de enviar, no podrás modificarlo (la administradora puede habilitarte si es necesario).</p>
     <div class="actions">
       <button class="btn-outline" id="btnSendCancel">Cancelar</button>
@@ -135,34 +103,15 @@
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx7_xc8zS6Z3b_yUfeJGAwezIm3mD83ntjvb02hu1ise7-tRN_gtmGBwjI7hURO-j_i/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxgQFu38BuIQ0BRhXOjqL6V4HRfeBL8SfdnY2sWAndrOEm8oj1agSjI8fy7XeyluBQN/exec'; // backend
 
 let TOKEN=null, USER=null, LISTAS=null;
-
-/* ===== Temas ===== */
-const THEMES=[
-  {bg:'#0f172a',card:'#0f172a',text:'#e5e7eb',muted:'#9aa4bf',border:'#24304a',accent:'#7c83ff'},
-  {bg:'#101418',card:'#131a21',text:'#e6f0ff',muted:'#9aa4bf',border:'#263142',accent:'#22c55e'},
-  {bg:'#1b0f2a',card:'#1e1634',text:'#f4eaff',muted:'#b9a9d6',border:'#362f54',accent:'#f59e0b'},
-  {bg:'#0b1724',card:'#0e1d2c',text:'#e5f6ff',muted:'#9cc1d8',border:'#1c2b3a',accent:'#ef4444'}
-];
-function applyTheme(t){ for(const [k,v] of Object.entries(t)) document.documentElement.style.setProperty('--'+k, v); localStorage.setItem('fun_theme',JSON.stringify(t)); }
-function rgbToHex(rgb){ if(rgb.startsWith('#')) return rgb; const m=rgb.match(/(\d+),\s*(\d+),\s*(\d+)/); if(!m) return '#0f172a'; return '#'+[m[1],m[2],m[3]].map(x=>('0'+parseInt(x).toString(16)).slice(-2)).join(''); }
-function initPalette(){
-  document.querySelectorAll('.swatch').forEach((el,i)=>el.addEventListener('click',()=>{applyTheme(THEMES[i]);document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));el.classList.add('active');}));
-  const saved=localStorage.getItem('fun_theme'); applyTheme(saved?JSON.parse(saved):THEMES[0]);
-  const pick=document.getElementById('bgPicker');
-  pick.value = rgbToHex(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
-  pick.addEventListener('input', e=>{ document.documentElement.style.setProperty('--bg',e.target.value); });
-}
-
-/* ===== Helpers ===== */
 const $=id=>document.getElementById(id);
 const todayStr=()=>new Date().toISOString().slice(0,10);
-function lockToday(){ $('fecha').value=todayStr(); $('fecha').readOnly=true; $('fecha').addEventListener('keydown',e=>e.preventDefault()); $('fecha').addEventListener('input',()=>$('fecha').value=todayStr()); }
+function lockToday(){ $('fecha').value=todayStr(); $('fecha').readOnly=true; }
 const num = id => +((($(id)?.value)||'0').toString().replace(/[, ]/g,'')) || 0;
-const params = new URLSearchParams(location.search);
-const AID = params.get('aid') || '';
+const qs = new URLSearchParams(location.search);
+const AID = qs.get('aid') || ''; // enlace “desde el correo”
 
 /* ===== Login ===== */
 async function login(){
@@ -173,31 +122,17 @@ async function login(){
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
     TOKEN=j.token; USER=j.user;
 
-    // Si el link tiene ?aid=..., debe coincidir con el usuario logueado
-    if (AID && USER.id !== AID) {
-      $('loginMsg').innerHTML='<span class="bad">Este enlace no corresponde a tu usuario.</span>';
-      TOKEN=null; USER=null; return;
+    // si el link trae ?aid=..., debe coincidir con el usuario logueado
+    if (AID && AID !== USER.id){
+      throw new Error('Este enlace no corresponde a tu usuario.');
     }
 
     $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
     await cargarListas(); lockToday();
+    await cargarAsignacionDelDia();
 
-    if((USER.rol||'').toLowerCase()==='admin'){
-      $('adminCard').classList.remove('hid');
-      $('unlockCard').classList.remove('hid');
-      initAdminSelectors();
-      initUnlockPanel();
-      syncPreviewFromAdmin();
-      // para admin el campo consignación sí se puede editar
-      $('consignacion').disabled=false;
-    }else{
-      await cargarAsignacionDelDia();
-      // para asesor consignación deshabilitada
-      $('consignacion').disabled=true;
-    }
-
-    $('loginCard').classList.add('hid'); $('formCard').classList.remove('hid');
-    recalcAuto();
+    $('loginCard').classList.add('hid');
+    $('formCard').classList.remove('hid');
     $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
   }catch(e){ $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>'; }
 }
@@ -228,24 +163,24 @@ async function cargarAsignacionDelDia(){
     fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
     $('meta').value = Number(a.meta_dia||0) || 0;
 
-    // Bloquear selects para asesor
-    $('ciudad').disabled = true;
-    $('sede').disabled   = true;
-    $('maquina').disabled= true;
+    // Bloquea selects al asesor
+    $('ciudad').disabled = true; $('sede').disabled = true; $('maquina').disabled = true;
 
-    if (a.enviado_hoy) {
-      $('msg').innerHTML = '<span class="ok">Ya se envió este reporte.</span>';
-      $('btnEnviar').disabled = true;
-      // evitar edición
-      ['marcado','error','gastos','qr','consignacion','comentario','foto','video'].forEach(id=>{
-        if ($(id)) $(id).disabled = true;
-      });
+    // Si ya envió hoy: bloquea todo
+    if (j.enviado_hoy) {
+      $('alreadyMsg').classList.remove('hid');
+      disableForm(true);
     }
   }catch(e){
-    $('ciudad').disabled = false;
-    $('sede').disabled   = false;
-    $('maquina').disabled= false;
+    // Sin asignación: deja selects libres
+    $('ciudad').disabled = false; $('sede').disabled = false; $('maquina').disabled = false;
   }
+}
+
+function disableForm(flag){
+  // deshabilita todo el formulario para evitar segundos envíos
+  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id => $(id).disabled = flag);
+  $('btnEnviar').disabled = flag;
 }
 
 /* ===== Cálculos encadenados ===== */
@@ -254,13 +189,13 @@ function recalcAuto(){
   const error   = num('error');
   const gastos  = num('gastos');
   const qr      = num('qr');
-  const cons    = num('consignacion'); // asesor no lo edita
+  const cons    = num('consignacion'); // lo edita admin; aquí está disabled para asesor
 
   const venta = Math.max(0, marcado - error);
   $('venta').value = venta;
 
-  const tickets = Math.max(0, Math.floor(venta / 13));  // entero
-  $('tickets').value = tickets;
+  // Tickets: entero con división por 13 (ej. 8, 12, 18, etc.)
+  $('tickets').value = Math.max(0, Math.floor(venta / 13));
 
   const efectivo = Math.max(0, venta - gastos - qr);
   $('efectivo').value = efectivo;
@@ -268,19 +203,47 @@ function recalcAuto(){
   const pendiente = Math.max(0, efectivo - cons);
   $('pendiente').value = pendiente;
 }
-['marcado','error','gastos','qr','consignacion'].forEach(id=>{
+['marcado','error','gastos','qr'].forEach(id=>{
   document.addEventListener('input', e=>{ if(e.target && e.target.id===id) recalcAuto(); });
 });
 
 /* ===== Upload a Drive ===== */
-async function uploadFile(file){ if(!file) return ''; const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);}); const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url; }
-
-/* ===== Envío con confirmación ===== */
-function openSendConfirm(){
-  document.getElementById('sendModal').style.display='flex';
-  document.getElementById('btnSendCancel').onclick = ()=> document.getElementById('sendModal').style.display='none';
-  document.getElementById('btnSendConfirm').onclick = ()=> { document.getElementById('sendModal').style.display='none'; enviar(); };
+async function uploadFile(file){
+  if(!file) return '';
+  const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);});
+  const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})});
+  const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url;
 }
+
+/* ===== Confirmación con vista previa ===== */
+function openSendConfirm(){
+  // Construye vista previa
+  const rows = [
+    ['Asesor', $('asesorNombre').value],
+    ['Fecha', $('fecha').value],
+    ['Ciudad', $('ciudad').options[$('ciudad').selectedIndex]?.text || ''],
+    ['Sede', $('sede').options[$('sede').selectedIndex]?.text || ''],
+    ['Máquina', $('maquina').value],
+    ['Marcado', num('marcado').toLocaleString('es-CO')],
+    ['Error', num('error').toLocaleString('es-CO')],
+    ['Venta total', num('venta').toLocaleString('es-CO')],
+    ['Tickets vendidos', num('tickets')],
+    ['Gastos', num('gastos').toLocaleString('es-CO')],
+    ['QR', num('qr').toLocaleString('es-CO')],
+    ['Efectivo', num('efectivo').toLocaleString('es-CO')],
+    ['Consignación (admin)', num('consignacion').toLocaleString('es-CO')],
+    ['Pendiente', num('pendiente').toLocaleString('es-CO')],
+    ['Meta del día', num('meta').toLocaleString('es-CO')],
+    ['Comentario', $('comentario').value || '—']
+  ];
+  const html = ['<table class="preview">', ...rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`), '</table>'].join('');
+  $('preview').innerHTML = html;
+
+  $('sendModal').style.display='flex';
+  $('btnSendCancel').onclick = ()=> $('sendModal').style.display='none';
+  $('btnSendConfirm').onclick = ()=> { $('sendModal').style.display='none'; enviar(); };
+}
+
 async function enviar(){
   $('msg').textContent='Subiendo archivos y enviando...';
   try{
@@ -291,90 +254,16 @@ async function enviar(){
       qr:num('qr')||0, efectivo:num('efectivo')||0, consignacion:num('consignacion')||0, pendiente_consignar:num('pendiente')||0,
       comentario:$('comentario').value||'', foto_url, video_url };
     const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'Error al registrar');
+
     $('msg').innerHTML='<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>';
-    $('btnEnviar').disabled = true;
+    disableForm(true); // evita reintentos en UI
   }catch(e){ $('msg').innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
-}
-
-/* ===== Admin: Asignación ===== */
-function initAdminSelectors(){
-  fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
-  $('a_ciudad').addEventListener('change', ()=>{
-    const cid=$('a_ciudad').value;
-    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre');
-    $('a_sede').dispatchEvent(new Event('change'));
-  });
-  $('a_sede').addEventListener('change', ()=>{
-    const sid=$('a_sede').value;
-    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
-    syncPreviewFromAdmin();
-  });
-  const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
-  fillSelect('a_asesor', asesores,'id','nombre');
-
-  $('a_asesor').addEventListener('change', syncPreviewFromAdmin);
-  $('a_meta').addEventListener('input',  syncPreviewFromAdmin);
-
-  $('a_ciudad').dispatchEvent(new Event('change'));
-  syncPreviewFromAdmin();
-
-  $('btnAdminGuardar').addEventListener('click', adminGuardar);
-}
-function syncPreviewFromAdmin(){
-  const cid = $('a_ciudad').value;
-  const sid = $('a_sede').value;
-  const mid = $('a_maquina').value;
-
-  fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value=cid;
-  fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre'); $('sede').value=sid;
-  fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id'); $('maquina').value=mid;
-
-  const metaAdmin = +$('a_meta').value || 0;
-  const metaMaquina = Number((LISTAS.maquinas.find(x=>x.id===mid)||{}).meta_sugerida|| (LISTAS.maquinas.find(x=>x.id===mid)||{}).meta || 0);
-  $('meta').value = metaAdmin || metaMaquina;
-
-  const aSel = $('a_asesor');
-  $('asesorId').value = aSel.value;
-  $('asesorNombre').value = aSel.options[aSel.selectedIndex]?.text || '';
-
-  recalcAuto();
-}
-async function adminGuardar(){
-  const msg=$('adminMsg'); msg.textContent='Guardando...';
-  try{
-    const q=new URLSearchParams({
-      token:TOKEN, ciudad_id:$('a_ciudad').value, sede_id:$('a_sede').value,
-      maquina_id:$('a_maquina').value, asesor_id:$('a_asesor').value,
-      meta_sugerida:String(+$('a_meta').value||0)
-    });
-    const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
-
-    await cargarListas();
-    syncPreviewFromAdmin();
-    msg.innerHTML='<span class="ok">✔ Guardado y notificado por email</span>';
-  }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
-}
-
-/* ===== Admin: Reabrir asesor ===== */
-function initUnlockPanel(){
-  const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
-  fillSelect('u_asesor', asesores,'id','nombre');
-  $('btnUnlock').addEventListener('click', async ()=>{
-    const msg=$('unlockMsg'); msg.textContent='Procesando...';
-    try{
-      const q=new URLSearchParams({ token:TOKEN, asesor_id:$('u_asesor').value });
-      const r=await fetch(WEB_APP_URL+'?path=admin_unlock&'+q.toString());
-      const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo desbloquear');
-      msg.innerHTML='<span class="ok">✔ Asesor reabierto para hoy.</span>';
-    }catch(e){ msg.innerHTML='<span class="bad">❌ '+e.message+'</span>'; }
-  });
 }
 
 /* ===== Init ===== */
 document.addEventListener('DOMContentLoaded', ()=>{
-  initPalette();
   $('btnLogin').addEventListener('click', login);
   $('btnEnviar').addEventListener('click', openSendConfirm);
 });
