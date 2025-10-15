@@ -214,6 +214,40 @@ async function login(){
       $('formCard').classList.remove('hid');
     }
 
+    // --- BLOQUEAR / PERMITIR CAMPOS PARA ASESOR ---
+function lockAsesorUI() {
+  // Bloqueados (siempre)
+  $('asesorNombre').readOnly = true;
+  $('fecha').readOnly = true;
+
+  $('ciudad').disabled = true;
+  $('sede').disabled   = true;
+  $('maquina').disabled= true;
+
+  $('meta').readOnly = true;
+  $('consignacion').disabled = true;
+
+  // Automáticos (solo lectura)
+  $('tickets').readOnly = true;
+  $('venta').readOnly   = true;
+  $('efectivo').readOnly= true;
+  $('pendiente').readOnly = true;
+
+  // Editables
+  ['marcado','error','gastos','qr','comentario','foto','video']
+    .forEach(id=>{
+      const el = $(id);
+      if (!el) return;
+      el.readOnly  = false;
+      el.disabled  = false;
+    });
+}
+
+// Llama a esta función inmediatamente después de pintar la asignación:
+await cargarAsignacionDelDia();
+lockAsesorUI();
+
+
     $('loginCard').classList.add('hid');
     $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
   }catch(e){ $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>'; }
