@@ -3,103 +3,51 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FUNVENSER · Reporte Diario</title>
-
-<!--
-  FUNVENSER · Frontend único (index.html)
-  -------------------------------------------------------
-  - Login por API Key (admin/asesor)
-  - Admin: asignación de ciudad/sede/máquina/asesor/meta
-  - Enlace con ?aid=USR-xxx para validar que el asesor correcto entra desde el correo
-  - Asesor: obtiene asignación del día y bloquea combos
-  - Cálculos automáticos (venta, tickets, efectivo, pendiente)
-  - Adjuntar foto y video al enviar
-  - Mensajes y confirmaciones
--->
-
+<title>FUNVENSER · Reportes</title>
 <style>
-  :root{
-    --bg:#0f172a;
-    --card:#0f172a;
-    --text:#e5e7eb;
-    --muted:#9aa4bf;
-    --border:#24304a;
-    --accent:#7c83ff;
-  }
+  :root{--bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#7c83ff}
   *{box-sizing:border-box}
-  body{
-    margin:0;
-    background:linear-gradient(180deg,var(--bg),#0b1224);
-    color:var(--text);
-    font-family:system-ui,Segoe UI,Roboto,Arial;
-  }
+  body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1224);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
   .wrap{max-width:980px;margin:auto;padding:16px}
-  .card{
-    background:rgba(17,24,39,.85);
-    border:1px solid var(--border);
-    border-radius:16px;
-    padding:16px;
-    box-shadow:0 8px 24px rgba(0,0,0,.25);
-    backdrop-filter: blur(4px);
-  }
-  h1{margin:.2rem 0 1rem;font-size:1.2rem}
+  .card{background:rgba(17,24,39,.85);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter: blur(4px)}
+  h1{margin:.4rem 0 1rem;font-size:1.2rem}
   label{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}
-  input,select,textarea,button{
-    width:100%;padding:10px;border-radius:10px;
-    border:1px solid var(--border);background:#0b1224;color:var(--text)
-  }
-  input[readonly], select:disabled{opacity:.8;cursor:not-allowed}
+  input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1224;color:var(--text)}
+  input[readonly], select:disabled, textarea[readonly]{opacity:.85;cursor:not-allowed}
   button{cursor:pointer;margin-top:14px;background:var(--accent);border-color:transparent}
   .grid{display:grid;gap:12px}
   @media(min-width:900px){ .grid-2{grid-template-columns:1fr 1fr} }
   .ok{color:#58d68d} .bad{color:#ff6b6b} .muted{color:var(--muted)}
   .hid{display:none}
-
-  /* barra de colores */
-  .palette{display:flex;gap:10px;align-items:center;padding:10px;background:#0b1224;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
-  .swatch{width:20px;height:20px;border-radius:999px;border:2px solid #fff2;cursor:pointer;box-shadow:0 0 0 2px #0006}
-  .swatch.active{outline:2px solid #fff8}
-  .spacer{flex:1}
-
-  /* login */
   .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px}
   .logo{width:64px;height:64px;border-radius:16px;background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);box-shadow:0 6px 18px rgba(0,0,0,.35)}
   .title{font-weight:700;font-size:1.4rem}
   .subtitle{color:#9aa4bf;font-size:.95rem}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
 
-  /* modales */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px}
-  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:520px;width:100%;padding:16px}
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
+  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;padding:16px}
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
   .btn-outline{background:transparent;border:1px solid var(--border)}
+  .preview{background:#0b1224;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:.93rem}
+  .preview b{color:#fff}
 </style>
 </head>
 <body>
-
-<!-- Paleta de colores y fondo -->
-<div class="palette" id="palette">
-  <div class="swatch" data-i="0" style="background:#7c83ff" title="Azul"></div>
-  <div class="swatch" data-i="1" style="background:#22c55e" title="Verde"></div>
-  <div class="swatch" data-i="2" style="background:#f59e0b" title="Ámbar"></div>
-  <div class="swatch" data-i="3" style="background:#ef4444" title="Rojo"></div>
-  <div class="spacer"></div>
-  <label style="color:var(--muted);font-size:.9rem">
-    Fondo: <input id="bgPicker" type="color" value="#0f172a" style="width:36px;height:24px;border:none;vertical-align:middle">
-  </label>
-</div>
-
 <div class="wrap">
   <!-- LOGIN -->
   <div class="card" id="loginCard">
     <div class="hero">
-      <div class="logo" aria-hidden="true"></div>
+      <div class="logo"></div>
       <div class="title">Ingresar · FUNVENSER</div>
-      <div class="subtitle">Accede con tu API Key para registrar o administrar</div>
+      <div class="subtitle">Usa tu API Key para acceder</div>
     </div>
-    <label>API Key del Asesor</label>
-    <input id="apiKey" placeholder="Ingresa tu API Key (ej. 123, 1234, admin...)" />
+    <label>API Key</label>
+    <input id="apiKey" placeholder="Ingresa tu API Key" />
     <button id="btnLogin">Entrar</button>
-    <div id="loginMsg" class="muted" role="status" aria-live="polite"></div>
+    <div id="loginMsg" class="muted"></div>
   </div>
 
   <!-- ADMIN -->
@@ -112,28 +60,39 @@
       <div><label>Asesor</label><select id="a_asesor"></select></div>
       <div><label>Meta del día</label><input id="a_meta" type="number" min="0" step="1000" value="0" /></div>
     </div>
-    <button id="btnAdminGuardar">Guardar asignación/meta</button>
-    <div id="adminMsg" class="muted" role="status"></div>
+    <div class="row">
+      <button id="btnAdminGuardar">Guardar asignación/meta</button>
+    </div>
+
+    <h1 style="margin-top:22px">Vista previa (lo que verá el asesor)</h1>
+    <div class="preview" id="adminPreview"></div>
+
+    <h1 style="margin-top:22px">Eliminar reporte de hoy</h1>
+    <div class="grid grid-2">
+      <div><label>Asesor</label><select id="del_asesor"></select></div>
+      <div><label>Máquina (opcional)</label><select id="del_maquina"></select></div>
+    </div>
+    <div class="row">
+      <button class="btn-outline" id="btnDelete">Eliminar reporte de HOY</button>
+    </div>
+
+    <div id="adminMsg" class="muted" style="margin-top:8px"></div>
   </div>
 
-  <!-- FORMULARIO -->
+  <!-- ASESOR -->
   <div class="card hid" id="formCard">
     <h1>Reporte Diario</h1>
     <div class="grid grid-2">
-      <!-- Asesor -->
-      <input id="asesorId" class="hid" aria-hidden="true" />
+      <input id="asesorId" class="hid" />
       <div><label>Asesor</label><input id="asesorNombre" readonly /></div>
-      <!-- Fecha (del día, bloqueada) -->
-      <div><label>Fecha</label><input type="date" id="fecha" readonly /></div>
+      <div><label>Fecha</label><input id="fecha" readonly /></div>
 
-      <!-- Ubicación y máquina -->
-      <div><label>Ciudad</label><select id="ciudad"></select></div>
-      <div><label>Sede (Centro Comercial)</label><select id="sede"></select></div>
-      <div><label>Máquina</label><select id="maquina"></select></div>
+      <div><label>Ciudad</label><select id="ciudad" disabled></select></div>
+      <div><label>Sede (Centro Comercial)</label><select id="sede" disabled></select></div>
+      <div><label>Máquina</label><select id="maquina" disabled></select></div>
 
-      <!-- Datos de operación -->
       <div><label>Marcado (monto en $)</label><input id="marcado" type="number" min="0" step="1000" value="0" /></div>
-      <div><label>Error (monto en $)</label><input id="error" type="number" min="0" step="1000" value="0" placeholder="0 si no hubo" /></div>
+      <div><label>Error (monto en $)</label><input id="error" type="number" min="0" step="1000" value="0" /></div>
 
       <div><label>Tickets vendidos (auto)</label><input id="tickets" type="number" readonly value="0" /></div>
       <div><label>Venta total (auto)</label><input id="venta" type="number" readonly value="0" /></div>
@@ -142,9 +101,9 @@
       <div><label>Gastos</label><input id="gastos" type="number" min="0" step="500" value="0" /></div>
 
       <div><label>QR</label><input id="qr" type="number" min="0" step="1000" value="0" /></div>
-      <div><label>Efectivo (auto)</label><input id="efectivo" type="number" readonly value="0" /></div>
+      <div><label>Consignación (la edita Admin)</label><input id="consignacion" type="number" value="0" readonly /></div>
 
-      <div><label>Consignación</label><input id="consignacion" type="number" min="0" step="1000" value="0" /></div>
+      <div><label>Efectivo (auto)</label><input id="efectivo" type="number" readonly value="0" /></div>
       <div><label>Pendiente por consignar (auto)</label><input id="pendiente" type="number" readonly value="0" /></div>
 
       <div style="grid-column:1 / -1">
@@ -152,33 +111,20 @@
         <textarea id="comentario" rows="3" placeholder="Observaciones del día"></textarea>
       </div>
 
-      <!-- Adjuntos -->
       <div><label>Foto (jpg/png)</label><input id="foto" type="file" accept="image/*" /></div>
       <div><label>Video (mp4/quicktime)</label><input id="video" type="file" accept="video/*" /></div>
     </div>
 
     <button id="btnEnviar">Enviar reporte</button>
-    <div id="msg" class="muted" role="status"></div>
+    <div id="msg" class="muted" style="margin-top:6px"></div>
   </div>
 </div>
 
-<!-- Modal confirmación Admin -->
-<div class="modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="titleConfirm">
+<!-- Modal confirm envío -->
+<div class="modal" id="sendModal" role="dialog" aria-modal="true">
   <div class="content">
-    <h3 id="titleConfirm">Confirmar asignación/meta</h3>
-    <p id="confirmText" class="muted"></p>
-    <div class="actions">
-      <button class="btn-outline" id="btnCancel">Cancelar</button>
-      <button id="btnConfirm">Sí, confirmar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal confirmación envío reporte -->
-<div class="modal" id="sendModal" role="dialog" aria-modal="true" aria-labelledby="titleSend">
-  <div class="content">
-    <h3 id="titleSend">Confirmar envío</h3>
-    <p class="muted">¿Estás seguro de enviar tu reporte del día? Después de enviar, no podrás modificarlo (la administradora puede habilitarte si es necesario).</p>
+    <h3>Confirmar envío</h3>
+    <div class="preview" id="sendPreview" style="margin-top:8px"></div>
     <div class="actions">
       <button class="btn-outline" id="btnSendCancel">Cancelar</button>
       <button id="btnSendConfirm">Sí, enviar</button>
@@ -187,163 +133,64 @@
 </div>
 
 <script>
-/* ===========================================
-   CONFIGURA TU URL DE WEB APP DE APPS SCRIPT
-   (La que termina en /exec, después de "Deploy")
-   =========================================== */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw5Hcx97wi27oJFPPzi3KKXrBW-OxNGVkTFqMie5emVe1dWnH4oTLj61gAdSNylYw87/exec';
+/* ========= CONFIG ========= */
+/* ⬇️ PON AQUÍ LA URL /exec DE TU DEPLOY ACTIVO (muy importante) */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwRFK79ZaLeY5gm73dHxJ35W-gEX9EnDnlZlpn_aI0qhZMK5TINmQDOCKDhLYE7Qnfj/exec';
 
-/* ====== Estado global ====== */
-let TOKEN=null, USER=null, LISTAS=null;
+let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
-/* ====== Parámetro ?aid= (enlace para asesor desde el correo) ====== */
-const params = new URLSearchParams(location.search);
-const AID = params.get('aid') || '';  // si viene, el login exige que el usuario coincida
-
-/* ====== Paleta / Temas ====== */
-const THEMES=[
-  {bg:'#0f172a',card:'#0f172a',text:'#e5e7eb',muted:'#9aa4bf',border:'#24304a',accent:'#7c83ff'},
-  {bg:'#101418',card:'#131a21',text:'#e6f0ff',muted:'#9aa4bf',border:'#263142',accent:'#22c55e'},
-  {bg:'#1b0f2a',card:'#1e1634',text:'#f4eaff',muted:'#b9a9d6',border:'#362f54',accent:'#f59e0b'},
-  {bg:'#0b1724',card:'#0e1d2c',text:'#e5f6ff',muted:'#9cc1d8',border:'#1c2b3a',accent:'#ef4444'}
-];
-function applyTheme(t){
-  for(const [k,v] of Object.entries(t)) document.documentElement.style.setProperty('--'+k, v);
-  localStorage.setItem('fun_theme',JSON.stringify(t));
-}
-function rgbToHex(rgb){
-  if(rgb.startsWith('#')) return rgb;
-  const m=rgb.match(/(\d+),\s*(\d+),\s*(\d+)/);
-  if(!m) return '#0f172a';
-  return '#'+[m[1],m[2],m[3]].map(x=>('0'+parseInt(x).toString(16)).slice(-2)).join('');
-}
-function initPalette(){
-  document.querySelectorAll('.swatch').forEach((el,i)=>{
-    el.addEventListener('click',()=>{
-      applyTheme(THEMES[i]);
-      document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
-      el.classList.add('active');
-    });
-  });
-  const saved=localStorage.getItem('fun_theme');
-  applyTheme(saved?JSON.parse(saved):THEMES[0]);
-  const pick=document.getElementById('bgPicker');
-  pick.value = rgbToHex(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
-  pick.addEventListener('input', e=>{ document.documentElement.style.setProperty('--bg',e.target.value); });
-}
-
-/* ====== Helpers ====== */
+/* ========= HELPERS ========= */
 const $=id=>document.getElementById(id);
 const todayStr=()=>new Date().toISOString().slice(0,10);
-function lockToday(){
-  $('fecha').value=todayStr();
-  $('fecha').readOnly=true;
-  $('fecha').addEventListener('keydown',e=>e.preventDefault());
-  $('fecha').addEventListener('input',()=>$('fecha').value=todayStr());
-}
 const num = id => +((($(id)?.value)||'0').toString().replace(/[, ]/g,'')) || 0;
+function lockToday(){ $('fecha').value=todayStr(); $('fecha').readOnly=true; }
+function setMsg(el, html){ el.innerHTML = html; }
 
-/* ====== LOGIN ======
-   - Valida API key, maneja bloqueo (403)
-   - Si hay ?aid=, exige que el usuario coincida
-   - Muestra formulario siempre; si falla algo, avisa en #msg
-*/
+/* ========= LOGIN ========= */
 async function login(){
   const api_key=$('apiKey').value.trim();
-  $('loginMsg').textContent='Validando...';
+  setMsg($('loginMsg'),'Validando...');
   try{
-    const r=await fetch(WEB_APP_URL+'?path=login',{
-      method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({api_key})
-    });
+    // Si el enlace vino con ?aid=USR-xxx, lo mandamos en el body para que el backend verifique coherencia
+    const body = { api_key };
+    if (AID_PARAM) body.aid = AID_PARAM;
 
-    // Bloqueado por hoy
-    if (r.status === 403){
-      const j = await r.json();
-      $('loginMsg').innerHTML = `<span class="bad">${j.error || 'Acceso bloqueado por hoy'}</span>`;
-      return;
-    }
-
+    const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
-
     TOKEN=j.token; USER=j.user;
 
-    // Si viene ?aid= en la URL, debe coincidir con el usuario logueado
-    if (AID && String(AID)!==String(USER.id)){
-      $('loginMsg').innerHTML = '<span class="bad">Este enlace no corresponde a tu usuario.</span>';
-      return;
-    }
+    // Cargar listas y fecha fija
+    await cargarListas(); lockToday();
 
-    // Pintar datos base
-    $('asesorNombre').value=USER.nombre||'';
-    $('asesorId').value=USER.id||'';
-
-    // Intentar mostrar formulario; si algo interrumpe, mostrar aviso (no pantalla negra)
-    try {
-      await cargarListas();
-      lockToday();
-
-      if((USER.rol||'').toLowerCase()==='admin'){
-        $('adminCard').classList.remove('hid');
-        initAdminSelectors();
-        syncPreviewFromAdmin();
-      }else{
-        await cargarAsignacionDelDia(); // asesor
-      }
-
-      $('loginCard').classList.add('hid');
+    if((USER.rol||'').toLowerCase()==='admin'){
+      // Panel Admin
+      $('adminCard').classList.remove('hid');
+      initAdminSelectors();
+      syncAdminPreview();
+    }else{
+      // Asesor
       $('formCard').classList.remove('hid');
+      $('asesorId').value = USER.id;
+      $('asesorNombre').value = USER.nombre;
+      await cargarAsignacionDelDia();
       recalcAuto();
-
-      $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
-    }catch(e2){
-      $('loginCard').classList.add('hid');
-      $('formCard').classList.remove('hid');
-      $('msg').innerHTML = `<span class="bad">Aviso: ${e2.message || e2}</span>`;
     }
 
-  }catch(e){
-    $('loginMsg').innerHTML='<span class="bad">'+(e.message||e)+'</span>';
-  }
+    $('loginCard').classList.add('hid');
+    setMsg($('loginMsg'),'<span class="ok">Acceso concedido</span>');
+  }catch(e){ setMsg($('loginMsg'),'<span class="bad">'+e.message+'</span>'); }
 }
 
-/* ====== Listas (ciudades, sedes, máquinas, usuarios) ====== */
+/* ========= LISTAS ========= */
 async function cargarListas(){
-  const r=await fetch(WEB_APP_URL+'?path=listas');
-  const j=await r.json();
-  LISTAS=j;
+  const r=await fetch(WEB_APP_URL+'?path=listas'); const j=await r.json(); LISTAS=j;
+  // Asesor selects (si Admin los usa, se llenan en su init)
   fillSelect('ciudad', j.ciudades,'id','nombre');
-  $('ciudad').addEventListener('change', onCiudadChange);
-  $('sede').addEventListener('change', onSedeChange);
-  onCiudadChange();
+  $('ciudad').disabled = true;
 }
-function fillSelect(id,arr,valKey,txtKey){
-  const sel=$(id); sel.innerHTML='';
-  (arr||[]).forEach(o=>{
-    const op=document.createElement('option');
-    op.value=o[valKey]; op.textContent=o[txtKey];
-    sel.appendChild(op);
-  });
-}
-function onCiudadChange(){
-  const cid=$('ciudad').value;
-  fillSelect('sede', (LISTAS.sedes||[]).filter(s=>s.ciudad_id===cid),'id','nombre');
-  onSedeChange();
-}
-function onSedeChange(){
-  const sid=$('sede').value;
-  fillSelect('maquina', (LISTAS.maquinas||[]).filter(m=>m.sede_id===sid),'id','id');
-  setTimeout(()=>syncMeta(),0);
-}
-function syncMeta(){
-  const m=(LISTAS.maquinas||[]).find(x=>x.id===$('maquina').value);
-  $('meta').value = Number(m && (m.meta_sugerida||m.meta||0)) || 0;
-}
+function fillSelect(id,arr,valKey,txtKey){ const sel=$(id); sel.innerHTML=''; arr.forEach(o=>{const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);}); }
 
-/* ====== Asignación del día (ASESOR) ======
-   - Si existe, fija y bloquea combos
-   - Si no existe, deja libre y avisa
-*/
+/* ========= ASESOR: obtener asignación del día ========= */
 async function cargarAsignacionDelDia(){
   try{
     const q = new URLSearchParams({ token: TOKEN });
@@ -352,30 +199,26 @@ async function cargarAsignacionDelDia(){
     if (!j.ok) throw new Error(j.error||'Sin asignación');
 
     const a = j.asignacion;
-
+    // Pintar
     fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
     fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
     fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
     $('meta').value = Number(a.meta_dia||0) || 0;
 
-    $('ciudad').disabled = true;
-    $('sede').disabled   = true;
-    $('maquina').disabled= true;
+    // Esta info NO la puede cambiar el asesor
+    ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
 
+    // Si ya envió hoy, bloquear todo y notificar
+    if (j.enviado_hoy){
+      bloquearFormulario();
+      setMsg($('msg'), '<span class="ok">Ya registraste tu reporte hoy. Este enlace queda deshabilitado.</span>');
+    }
   }catch(e){
-    $('ciudad').disabled = false;
-    $('sede').disabled   = false;
-    $('maquina').disabled= false;
-    $('msg').innerHTML = `<span class="muted">No hay asignación hoy. Selecciona ciudad/sede/máquina; la meta usará la de la máquina si existe.</span>`;
+    setMsg($('msg'), '<span class="bad">No tienes asignación para hoy.</span>');
   }
 }
 
-/* ====== Cálculos encadenados ======
-   Venta total = Marcado − Error
-   Tickets     = Venta / 13
-   Efectivo    = Venta − Gastos − QR
-   Pendiente   = Efectivo − Consignación
-*/
+/* ========= Cálculos encadenados ========= */
 function recalcAuto(){
   const marcado = num('marcado');
   const error   = num('error');
@@ -386,7 +229,7 @@ function recalcAuto(){
   const venta = Math.max(0, marcado - error);
   $('venta').value = venta;
 
-  const tickets = Math.max(0, Math.floor(venta / 13));
+  const tickets = Math.max(0, Math.trunc(venta / 13)); // entero
   $('tickets').value = tickets;
 
   const efectivo = Math.max(0, venta - gastos - qr);
@@ -395,171 +238,141 @@ function recalcAuto(){
   const pendiente = Math.max(0, efectivo - cons);
   $('pendiente').value = pendiente;
 }
-['marcado','error','gastos','qr','consignacion'].forEach(id=>{
+['marcado','error','gastos','qr'].forEach(id=>{
   document.addEventListener('input', e=>{ if(e.target && e.target.id===id) recalcAuto(); });
 });
 
-/* ====== Subida de archivos a Drive ====== */
-async function uploadFile(file){
-  if(!file) return '';
-  const base64 = await new Promise((res,rej)=>{
-    const fr=new FileReader();
-    fr.onload=()=>res(String(fr.result).split(',')[1]);
-    fr.onerror=rej;
-    fr.readAsDataURL(file);
-  });
-  const r=await fetch(WEB_APP_URL+'?path=upload',{
-    method:'POST',headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})
-  });
-  const j=await r.json();
-  if(!j.ok) throw new Error(j.error||'No se pudo subir');
-  return j.url;
+function bloquearFormulario(){
+  // Bloquea todo para el asesor
+  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{ const el=$(id); if(el) el.disabled=true; });
+  $('btnEnviar').disabled = true;
 }
 
-/* ====== Envío con confirmación ====== */
-function openSendConfirm(){
+/* ========= Upload a Drive ========= */
+async function uploadFile(file){ if(!file) return ''; const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);}); const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url; }
+
+/* ========= Confirmación y envío ========= */
+function abrirPreviewEnvio(){
+  const html = `
+  <div><b>Asesor:</b> ${$('asesorNombre').value}</div>
+  <div><b>Fecha:</b> ${$('fecha').value}</div>
+  <div><b>Ciudad:</b> ${$('ciudad').options[$('ciudad').selectedIndex].text}</div>
+  <div><b>Sede:</b> ${$('sede').options[$('sede').selectedIndex].text}</div>
+  <div><b>Máquina:</b> ${$('maquina').value}</div>
+  <div><b>Meta del día:</b> $${(+$('meta').value||0).toLocaleString('es-CO')}</div>
+  <hr style="border-color:#1f2937;margin:8px 0">
+  <div><b>Marcado:</b> $${(+$('marcado').value||0).toLocaleString('es-CO')}</div>
+  <div><b>Error:</b> $${(+$('error').value||0).toLocaleString('es-CO')}</div>
+  <div><b>Gastos:</b> $${(+$('gastos').value||0).toLocaleString('es-CO')}</div>
+  <div><b>QR:</b> $${(+$('qr').value||0).toLocaleString('es-CO')}</div>
+  <div><b>Venta total:</b> $${(+$('venta').value||0).toLocaleString('es-CO')}</div>
+  <div><b>Tickets vendidos:</b> ${$('tickets').value}</div>
+  <div><b>Efectivo:</b> $${(+$('efectivo').value||0).toLocaleString('es-CO')}</div>
+  <div><b>Pendiente por consignar:</b> $${(+$('pendiente').value||0).toLocaleString('es-CO')}</div>
+  <div><b>Comentario:</b> ${$('comentario').value||'-'}</div>`;
+  $('sendPreview').innerHTML = html;
   $('sendModal').style.display='flex';
   $('btnSendCancel').onclick = ()=> $('sendModal').style.display='none';
   $('btnSendConfirm').onclick = ()=> { $('sendModal').style.display='none'; enviar(); };
 }
-async function enviar(){
-  $('msg').textContent='Subiendo archivos y enviando...';
-  try{
-    const foto_url = await uploadFile($('foto').files[0]);
-    const video_url= await uploadFile($('video').files[0]);
 
+async function enviar(){
+  setMsg($('msg'),'Subiendo archivos y enviando...');
+  try{
+    const foto_url=await uploadFile($('foto').files[0]);
+    const video_url=await uploadFile($('video').files[0]);
     const payload={
       fecha:$('fecha').value,
       ciudad_id:$('ciudad').value,
       sede_id:$('sede').value,
       maquina_id:$('maquina').value,
       asesor_id:$('asesorId').value,
-      marcado:num('marcado')||0,
-      error:num('error')||0,
-      tickets_vendidos:num('tickets')||0,
-      venta_total:num('venta')||0,
-      meta_dia:num('meta')||0,
-      gastos:num('gastos')||0,
-      qr:num('qr')||0,
-      efectivo:num('efectivo')||0,
-      consignacion:num('consignacion')||0,
-      pendiente_consignar:num('pendiente')||0,
-      comentario:$('comentario').value||'',
-      foto_url, video_url
+      marcado:num('marcado')||0, error:num('error')||0, tickets_vendidos:num('tickets')||0,
+      venta_total:num('venta')||0, meta_dia:num('meta')||0, gastos:num('gastos')||0,
+      qr:num('qr')||0, efectivo:num('efectivo')||0, consignacion:num('consignacion')||0, pendiente_consignar:num('pendiente')||0,
+      comentario:$('comentario').value||'', foto_url, video_url
     };
+    const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
 
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{
-      method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({token:TOKEN,payload})
-    });
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.error||'Error al registrar');
-
-    $('msg').innerHTML='<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>';
-    $('btnEnviar').disabled = true;
-  }catch(e){
-    $('msg').innerHTML='<span class="bad">❌ '+(e.message||e)+'</span>';
-  }
+    setMsg($('msg'),'<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
+    bloquearFormulario();
+  }catch(e){ setMsg($('msg'),'<span class="bad">❌ '+e.message+'</span>'); }
 }
 
-/* ====== Admin: combos + confirmación + guardar ====== */
+/* ========= ADMIN ========= */
 function initAdminSelectors(){
+  // fills
   fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
-
   $('a_ciudad').addEventListener('change', ()=>{
     const cid=$('a_ciudad').value;
-    fillSelect('a_sede', (LISTAS.sedes||[]).filter(s=>s.ciudad_id===cid),'id','nombre');
+    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre');
     $('a_sede').dispatchEvent(new Event('change'));
   });
-
   $('a_sede').addEventListener('change', ()=>{
     const sid=$('a_sede').value;
-    fillSelect('a_maquina', (LISTAS.maquinas||[]).filter(m=>m.sede_id===sid),'id','id');
-    syncPreviewFromAdmin();
+    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
+    fillSelect('del_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
+    syncAdminPreview();
   });
-
-  const asesores=(LISTAS.usuarios||[])
-    .filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
+  const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
   fillSelect('a_asesor', asesores,'id','nombre');
+  fillSelect('del_asesor', asesores,'id','nombre');
 
-  $('a_asesor').addEventListener('change', syncPreviewFromAdmin);
-  $('a_meta').addEventListener('input',  syncPreviewFromAdmin);
-
+  ['a_asesor','a_meta'].forEach(id=>$(id).addEventListener('input', syncAdminPreview));
   $('a_ciudad').dispatchEvent(new Event('change'));
-  syncPreviewFromAdmin();
 
-  $('btnAdminGuardar').addEventListener('click', showConfirm);
+  $('btnAdminGuardar').addEventListener('click', adminGuardar);
+  $('btnDelete').addEventListener('click', adminDeleteReport);
+  syncAdminPreview();
 }
-
-function syncPreviewFromAdmin(){
-  const cid = $('a_ciudad').value;
-  const sid = $('a_sede').value;
-  const mid = $('a_maquina').value;
-
-  fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value=cid;
-  fillSelect('sede', (LISTAS.sedes||[]).filter(s=>s.ciudad_id===cid),'id','nombre'); $('sede').value=sid;
-  fillSelect('maquina', (LISTAS.maquinas||[]).filter(m=>m.sede_id===sid),'id','id'); $('maquina').value=mid;
-
-  const metaAdmin = +$('a_meta').value || 0;
-  const metaMaquina = Number((LISTAS.maquinas.find(x=>x.id===mid)||{}).meta_sugerida
-                       || (LISTAS.maquinas.find(x=>x.id===mid)||{}).meta || 0);
-  $('meta').value = metaAdmin || metaMaquina;
-
-  const aSel = $('a_asesor');
-  const asesorId = aSel.value;
-  const asesorNombre = aSel.options[aSel.selectedIndex]?.text || '';
-  $('asesorId').value = asesorId;
-  $('asesorNombre').value = asesorNombre;
-
-  recalcAuto();
+function syncAdminPreview(){
+  const ciudad = $('a_ciudad').options[$('a_ciudad').selectedIndex]?.text || '';
+  const sede   = $('a_sede').options[$('a_sede').selectedIndex]?.text || '';
+  const maq    = $('a_maquina').value || '';
+  const asesor = $('a_asesor').options[$('a_asesor').selectedIndex]?.text || '';
+  const meta   = +$('a_meta').value || 0;
+  $('adminPreview').innerHTML =
+    `<div><b>Ciudad:</b> ${ciudad}</div>
+     <div><b>Sede:</b> ${sede}</div>
+     <div><b>Máquina:</b> ${maq}</div>
+     <div><b>Asesor:</b> ${asesor}</div>
+     <div><b>Meta del día:</b> $${meta.toLocaleString('es-CO')}</div>`;
 }
-
-function showConfirm(){
-  const cText = `
-Confirma la asignación/meta:
-• Ciudad: ${$('a_ciudad').options[$('a_ciudad').selectedIndex]?.text}
-• Sede: ${$('a_sede').options[$('a_sede').selectedIndex]?.text}
-• Máquina: ${$('a_maquina').value}
-• Asesor: ${$('a_asesor').options[$('a_asesor').selectedIndex]?.text}
-• Meta del día: $${(+$('a_meta').value||0).toLocaleString('es-CO')}
-  `.trim();
-  $('confirmText').textContent = cText;
-  $('confirmModal').style.display='flex';
-  $('btnCancel').onclick = ()=> $('confirmModal').style.display='none';
-  $('btnConfirm').onclick = ()=> { $('confirmModal').style.display='none'; adminGuardar(); };
-}
-
 async function adminGuardar(){
-  const msg=$('adminMsg'); msg.textContent='Guardando...';
+  const msg=$('adminMsg'); setMsg(msg,'Guardando...');
   try{
     const q=new URLSearchParams({
-      token:TOKEN,
-      ciudad_id:$('a_ciudad').value,
-      sede_id:$('a_sede').value,
-      maquina_id:$('a_maquina').value,
-      asesor_id:$('a_asesor').value,
+      token:TOKEN, ciudad_id:$('a_ciudad').value, sede_id:$('a_sede').value,
+      maquina_id:$('a_maquina').value, asesor_id:$('a_asesor').value,
       meta_sugerida:String(+$('a_meta').value||0)
     });
     const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.error||'No se pudo guardar');
-
-    // Actualiza listas y vista previa (sin recargar página)
-    await cargarListas();
-    syncPreviewFromAdmin();
-
-    msg.innerHTML='<span class="ok">✔ Guardado y notificado por email</span>';
-  }catch(e){
-    msg.innerHTML='<span class="bad">❌ '+(e.message||e)+'</span>';
-  }
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
+    setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
+  }catch(e){ setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>'); }
+}
+async function adminDeleteReport(){
+  const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
+  try{
+    const q=new URLSearchParams({
+      token:TOKEN,
+      asesor_id:$('del_asesor').value,
+      maquina_id:$('del_maquina').value||'',
+      fecha: todayStr()
+    });
+    const r=await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo eliminar');
+    setMsg(msg,'<span class="ok">✔ Reporte de HOY eliminado</span>');
+  }catch(e){ setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>'); }
 }
 
-/* ====== Init ====== */
+/* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
-  initPalette();
+  const url = new URL(location.href);
+  AID_PARAM = url.searchParams.get('aid') || null; // si vino desde email del asesor
   $('btnLogin').addEventListener('click', login);
-  $('btnEnviar').addEventListener('click', openSendConfirm);
+  $('btnEnviar').addEventListener('click', abrirPreviewEnvio);
 });
 </script>
 </body>
