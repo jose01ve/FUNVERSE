@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FUNVENSER · Reporte Diario</title>
+<title>FUNVENSER</title>
 <style>
   :root{--bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#7c83ff}
   *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1224);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
@@ -19,13 +19,11 @@
   .ok{color:#58d68d} .bad{color:#ff6b6b} .muted{color:var(--muted)}
   .hid{display:none}
 
-  /* login */
   .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px}
   .logo{width:64px;height:64px;border-radius:16px;background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);box-shadow:0 6px 18px rgba(0,0,0,.35)}
   .title{font-weight:700;font-size:1.4rem}
   .subtitle{color:#9aa4bf;font-size:.95rem}
 
-  /* modal */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
   .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:620px;width:100%;padding:16px}
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
@@ -34,6 +32,8 @@
   .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #223}
   .row:last-child{border-bottom:none}
   .k{color:#9aa4bf}.v{font-weight:600}
+  .split{display:grid;gap:12px}
+  @media(min-width:900px){ .split{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -43,19 +43,73 @@
     <div class="hero">
       <div class="logo"></div>
       <div class="title">Ingresar · FUNVENSER</div>
-      <div class="subtitle">Accede con tu API Key para registrar tu reporte</div>
+      <div class="subtitle">Usa tu API Key para acceder</div>
     </div>
-    <label>API Key del Asesor</label>
-    <input id="apiKey" placeholder="Ingresa tu API Key (ej. 123, 234, ...)" />
+    <label>API Key</label>
+    <input id="apiKey" placeholder="Ingresa tu API Key (ej. 123)" />
     <button id="btnLogin">Entrar</button>
     <div id="loginMsg" class="muted"></div>
   </div>
 
-  <!-- FORM -->
+  <!-- ADMIN -->
+  <div class="card hid" id="adminCard">
+    <h1>Admin · Asignación y Meta</h1>
+    <div class="grid grid-2">
+      <div><label>Ciudad</label><select id="a_ciudad"></select></div>
+      <div><label>Sede</label><select id="a_sede"></select></div>
+      <div><label>Máquina</label><select id="a_maquina"></select></div>
+      <div><label>Asesor</label><select id="a_asesor"></select></div>
+      <div><label>Meta del día</label><input id="a_meta" type="number" min="0" step="1000" value="0" /></div>
+    </div>
+    <button id="btnAdminGuardar">Guardar asignación/meta</button>
+
+    <h1 style="margin-top:22px">Acción rápida</h1>
+    <div class="grid grid-2">
+      <div>
+        <label>Eliminar reporte de HOY (máquina del combo + asesor seleccionado)</label>
+      </div>
+      <div>
+        <button class="btn-outline" id="btnAdminDelete">Eliminar reporte HOY</button>
+      </div>
+    </div>
+    <div id="adminMsg" class="muted"></div>
+  </div>
+
+  <!-- PREVIEW ADMIN (vista previa de lo asignado) -->
+  <div class="card hid" id="adminPreview">
+    <h1>Reporte Diario · Vista previa (lo que verá el asesor)</h1>
+    <div class="grid grid-2">
+      <input id="p_asesorId" class="hid" />
+      <div><label>Asesor</label><input id="p_asesorNombre" readonly /></div>
+      <div><label>Fecha</label><input id="p_fecha" readonly /></div>
+
+      <div><label>Ciudad</label><input id="p_ciudad" readonly /></div>
+      <div><label>Sede</label><input id="p_sede" readonly /></div>
+      <div><label>Máquina</label><input id="p_maquina" readonly /></div>
+
+      <div><label>Marcado (monto en $)</label><input value="0" readonly /></div>
+      <div><label>Error (monto en $)</label><input value="0" readonly /></div>
+
+      <div><label>Tickets (auto)</label><input value="0" readonly /></div>
+      <div><label>Venta total (auto)</label><input value="0" readonly /></div>
+
+      <div><label>Meta del día (admin)</label><input id="p_meta" readonly /></div>
+      <div><label>Gastos</label><input value="0" readonly /></div>
+
+      <div><label>QR</label><input value="0" readonly /></div>
+      <div><label>Efectivo (auto)</label><input value="0" readonly /></div>
+      <div><label>Consignación (la edita Admin)</label><input value="0" readonly /></div>
+      <div><label>Pendiente (auto)</label><input value="0" readonly /></div>
+
+      <div style="grid-column:1 / -1"><label>Comentario</label><textarea rows="2" readonly>Observaciones del día</textarea></div>
+    </div>
+  </div>
+
+  <!-- ASESOR FORM -->
   <div class="card hid" id="formCard">
     <h1>Reporte Diario</h1>
     <div class="grid grid-2">
-      <input id="asesorId" class="hid" /> <!-- oculto -->
+      <input id="asesorId" class="hid" />
       <div><label>Asesor</label><input id="asesorNombre" readonly /></div>
       <div><label>Fecha</label><input type="date" id="fecha" readonly /></div>
 
@@ -91,7 +145,7 @@
   </div>
 </div>
 
-<!-- Modal confirm Envío Reporte (vista previa) -->
+<!-- Modal Confirmación envío -->
 <div class="modal" id="sendModal" role="dialog" aria-modal="true">
   <div class="content">
     <h3>Confirmar envío</h3>
@@ -104,13 +158,25 @@
   </div>
 </div>
 
+<!-- Modal Confirmación Asignación -->
+<div class="modal" id="assignModal" role="dialog" aria-modal="true">
+  <div class="content">
+    <h3>Confirmar asignación/meta</h3>
+    <div id="assignPreview" class="preview"></div>
+    <div class="actions">
+      <button class="btn-outline" id="btnAssignCancel">Cancelar</button>
+      <button id="btnAssignConfirm">Sí, guardar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-/* ===================== CONFIG (edita esta URL) ===================== */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzzooTpZPTtXFLYqpj_hgIhVdOWQkaka79R_W7Kd6CZ-fL7Yvkvne2uO2NuR8k36Sry/exec';
+/* ===================== CONFIG ===================== */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwas4lbZ1Zp2y8PQXgAbEtZ55mu62BVvjd1h-mTrOaRL8SblBpMds-uEiDkwPHriQ/exec';
 
 /* ============ Estado global ============ */
 let TOKEN=null, USER=null, LISTAS=null;
-let AID = new URLSearchParams(location.search).get('aid') || ''; // asesor esperado desde el correo
+let AID = new URLSearchParams(location.search).get('aid') || '';
 
 /* ============ Helpers ============ */
 const $=id=>document.getElementById(id);
@@ -118,11 +184,8 @@ const todayStr=()=>new Date().toISOString().slice(0,10);
 function lockToday(){ $('fecha').value=todayStr(); $('fecha').readOnly=true; }
 const num = id => +((($(id)?.value)||'0').toString().replace(/[, ]/g,'')) || 0;
 function money(n){ return (+n||0).toLocaleString('es-CO'); }
-
-function setDisabledSending(reason){
-  $('btnEnviar').disabled = true;
-  $('msg').innerHTML = `<span class="bad">${reason}</span>`;
-}
+function disableSend(msg){ $('btnEnviar').disabled=true; $('msg').innerHTML=`<span class="bad">${msg}</span>`; }
+function sentKey(){ return `sent_${$('fecha').value}_${$('maquina').value}_${$('asesorId').value}`; }
 
 /* ============ Login ============ */
 async function login(){
@@ -130,47 +193,72 @@ async function login(){
   $('loginMsg').textContent='Validando...';
   try{
     const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({api_key})});
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.error||'Error de login');
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
     TOKEN=j.token; USER=j.user;
 
-    // Si el enlace traía ?aid=... debe ser el mismo asesor
-    if (AID && USER.id !== AID){
-      $('loginMsg').innerHTML = '<span class="bad">Este enlace no corresponde a tu usuario.</span>';
-      TOKEN=null; USER=null;
-      return;
+    // Si viene enlace de asesor ?aid=..., exigir coincidencia SOLO si rol es asesor
+    if (AID && (USER.rol||'').toLowerCase()==='asesor' && USER.id!==AID){
+      $('loginMsg').innerHTML='<span class="bad">Este enlace no corresponde a tu usuario.</span>';
+      TOKEN=null; USER=null; return;
     }
 
-    $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
-
-    // Cargar listas y asignación
     await cargarListas();
-    lockToday();
-    await cargarAsignacionDelDia(); // bloquea ciudad/sede/maquina/meta
-    lockAsesorUI();                // deja activos solo los campos permitidos
-    recalcAuto();                  // pinta auto
 
-    // Anti reenvío (cliente): si ya marcó como enviado en este dispositivo
-    const keySent = localStorage.getItem(sentKey());
-    if (keySent === '1') {
-      setDisabledSending('Ya enviaste este reporte hoy.');
+    if ((USER.rol||'').toLowerCase()==='admin'){
+      // Panel admin
+      initAdmin();
+      $('adminCard').classList.remove('hid');
+      $('adminPreview').classList.remove('hid');
+    } else {
+      // Asesor
+      $('asesorNombre').value=USER.nombre||''; $('asesorId').value=USER.id||'';
+      lockToday();
+      await cargarAsignacionAsesor();
+      lockAsesorUI();
+      recalcAuto();
+      const sk = localStorage.getItem(sentKey());
+      if (sk==='1') disableSend('Ya enviaste este reporte hoy.');
+      $('formCard').classList.remove('hid');
     }
 
-    $('loginCard').classList.add('hid'); $('formCard').classList.remove('hid');
-    $('loginMsg').innerHTML='<span class="ok">Acceso concedido</span>';
+    $('loginCard').classList.add('hid');
   }catch(e){
     $('loginMsg').innerHTML='<span class="bad">'+e.message+'</span>';
   }
 }
 
-/* ============ Listas y asignación ============ */
+/* ============ Listas ============ */
 async function cargarListas(){
   const r=await fetch(WEB_APP_URL+'?path=listas'); LISTAS=await r.json();
+}
 
-  // siempre pintamos los selects (aunque queden disable)
-  fillSelect('ciudad', LISTAS.ciudades,'id','nombre');
-  fillSelect('sede', LISTAS.sedes,'id','nombre');
-  fillSelect('maquina', LISTAS.maquinas,'id','id');
+/* ============ ADMIN UI ============ */
+function initAdmin(){
+  // Combos
+  fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
+  $('a_ciudad').addEventListener('change', ()=>{
+    const cid=$('a_ciudad').value;
+    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre');
+    $('a_sede').dispatchEvent(new Event('change'));
+  });
+  $('a_sede').addEventListener('change', ()=>{
+    const sid=$('a_sede').value;
+    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
+    syncAdminPreview();
+  });
+
+  const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
+  fillSelect('a_asesor', asesores,'id','nombre');
+
+  $('a_asesor').addEventListener('change', syncAdminPreview);
+  $('a_meta').addEventListener('input',  syncAdminPreview);
+  $('a_ciudad').dispatchEvent(new Event('change'));
+  syncAdminPreview();
+
+  // Guardar asignación (con confirmación)
+  $('btnAdminGuardar').addEventListener('click', openAssignConfirm);
+  // Eliminar reporte HOY
+  $('btnAdminDelete').addEventListener('click', adminDeleteToday);
 }
 
 function fillSelect(id,arr,valKey,txtKey){
@@ -182,176 +270,40 @@ function fillSelect(id,arr,valKey,txtKey){
   });
 }
 
-async function cargarAsignacionDelDia(){
+function syncAdminPreview(){
+  const cid=$('a_ciudad').value, sid=$('a_sede').value, mid=$('a_maquina').value;
+  const asesorId=$('a_asesor').value;
+  const asesorNombre=$('a_asesor').options[$('a_asesor').selectedIndex]?.text||'';
+  $('p_asesorId').value=asesorId; $('p_asesorNombre').value=asesorNombre;
+  $('p_fecha').value=todayStr();
+  $('p_ciudad').value=(LISTAS.ciudades.find(c=>c.id===cid)||{}).nombre||cid;
+  $('p_sede').value=(LISTAS.sedes.find(s=>s.id===sid)||{}).nombre||sid;
+  $('p_maquina').value=mid;
+  $('p_meta').value=+$('a_meta').value||0;
+}
+
+function openAssignConfirm(){
+  const cid=$('a_ciudad').options[$('a_ciudad').selectedIndex]?.text||'';
+  const sid=$('a_sede').options[$('a_sede').selectedIndex]?.text||'';
+  const mid=$('a_maquina').value;
+  const an=$('a_asesor').options[$('a_asesor').selectedIndex]?.text||'';
+  const meta=+$('a_meta').value||0;
+  $('assignPreview').innerHTML = `
+    <div class="row"><span class="k">Ciudad</span><span class="v">${cid}</span></div>
+    <div class="row"><span class="k">Sede</span><span class="v">${sid}</span></div>
+    <div class="row"><span class="k">Máquina</span><span class="v">${mid}</span></div>
+    <div class="row"><span class="k">Asesor</span><span class="v">${an}</span></div>
+    <div class="row"><span class="k">Meta del día</span><span class="v">$ ${meta.toLocaleString('es-CO')}</span></div>
+  `;
+  $('assignModal').style.display='flex';
+  $('btnAssignCancel').onclick = ()=> $('assignModal').style.display='none';
+  $('btnAssignConfirm').onclick = ()=> { $('assignModal').style.display='none'; adminGuardar(); };
+}
+
+async function adminGuardar(){
+  const msg=$('adminMsg'); msg.textContent='Guardando...';
   try{
-    const q = new URLSearchParams({ token: TOKEN });
-    const r = await fetch(WEB_APP_URL+'?path=asignacion&'+q.toString());
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error||'Sin asignación');
-
-    const a = j.asignacion;
-
-    // Pintar selects con filtro correcto
-    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
-    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
-    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
-    $('meta').value = Number(a.meta_dia||0) || 0;
-
-    // Bloquear por ser asignación del día
-    $('ciudad').disabled = true; $('sede').disabled = true; $('maquina').disabled = true; $('meta').readOnly = true;
-
-    // Anti reenvío (servidor): si el servidor nos dice que ya fue enviado (versión con flag)
-    if (j.enviado_hoy === true || j.asignacion?.enviado_hoy === true){
-      setDisabledSending('Ya enviaste este reporte hoy.');
-    }
-  }catch(e){
-    // Sin asignación: bloquea envío (según tu requerimiento)
-    setDisabledSending('No tienes asignación para hoy.');
-  }
-}
-
-/* ============ Bloqueos UI ============ */
-function lockAsesorUI(){
-  // Siempre bloqueados
-  $('asesorNombre').readOnly = true;
-  $('fecha').readOnly = true;
-  $('consignacion').disabled = true;
-
-  // Auto/solo-lectura
-  $('tickets').readOnly = true;
-  $('venta').readOnly   = true;
-  $('efectivo').readOnly= true;
-  $('pendiente').readOnly = true;
-
-  // Editables
-  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{
-    const el = $(id); if (!el) return;
-    el.readOnly = false; el.disabled = false;
-  });
-}
-
-/* ============ Cálculos encadenados ============ */
-function recalcAuto(){
-  const marcado = num('marcado');
-  const error   = num('error');
-  const gastos  = num('gastos');
-  const qr      = num('qr');
-  const cons    = num('consignacion');
-
-  const venta = Math.max(0, marcado - error);
-  $('venta').value = venta;
-
-  // Tickets: entero “2 dígitos” (capado a 99 si lo necesitas). Aquí dejamos entero simple:
-  let tickets = Math.max(0, Math.floor(venta / 13));
-  if (tickets > 99) tickets = 99; // tope visual a dos dígitos
-  $('tickets').value = tickets;
-
-  const efectivo = Math.max(0, venta - gastos - qr);
-  $('efectivo').value = efectivo;
-
-  const pendiente = Math.max(0, efectivo - cons);
-  $('pendiente').value = pendiente;
-}
-['marcado','error','gastos','qr','consignacion'].forEach(id=>{
-  document.addEventListener('input', e=>{ if(e.target && e.target.id===id) recalcAuto(); });
-});
-
-/* ============ Upload a Drive ============ */
-async function uploadFile(file){
-  if(!file) return '';
-  const base64=await new Promise((res,rej)=>{
-    const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);
-  });
-  const r=await fetch(WEB_APP_URL+'?path=upload',{
-    method:'POST',headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})
-  });
-  const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir');
-  return j.url;
-}
-
-/* ============ Confirmación (vista previa) ============ */
-function openSendConfirm(){
-  // Vista previa
-  const rows = [
-    ['Asesor', $('asesorNombre').value],
-    ['Fecha', $('fecha').value],
-    ['Ciudad', $('ciudad').options[$('ciudad').selectedIndex]?.text || ''],
-    ['Sede', $('sede').options[$('sede').selectedIndex]?.text || ''],
-    ['Máquina', $('maquina').value],
-    ['Marcado', '$ '+money(num('marcado'))],
-    ['Error', '$ '+money(num('error'))],
-    ['Venta total', '$ '+money(num('venta'))],
-    ['Tickets', num('tickets')],
-    ['Meta del día', '$ '+money(num('meta'))],
-    ['Gastos', '$ '+money(num('gastos'))],
-    ['QR', '$ '+money(num('qr'))],
-    ['Efectivo', '$ '+money(num('efectivo'))],
-    ['Consignación (admin)', '$ '+money(num('consignacion'))],
-    ['Pendiente', '$ '+money(num('pendiente'))],
-    ['Comentario', $('comentario').value||'—']
-  ];
-  const html = rows.map(([k,v])=>`<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
-  $('preview').innerHTML = html;
-
-  // Mostrar modal
-  $('sendModal').style.display='flex';
-  $('btnSendCancel').onclick = ()=> $('sendModal').style.display='none';
-  $('btnSendConfirm').onclick = ()=> { $('sendModal').style.display='none'; enviar(); };
-}
-
-/* ============ Envío ============ */
-function sentKey(){
-  // bandera local: por fecha + maquina + asesor
-  return `sent_${$('fecha').value}_${$('maquina').value}_${$('asesorId').value}`;
-}
-async function enviar(){
-  $('msg').textContent='Subiendo archivos y enviando...';
-  try{
-    // Si ya marcado localmente, corta
-    if (localStorage.getItem(sentKey()) === '1'){
-      setDisabledSending('Ya enviaste este reporte hoy.');
-      return;
-    }
-
-    const foto_url=await uploadFile($('foto').files[0]);
-    const video_url=await uploadFile($('video').files[0]);
-    const payload={
-      fecha:$('fecha').value,
-      ciudad_id:$('ciudad').value, sede_id:$('sede').value, maquina_id:$('maquina').value,
-      asesor_id:$('asesorId').value,
-      marcado:num('marcado')||0, error:num('error')||0, tickets_vendidos:num('tickets')||0,
-      venta_total:num('venta')||0, meta_dia:num('meta')||0, gastos:num('gastos')||0,
-      qr:num('qr')||0, efectivo:num('efectivo')||0, consignacion:num('consignacion')||0,
-      pendiente_consignar:num('pendiente')||0, comentario:$('comentario').value||'',
-      foto_url, video_url
-    };
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{
-      method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({token:TOKEN,payload})
-    });
-    const j=await r.json();
-    if(!j.ok){
-      // Duplicado del servidor (por máquina/fecha) o bloqueo
-      if (j.error) throw new Error(j.error);
-      throw new Error('Error al registrar');
-    }
-
-    // Marca local para que el mismo enlace ya no sirva en este dispositivo
-    localStorage.setItem(sentKey(), '1');
-
-    $('msg').innerHTML='<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>';
-    $('btnEnviar').disabled = true;
-  }catch(e){
-    $('msg').innerHTML='<span class="bad">❌ '+e.message+'</span>';
-  }
-}
-
-/* ============ Init ============ */
-document.addEventListener('DOMContentLoaded', ()=>{
-  $('btnLogin').addEventListener('click', login);
-  $('btnEnviar').addEventListener('click', openSendConfirm);
-});
-</script>
-</body>
-</html>
+    const q=new URLSearchParams({
+      token:TOKEN,
+      ciudad_id:$('a_ciudad').value,
+      sede_id:$('a_sede').value,
