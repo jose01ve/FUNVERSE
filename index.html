@@ -218,6 +218,7 @@ function fillSelect(id,arr,valKey,txtKey){
 }
 
 /* ========= ASESOR: obtener asignación del día ========= */
+<script>
 async function cargarAsignacionDelDia(){
   try{
     const q = new URLSearchParams({ token: TOKEN });
@@ -226,24 +227,43 @@ async function cargarAsignacionDelDia(){
     if (!j.ok) throw new Error(j.error||'Sin asignación');
 
     const a = j.asignacion;
-    // Pintar ciudad/sede/máquina/meta que definió la admin
-    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
-    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
-    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
+
+    // 1) Pintar exactamente lo que definió la ADMIN (de hoja Asignaciones)
+    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); 
+    $('ciudad').value = a.ciudad_id;
+
+    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); 
+    $('sede').value = a.sede_id;
+
+    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); 
+    $('maquina').value = a.maquina_id;
+
+    // Meta definida por admin para HOY
     $('meta').value = Number(a.meta_dia||0) || 0;
 
-    // El asesor NO puede cambiar estos datos
+    // 2) Asegurar que el asesor del formulario sea el asignado
+    $('asesorId').value = a.asesor_id;
+    // Si quieres además mostrar el nombre que corresponde a ese ID (por si difiere del usuario logueado):
+    const u = (LISTAS.usuarios||[]).find(u => String(u.id)===String(a.asesor_id));
+    if (u && u.nombre) $('asesorNombre').value = u.nombre;
+
+    // 3) El asesor NO puede cambiar lo asignado
     ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
 
-    // Si ya envió hoy, bloquear toda la UI del asesor
+    // 4) Si ya envió hoy, bloquear todo
     if (j.enviado_hoy){
       bloquearFormulario();
       setMsg($('msg'), '<span class="ok">Ya registraste tu reporte hoy. Este enlace queda deshabilitado.</span>');
     }
+
+    // Recalcular automáticos por si ya hay valores en los campos editables
+    recalcAuto();
   }catch(e){
     setMsg($('msg'), '<span class="bad">No tienes asignación para hoy.</span>');
   }
 }
+</script>
+
 
 /* ========= Cálculos encadenados =========
    - Venta total   = Marcado - Error
@@ -417,27 +437,35 @@ function syncAdminPreview(){
      <div><b>Meta del día:</b> $${meta.toLocaleString('es-CO')}</div>`;
 }
 
+<script>
 async function adminGuardar(){
   const msg=$('adminMsg'); setMsg(msg,'Guardando...');
   try{
-    // IMPORTANTE: se envía la fecha seleccionada por la admin (yyyy-MM-dd). El backend la normaliza a dd-MM-yyyy.
     const q=new URLSearchParams({
       token:TOKEN,
-      fecha:$('a_fecha').value,
       ciudad_id:$('a_ciudad').value,
       sede_id:$('a_sede').value,
       maquina_id:$('a_maquina').value,
       asesor_id:$('a_asesor').value,
       meta_sugerida:String(+$('a_meta').value||0)
     });
+
     const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
+    const j=await r.json(); 
+    if(!j.ok) throw new Error(j.error||'No se pudo guardar');
+
+    // Refrescar listas por si la meta/asesor de la máquina cambiaron
+    await cargarListas();
+    syncAdminPreview();
+
     setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
   }catch(e){
     setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>');
   }
 }
+</script>
 
+<script>
 async function adminDeleteReport(){
   const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
   try{
@@ -445,27 +473,31 @@ async function adminDeleteReport(){
       token:TOKEN,
       asesor_id:$('del_asesor').value,
       maquina_id:$('del_maquina').value||'',
-      fecha: todayStr() // la app elimina reporte y también asignación de esa fecha (el backend lo hace)
+      fecha: todayStr()
     });
+
     const r=await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
     const j=await r.json();
 
     if (!j.ok){
-      // Mensaje explícito desde el backend (por ejemplo "No hay reporte para eliminar")
       setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
       return;
     }
 
-    if ((j.removed||0) > 0 || (j.removed_asignaciones||0) > 0){
-      setMsg(msg, `<span class="ok">✔ Eliminado. Reportes: ${j.removed||0} · Asignaciones: ${j.removed_asignaciones||0}</span>`);
+    // Compatibilidad: algunos backends devuelven removed y (opcional) removed_asignaciones
+    const rep = Number(j.removed||0);
+    const asi = Number(j.removed_asignaciones||0);
+    if (rep>0 || asi>0){
+      setMsg(msg, `<span class="ok">✔ Eliminado. Reportes: ${rep} · Asignaciones: ${asi}</span>`);
     } else {
       setMsg(msg, `<span class="bad">❌ No hay reporte para eliminar</span>`);
     }
   }catch(e){
-    // Error de red u otro
     setMsg($('adminMsg'), `<span class="bad">❌ ${e.message || 'No hay reporte para eliminar'}</span>`);
   }
 }
+</script>
+
 
 /* ========= INIT (al cargar la página) ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
