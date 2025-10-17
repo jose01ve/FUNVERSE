@@ -1,11 +1,11 @@
+FUNCIONAL
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FUNVENSER · Reportes</title>
-
-<!-- =================== ESTILOS (UI base) =================== -->
 <style>
   :root{--bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#7c83ff}
   *{box-sizing:border-box}
@@ -28,7 +28,7 @@
   .row{display:flex;gap:8px}
   .row>*{flex:1}
 
-  /* Modal */
+  /* modal */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
   .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;padding:16px}
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
@@ -39,8 +39,7 @@
 </head>
 <body>
 <div class="wrap">
-
-  <!-- =================== LOGIN =================== -->
+  <!-- LOGIN -->
   <div class="card" id="loginCard">
     <div class="hero">
       <div class="logo"></div>
@@ -53,21 +52,16 @@
     <div id="loginMsg" class="muted"></div>
   </div>
 
-  <!-- =================== ADMIN =================== -->
+  <!-- ADMIN -->
   <div class="card hid" id="adminCard">
     <h1>Admin · Asignación y Meta · FUNVENSER</h1>
-
-    <!-- NUEVO: la administradora puede fijar la fecha de la asignación -->
     <div class="grid grid-2">
       <div><label>Ciudad</label><select id="a_ciudad"></select></div>
       <div><label>Sede</label><select id="a_sede"></select></div>
       <div><label>Máquina</label><select id="a_maquina"></select></div>
       <div><label>Asesor</label><select id="a_asesor"></select></div>
       <div><label>Meta del día</label><input id="a_meta" type="number" min="0" step="1000" value="0" /></div>
-      <div><label>Fecha (para la asignación)</label><input id="a_fecha" type="date" /></div>
-    
     </div>
-
     <div class="row">
       <button id="btnAdminGuardar">Guardar asignación/meta</button>
     </div>
@@ -87,48 +81,38 @@
     <div id="adminMsg" class="muted" style="margin-top:8px"></div>
   </div>
 
-  <!-- =================== ASESOR =================== -->
+  <!-- ASESOR -->
   <div class="card hid" id="formCard">
     <h1>Reporte Diario</h1>
     <div class="grid grid-2">
-      <!-- ID asesor oculto -->
       <input id="asesorId" class="hid" />
-
-      <!-- Datos fijos que el asesor NO edita -->
       <div><label>Asesor</label><input id="asesorNombre" readonly /></div>
       <div><label>Fecha</label><input id="fecha" readonly /></div>
+
       <div><label>Ciudad</label><select id="ciudad" disabled></select></div>
       <div><label>Sede (Centro Comercial)</label><select id="sede" disabled></select></div>
       <div><label>Máquina</label><select id="maquina" disabled></select></div>
 
-      <!-- Campos editables por asesor -->
       <div><label>Marcado (monto en $)</label><input id="marcado" type="number" min="0" step="1000" value="0" /></div>
       <div><label>Error (monto en $)</label><input id="error" type="number" min="0" step="1000" value="0" /></div>
 
-      <!-- Cálculos automáticos (solo lectura) -->
       <div><label>Tickets vendidos (auto)</label><input id="tickets" type="number" readonly value="0" /></div>
       <div><label>Venta total (auto)</label><input id="venta" type="number" readonly value="0" /></div>
 
       <div><label>Meta del día (admin)</label><input id="meta" type="number" readonly value="0" /></div>
-      <!-- NUEVO: Faltante = Venta - Meta (auto) -->
-      <div><label>Faltante de Meta (auto)</label><input id="faltante" type="number" readonly value="0" /></div>
-
-      <!-- Editables por asesor -->
       <div><label>Gastos</label><input id="gastos" type="number" min="0" step="500" value="0" /></div>
-      <div><label>QR</label><input id="qr" type="number" min="0" step="1000" value="0" /></div>
 
-      <!-- Solo Admin (asesor NO edita) -->
+      <div><label>QR</label><input id="qr" type="number" min="0" step="1000" value="0" /></div>
       <div><label>Consignación (la edita Admin)</label><input id="consignacion" type="number" value="0" readonly /></div>
 
-      <!-- Automáticos -->
       <div><label>Efectivo (auto)</label><input id="efectivo" type="number" readonly value="0" /></div>
       <div><label>Pendiente por consignar (auto)</label><input id="pendiente" type="number" readonly value="0" /></div>
 
-      <!-- Comentario y evidencia -->
       <div style="grid-column:1 / -1">
         <label>Comentario</label>
         <textarea id="comentario" rows="3" placeholder="Observaciones del día"></textarea>
       </div>
+
       <div><label>Foto (jpg/png)</label><input id="foto" type="file" accept="image/*" /></div>
       <div><label>Video (mp4/quicktime)</label><input id="video" type="file" accept="video/*" /></div>
     </div>
@@ -138,7 +122,7 @@
   </div>
 </div>
 
-<!-- =================== MODAL CONFIRM ENVÍO =================== -->
+<!-- Modal confirm envío -->
 <div class="modal" id="sendModal" role="dialog" aria-modal="true">
   <div class="content">
     <h3>Confirmar envío</h3>
@@ -150,18 +134,16 @@
   </div>
 </div>
 
-<!-- =================== LÓGICA (Front) =================== -->
 <script>
-/* ========= CONFIG =========
-   Reemplaza por la URL /exec del deployment ACTIVO de tu Apps Script.
-*/
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxLJtoRMNDMuYD1BSGgNIfkojpssJWSFy1s-hxRnBP5nNPd6k-E4Yu78upUbT1EXSUN/exec';
+/* ========= CONFIG ========= */
+/* ⬇️ PON AQUÍ LA URL /exec DE TU DEPLOY ACTIVO (muy importante) */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzThQETTbdTwXGarLwTW8t8kdogrjJ2qcSyAusJDAFOILx7nkz7rUK2ObsBFSO_kqeI/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
 /* ========= HELPERS ========= */
 const $=id=>document.getElementById(id);
-const todayStr=()=>new Date().toISOString().slice(0,10); // yyyy-MM-dd (para inputs date)
+const todayStr=()=>new Date().toISOString().slice(0,10);
 const num = id => +((($(id)?.value)||'0').toString().replace(/[, ]/g,'')) || 0;
 function lockToday(){ $('fecha').value=todayStr(); $('fecha').readOnly=true; }
 function setMsg(el, html){ el.innerHTML = html; }
@@ -171,7 +153,7 @@ async function login(){
   const api_key=$('apiKey').value.trim();
   setMsg($('loginMsg'),'Validando...');
   try{
-    // Si el enlace llegó con ?aid=USR-xxx lo mandamos para validar que el enlace corresponda al usuario
+    // Si el enlace vino con ?aid=USR-xxx, lo mandamos en el body para que el backend verifique coherencia
     const body = { api_key };
     if (AID_PARAM) body.aid = AID_PARAM;
 
@@ -179,16 +161,16 @@ async function login(){
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
     TOKEN=j.token; USER=j.user;
 
-    // Cargar listas y fijar fecha de hoy en vista del asesor
+    // Cargar listas y fecha fija
     await cargarListas(); lockToday();
 
     if((USER.rol||'').toLowerCase()==='admin'){
-      // Mostrar panel de administración
+      // Panel Admin
       $('adminCard').classList.remove('hid');
       initAdminSelectors();
       syncAdminPreview();
     }else{
-      // Mostrar formulario del asesor
+      // Asesor
       $('formCard').classList.remove('hid');
       $('asesorId').value = USER.id;
       $('asesorNombre').value = USER.nombre;
@@ -204,21 +186,13 @@ async function login(){
 /* ========= LISTAS ========= */
 async function cargarListas(){
   const r=await fetch(WEB_APP_URL+'?path=listas'); const j=await r.json(); LISTAS=j;
-  // En el formulario del asesor, estos selects quedan bloqueados (administradora define)
+  // Asesor selects (si Admin los usa, se llenan en su init)
   fillSelect('ciudad', j.ciudades,'id','nombre');
   $('ciudad').disabled = true;
 }
-function fillSelect(id,arr,valKey,txtKey){
-  const sel=$(id); sel.innerHTML='';
-  (arr||[]).forEach(o=>{
-    const op=document.createElement('option');
-    op.value=o[valKey]; op.textContent=o[txtKey];
-    sel.appendChild(op);
-  });
-}
+function fillSelect(id,arr,valKey,txtKey){ const sel=$(id); sel.innerHTML=''; arr.forEach(o=>{const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);}); }
 
 /* ========= ASESOR: obtener asignación del día ========= */
-<script>
 async function cargarAsignacionDelDia(){
   try{
     const q = new URLSearchParams({ token: TOKEN });
@@ -227,51 +201,26 @@ async function cargarAsignacionDelDia(){
     if (!j.ok) throw new Error(j.error||'Sin asignación');
 
     const a = j.asignacion;
-
-    // 1) Pintar exactamente lo que definió la ADMIN (de hoja Asignaciones)
-    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); 
-    $('ciudad').value = a.ciudad_id;
-
-    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); 
-    $('sede').value = a.sede_id;
-
-    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); 
-    $('maquina').value = a.maquina_id;
-
-    // Meta definida por admin para HOY
+    // Pintar
+    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
+    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
+    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
     $('meta').value = Number(a.meta_dia||0) || 0;
 
-    // 2) Asegurar que el asesor del formulario sea el asignado
-    $('asesorId').value = a.asesor_id;
-    // Si quieres además mostrar el nombre que corresponde a ese ID (por si difiere del usuario logueado):
-    const u = (LISTAS.usuarios||[]).find(u => String(u.id)===String(a.asesor_id));
-    if (u && u.nombre) $('asesorNombre').value = u.nombre;
-
-    // 3) El asesor NO puede cambiar lo asignado
+    // Esta info NO la puede cambiar el asesor
     ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
 
-    // 4) Si ya envió hoy, bloquear todo
+    // Si ya envió hoy, bloquear todo y notificar
     if (j.enviado_hoy){
       bloquearFormulario();
       setMsg($('msg'), '<span class="ok">Ya registraste tu reporte hoy. Este enlace queda deshabilitado.</span>');
     }
-
-    // Recalcular automáticos por si ya hay valores en los campos editables
-    recalcAuto();
   }catch(e){
     setMsg($('msg'), '<span class="bad">No tienes asignación para hoy.</span>');
   }
 }
-</script>
 
-
-/* ========= Cálculos encadenados =========
-   - Venta total   = Marcado - Error
-   - Tickets       = floor(Venta/13) (entero)
-   - Efectivo      = Venta - Gastos - QR
-   - Pendiente     = Efectivo - Consignación
-   - Faltante Meta = Venta - Meta (nuevo)
-*/
+/* ========= Cálculos encadenados ========= */
 function recalcAuto(){
   const marcado = num('marcado');
   const error   = num('error');
@@ -290,47 +239,27 @@ function recalcAuto(){
 
   const pendiente = Math.max(0, efectivo - cons);
   $('pendiente').value = pendiente;
-
-  const faltante = venta - (+$('meta').value || 0);     // NUEVO
-  $('faltante').value = faltante;
 }
-// Recalcular cada vez que cambien valores editables por el asesor
 ['marcado','error','gastos','qr'].forEach(id=>{
   document.addEventListener('input', e=>{ if(e.target && e.target.id===id) recalcAuto(); });
 });
 
-/* ========= Bloqueo de interfaz (asesor ya envió) ========= */
 function bloquearFormulario(){
-  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{
-    const el=$(id); if(el) el.disabled=true;
-  });
+  // Bloquea todo para el asesor
+  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{ const el=$(id); if(el) el.disabled=true; });
   $('btnEnviar').disabled = true;
 }
 
-/* ========= Subida a Drive ========= */
-async function uploadFile(file){
-  if(!file) return '';
-  const base64=await new Promise((res,rej)=>{
-    const fr=new FileReader();
-    fr.onload=()=>res(String(fr.result).split(',')[1]);
-    fr.onerror=rej; fr.readAsDataURL(file);
-  });
-  const r=await fetch(WEB_APP_URL+'?path=upload',{
-    method:'POST',headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})
-  });
-  const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir');
-  return j.url;
-}
+/* ========= Upload a Drive ========= */
+async function uploadFile(file){ if(!file) return ''; const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);}); const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url; }
 
-/* ========= Confirmación (preview) y envío ========= */
+/* ========= Confirmación y envío ========= */
 function abrirPreviewEnvio(){
-  // Vista previa con formato COP en los montos
   const html = `
   <div><b>Asesor:</b> ${$('asesorNombre').value}</div>
   <div><b>Fecha:</b> ${$('fecha').value}</div>
-  <div><b>Ciudad:</b> ${$('ciudad').options[$('ciudad').selectedIndex]?.text||''}</div>
-  <div><b>Sede:</b> ${$('sede').options[$('sede').selectedIndex]?.text||''}</div>
+  <div><b>Ciudad:</b> ${$('ciudad').options[$('ciudad').selectedIndex].text}</div>
+  <div><b>Sede:</b> ${$('sede').options[$('sede').selectedIndex].text}</div>
   <div><b>Máquina:</b> ${$('maquina').value}</div>
   <div><b>Meta del día:</b> $${(+$('meta').value||0).toLocaleString('es-CO')}</div>
   <hr style="border-color:#1f2937;margin:8px 0">
@@ -340,13 +269,10 @@ function abrirPreviewEnvio(){
   <div><b>QR:</b> $${(+$('qr').value||0).toLocaleString('es-CO')}</div>
   <div><b>Venta total:</b> $${(+$('venta').value||0).toLocaleString('es-CO')}</div>
   <div><b>Tickets vendidos:</b> ${$('tickets').value}</div>
-  <div><b>Faltante de Meta:</b> $${(+$('faltante').value||0).toLocaleString('es-CO')}</div>
   <div><b>Efectivo:</b> $${(+$('efectivo').value||0).toLocaleString('es-CO')}</div>
   <div><b>Pendiente por consignar:</b> $${(+$('pendiente').value||0).toLocaleString('es-CO')}</div>
   <div><b>Comentario:</b> ${$('comentario').value||'-'}</div>`;
   $('sendPreview').innerHTML = html;
-
-  // Mostrar modal y manejar acciones
   $('sendModal').style.display='flex';
   $('btnSendCancel').onclick = ()=> $('sendModal').style.display='none';
   $('btnSendConfirm').onclick = ()=> { $('sendModal').style.display='none'; enviar(); };
@@ -357,47 +283,28 @@ async function enviar(){
   try{
     const foto_url=await uploadFile($('foto').files[0]);
     const video_url=await uploadFile($('video').files[0]);
-
-    // Payload con todos los valores (numerales crudos para que Sheets mantenga sumas)
     const payload={
       fecha:$('fecha').value,
       ciudad_id:$('ciudad').value,
       sede_id:$('sede').value,
       maquina_id:$('maquina').value,
       asesor_id:$('asesorId').value,
-      marcado:num('marcado')||0,
-      error:num('error')||0,
-      tickets_vendidos:num('tickets')||0,
-      venta_total:num('venta')||0,
-      meta_dia:num('meta')||0,
-      gastos:num('gastos')||0,
-      qr:num('qr')||0,
-      efectivo:num('efectivo')||0,
-      consignacion:num('consignacion')||0,
-      pendiente_consignar:num('pendiente')||0,
-      comentario:$('comentario').value||'',
-      foto_url, video_url
+      marcado:num('marcado')||0, error:num('error')||0, tickets_vendidos:num('tickets')||0,
+      venta_total:num('venta')||0, meta_dia:num('meta')||0, gastos:num('gastos')||0,
+      qr:num('qr')||0, efectivo:num('efectivo')||0, consignacion:num('consignacion')||0, pendiente_consignar:num('pendiente')||0,
+      comentario:$('comentario').value||'', foto_url, video_url
     };
-
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{
-      method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({token:TOKEN,payload})
-    });
+    const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
 
     setMsg($('msg'),'<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
     bloquearFormulario();
-  }catch(e){
-    setMsg($('msg'),'<span class="bad">❌ '+e.message+'</span>');
-  }
+  }catch(e){ setMsg($('msg'),'<span class="bad">❌ '+e.message+'</span>'); }
 }
 
 /* ========= ADMIN ========= */
 function initAdminSelectors(){
-  // Fecha por defecto = hoy (yyyy-MM-dd para el input)
-  $('a_fecha').value = todayStr();
-
-  // Cascada ciudad -> sede -> máquina
+  // fills
   fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
   $('a_ciudad').addEventListener('change', ()=>{
     const cid=$('a_ciudad').value;
@@ -410,14 +317,13 @@ function initAdminSelectors(){
     fillSelect('del_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
     syncAdminPreview();
   });
-
-  // Asesores (solo activos con rol asesor)
   const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
   fillSelect('a_asesor', asesores,'id','nombre');
   fillSelect('del_asesor', asesores,'id','nombre');
 
   ['a_asesor','a_meta'].forEach(id=>$(id).addEventListener('input', syncAdminPreview));
   $('a_ciudad').dispatchEvent(new Event('change'));
+
   $('btnAdminGuardar').addEventListener('click', adminGuardar);
   $('btnDelete').addEventListener('click', adminDeleteReport);
   syncAdminPreview();
@@ -429,43 +335,25 @@ function syncAdminPreview(){
   const asesor = $('a_asesor').options[$('a_asesor').selectedIndex]?.text || '';
   const meta   = +$('a_meta').value || 0;
   $('adminPreview').innerHTML =
-    `<div><b>Fecha:</b> ${$('a_fecha').value || '-'}</div>
-     <div><b>Ciudad:</b> ${ciudad}</div>
+    `<div><b>Ciudad:</b> ${ciudad}</div>
      <div><b>Sede:</b> ${sede}</div>
      <div><b>Máquina:</b> ${maq}</div>
      <div><b>Asesor:</b> ${asesor}</div>
      <div><b>Meta del día:</b> $${meta.toLocaleString('es-CO')}</div>`;
 }
-
-<script>
 async function adminGuardar(){
   const msg=$('adminMsg'); setMsg(msg,'Guardando...');
   try{
     const q=new URLSearchParams({
-      token:TOKEN,
-      ciudad_id:$('a_ciudad').value,
-      sede_id:$('a_sede').value,
-      maquina_id:$('a_maquina').value,
-      asesor_id:$('a_asesor').value,
+      token:TOKEN, ciudad_id:$('a_ciudad').value, sede_id:$('a_sede').value,
+      maquina_id:$('a_maquina').value, asesor_id:$('a_asesor').value,
       meta_sugerida:String(+$('a_meta').value||0)
     });
-
     const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
-    const j=await r.json(); 
-    if(!j.ok) throw new Error(j.error||'No se pudo guardar');
-
-    // Refrescar listas por si la meta/asesor de la máquina cambiaron
-    await cargarListas();
-    syncAdminPreview();
-
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
     setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
-  }catch(e){
-    setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>');
-  }
+  }catch(e){ setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>'); }
 }
-</script>
-
-<script>
 async function adminDeleteReport(){
   const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
   try{
@@ -475,36 +363,16 @@ async function adminDeleteReport(){
       maquina_id:$('del_maquina').value||'',
       fecha: todayStr()
     });
-
     const r=await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
-    const j=await r.json();
-
-    if (!j.ok){
-      setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
-      return;
-    }
-
-    // Compatibilidad: algunos backends devuelven removed y (opcional) removed_asignaciones
-    const rep = Number(j.removed||0);
-    const asi = Number(j.removed_asignaciones||0);
-    if (rep>0 || asi>0){
-      setMsg(msg, `<span class="ok">✔ Eliminado. Reportes: ${rep} · Asignaciones: ${asi}</span>`);
-    } else {
-      setMsg(msg, `<span class="bad">❌ No hay reporte para eliminar</span>`);
-    }
-  }catch(e){
-    setMsg($('adminMsg'), `<span class="bad">❌ ${e.message || 'No hay reporte para eliminar'}</span>`);
-  }
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo eliminar');
+    setMsg(msg,'<span class="ok">✔ Reporte de HOY eliminado</span>');
+  }catch(e){ setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>'); }
 }
-</script>
 
-
-/* ========= INIT (al cargar la página) ========= */
+/* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
   const url = new URL(location.href);
-  // Si el asesor abre desde el correo, llega con ?aid=ID. Se valida en el backend al hacer login.
-  AID_PARAM = url.searchParams.get('aid') || null;
-
+  AID_PARAM = url.searchParams.get('aid') || null; // si vino desde email del asesor
   $('btnLogin').addEventListener('click', login);
   $('btnEnviar').addEventListener('click', abrirPreviewEnvio);
 });
