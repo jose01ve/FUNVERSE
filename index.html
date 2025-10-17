@@ -135,7 +135,7 @@
 <script>
 /* ========= CONFIG ========= */
 /* ⬇️ PON AQUÍ LA URL /exec DE TU DEPLOY ACTIVO (muy importante) */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyulW-A7XEnVAIn4mtuEDOEjfTQ3v_pV2I_SLbFbNzkf3RivpWk6ZxpC2w0Ds-zfk5T/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbymdFNg4yGkLDH-s--xltr7xh6RF-sTkZD6hhU4PxMw47ISa0PvAaN51XEioNTH9Ukk/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -362,23 +362,9 @@ async function adminDeleteReport(){
       fecha: todayStr()
     });
     const r=await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
-    const j=await r.json();
-
-    if (!j.ok){
-      // Mostrar mensaje exacto del backend (por ejemplo: "No hay reporte para eliminar")
-      setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
-      return;
-    }
-
-    if (typeof j.removed === 'number' && j.removed > 0){
-      setMsg(msg, `<span class="ok">✔ Reporte de HOY eliminado (${j.removed})</span>`);
-    } else {
-      setMsg(msg, `<span class="bad">❌ No hay reporte para eliminar</span>`);
-    }
-  }catch(e){
-    // Error de red u otro
-    setMsg($('adminMsg'), `<span class="bad">❌ ${e.message || 'No hay reporte para eliminar'}</span>`);
-  }
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo eliminar');
+    setMsg(msg,'<span class="ok">✔ Reporte de HOY eliminado</span>');
+  }catch(e){ setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>'); }
 }
 
 /* ========= INIT ========= */
