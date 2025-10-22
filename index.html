@@ -25,7 +25,6 @@
   .subtitle{color:#9aa4bf;font-size:.95rem}
   .row{display:flex;gap:8px}
   .row>*{flex:1}
-
   /* modal */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
   .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;padding:16px}
@@ -33,6 +32,8 @@
   .btn-outline{background:transparent;border:1px solid var(--border)}
   .preview{background:#0b1224;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:.93rem}
   .preview b{color:#fff}
+  .inline{display:flex;gap:8px;align-items:end}
+  .inline .half{flex:1}
 </style>
 </head>
 <body>
@@ -53,22 +54,26 @@
   <!-- ADMIN -->
   <div class="card hid" id="adminCard">
     <h1>Admin · Asignación y Meta · FUNVENSER</h1>
+
     <div class="grid grid-2">
       <div><label>Ciudad</label><select id="a_ciudad"></select></div>
       <div><label>Sede</label><select id="a_sede"></select></div>
       <div><label>Máquina</label><select id="a_maquina"></select></div>
       <div><label>Asesor</label><select id="a_asesor"></select></div>
 
-      <!-- Meta + Fecha (nueva) -->
-      <div>
-        <label>Meta del día</label>
-        <input id="a_meta" type="number" min="0" step="1000" value="0" />
-      </div>
-      <div>
-        <label>Fecha de la asignación</label>
-        <input id="a_fecha" type="date" />
+      <!-- Meta + Fecha -->
+      <div class="inline">
+        <div class="half">
+          <label>Meta del día</label>
+          <input id="a_meta" inputmode="numeric" value="$ 0" />
+        </div>
+        <div class="half">
+          <label>Fecha asignación</label>
+          <input id="a_fecha" type="date" />
+        </div>
       </div>
     </div>
+
     <div class="row">
       <button id="btnAdminGuardar">Guardar asignación/meta</button>
     </div>
@@ -84,7 +89,6 @@
     <div class="row">
       <button class="btn-outline" id="btnDelete">Eliminar reporte de HOY</button>
     </div>
-
     <div id="adminMsg" class="muted" style="margin-top:8px"></div>
   </div>
 
@@ -100,26 +104,24 @@
       <div><label>Sede (Centro Comercial)</label><select id="sede" disabled></select></div>
       <div><label>Máquina</label><select id="maquina" disabled></select></div>
 
-      <!-- Editables como TEXTO para permitir puntos (18.000) -->
-      <div><label>Marcado (monto en $)</label><input id="marcado" type="text" inputmode="numeric" value="0" /></div>
-      <div><label>Error (monto en $)</label><input id="error" type="text" inputmode="numeric" value="0" /></div>
+      <div><label>Marcado (monto en $)</label><input id="marcado" inputmode="numeric" value="$ 0" /></div>
+      <div><label>Error (monto en $)</label><input id="error" inputmode="numeric" value="$ 0" /></div>
 
-      <div><label>Tickets vendidos (auto)</label><input id="tickets" type="text" readonly value="0" /></div>
-      <div><label>Venta total (auto)</label><input id="venta" type="text" readonly value="0" /></div>
+      <div><label>Tickets vendidos (auto)</label><input id="tickets" type="number" readonly value="0" /></div>
+      <div><label>Venta total (auto)</label><input id="venta" readonly value="$ 0" /></div>
 
-      <div><label>Meta del día (admin)</label><input id="meta" type="text" readonly value="0" /></div>
-      <div><label>Gastos</label><input id="gastos" type="text" inputmode="numeric" value="0" /></div>
+      <div><label>Meta del día (admin)</label><input id="meta" readonly value="$ 0" /></div>
+      <div><label>Gastos</label><input id="gastos" inputmode="numeric" value="$ 0" /></div>
 
-      <div><label>QR</label><input id="qr" type="text" inputmode="numeric" value="0" /></div>
-      <div><label>Consignación (la edita Admin)</label><input id="consignacion" type="text" value="0" readonly /></div>
+      <div><label>QR</label><input id="qr" inputmode="numeric" value="$ 0" /></div>
+      <div><label>Consignación (la edita Admin)</label><input id="consignacion" readonly value="$ 0" /></div>
 
-      <div><label>Efectivo (auto)</label><input id="efectivo" type="text" readonly value="0" /></div>
-      <div><label>Pendiente por consignar (auto)</label><input id="pendiente" type="text" readonly value="0" /></div>
+      <div><label>Efectivo (auto)</label><input id="efectivo" readonly value="$ 0" /></div>
+      <div><label>Pendiente por consignar (auto)</label><input id="pendiente" readonly value="$ 0" /></div>
 
-      <!-- NUEVO: Faltante de Meta -->
       <div style="grid-column:1 / -1">
-        <label>Faltante de Meta (auto = Venta - Meta)</label>
-        <input id="faltante" type="text" readonly value="0" />
+        <label>Faltante de Meta (auto = Venta – Meta)</label>
+        <input id="faltante" readonly value="$ 0" />
       </div>
 
       <div style="grid-column:1 / -1">
@@ -149,22 +151,25 @@
 </div>
 
 <script>
-/* ========= CONFIG ========= */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpxs95LrW4_mRuXapVtee2wnYvxNOPGCykmgNzOn3T8iZg2rAySZoxdHP7O4DiWrA2/exec';
+/* ========= CONFIG (URL del Web App) ========= */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz4JqlRT1_ASfKTX20un_H9rWnpI5-gsy4YEjbb-HSU-6nZthpMVoJdvWrduUTE2J5d/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
 /* ========= HELPERS ========= */
 const $=id=>document.getElementById(id);
 const todayIso=()=>new Date().toISOString().slice(0,10);
-const toDMY = iso => iso && iso.includes('-') ? iso.split('-').reverse().join('-') : iso;
-// lee valor de input y lo normaliza: quita puntos, comas y espacios
-const readNumber = id => +((($(id)?.value)||'0').toString().replace(/[.,\s]/g,'')) || 0;
-// escribe como COP ($ 47.000)
-const fmtCOP = v => '$ '+(Number(v)||0).toLocaleString('es-CO');
+const isoToDMY = iso => { const [y,m,d]=iso.split('-'); return `${d}-${m}-${y}`; };
+const toCOP = n => `$ ${Math.max(0, Math.trunc(Number(n)||0)).toLocaleString('es-CO')}`;
+const parseCOP = v => Number(String(v||'0').replace(/[^0-9]/g,'')); // permite "18.000" etc.
 
+/* Pone hoy en la casilla de fecha (formato dd-MM-yyyy para mostrar) */
+function lockToday(){
+  const dmy = isoToDMY(todayIso());
+  $('fecha').value = dmy;
+  $('fecha').readOnly = true;
+}
 function setMsg(el, html){ el.innerHTML = html; }
-function setMoney(id, val){ $(id).value = fmtCOP(val); }
 
 /* ========= LOGIN ========= */
 async function login(){
@@ -178,7 +183,7 @@ async function login(){
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
     TOKEN=j.token; USER=j.user;
 
-    await cargarListas();
+    await cargarListas(); lockToday();
 
     if((USER.rol||'').toLowerCase()==='admin'){
       $('adminCard').classList.remove('hid');
@@ -188,9 +193,8 @@ async function login(){
       $('formCard').classList.remove('hid');
       $('asesorId').value = USER.id;
       $('asesorNombre').value = USER.nombre;
-      $('fecha').value = toDMY(todayIso()); // mostrar dd-MM-yyyy
       await cargarAsignacionDelDia();
-      recalcAuto();
+      recalcAuto(); // primer cálculo
     }
 
     $('loginCard').classList.add('hid');
@@ -201,14 +205,19 @@ async function login(){
 /* ========= LISTAS ========= */
 async function cargarListas(){
   const r=await fetch(WEB_APP_URL+'?path=listas'); const j=await r.json(); LISTAS=j;
-  fillSelect('ciudad', j.ciudades,'id','nombre'); $('ciudad').disabled = true;
+  fillSelect('ciudad', j.ciudades,'id','nombre');
+  $('ciudad').disabled = true;
 }
 function fillSelect(id,arr,valKey,txtKey){
   const sel=$(id); sel.innerHTML='';
-  arr.forEach(o=>{const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);});
+  (arr||[]).forEach(o=>{
+    const op=document.createElement('option');
+    op.value=o[valKey]; op.textContent=o[txtKey];
+    sel.appendChild(op);
+  });
 }
 
-/* ========= ASESOR: asignación del día ========= */
+/* ========= ASESOR: obtener asignación del día ========= */
 async function cargarAsignacionDelDia(){
   try{
     const q = new URLSearchParams({ token: TOKEN });
@@ -217,12 +226,13 @@ async function cargarAsignacionDelDia(){
     if (!j.ok) throw new Error(j.error||'Sin asignación');
 
     const a = j.asignacion;
+    // Pintar selects
     fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
     fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
     fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
+    $('meta').value = toCOP(a.meta_dia||0);
 
-    setMoney('meta', a.meta_dia);
-
+    // bloqueables por el asesor
     ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
 
     if (j.enviado_hoy){
@@ -234,40 +244,57 @@ async function cargarAsignacionDelDia(){
   }
 }
 
-/* ========= Máscara dinero & cálculos ========= */
-// convierte 18.000 -> $ 18.000 en inputs editables y recalcula
-['marcado','error','gastos','qr'].forEach(id=>{
-  const el=$(id);
-  el.addEventListener('input', ()=>{ el.value = el.value.replace(/[^\d.,]/g,''); recalcAuto(); });
-  el.addEventListener('blur', ()=>{ el.value = fmtCOP(readNumber(id)); });
+/* ========= Formateo COP en campos editables ========= */
+['marcado','error','gastos','qr','a_meta'].forEach(id=>{
+  document.addEventListener('input', e=>{
+    if (e.target && e.target.id===id){
+      // no reformateo agresivo durante escritura; solo cálculos
+      recalcAuto();
+    }
+  });
+  document.addEventListener('blur', e=>{
+    if (e.target && e.target.id===id){
+      e.target.value = toCOP(parseCOP(e.target.value));
+      if (id==='a_meta') syncAdminPreview();
+    }
+  }, true);
 });
 
+/* ========= Cálculos encadenados =========
+   Venta total = Marcado - Error
+   Tickets = floor(Venta / 13)
+   Efectivo = Venta - Gastos - QR
+   Pendiente = Efectivo - Consignación
+   Faltante = Venta - Meta
+======================================================== */
 function recalcAuto(){
-  const marcado = readNumber('marcado');
-  const error   = readNumber('error');
-  const gastos  = readNumber('gastos');
-  const qr      = readNumber('qr');
-  const cons    = readNumber('consignacion');
-  const meta    = readNumber('meta');
+  const marcado = parseCOP($('marcado').value);
+  const error   = parseCOP($('error').value);
+  const gastos  = parseCOP($('gastos').value);
+  const qr      = parseCOP($('qr').value);
+  const meta    = parseCOP($('meta').value);
+  const cons    = parseCOP($('consignacion').value);
 
   const venta = Math.max(0, marcado - error);
-  setMoney('venta', venta);
+  $('venta').value = toCOP(venta);
 
   const tickets = Math.max(0, Math.trunc(venta / 13));
-  $('tickets').value = String(tickets);
+  $('tickets').value = tickets;
 
   const efectivo = Math.max(0, venta - gastos - qr);
-  setMoney('efectivo', efectivo);
+  $('efectivo').value = toCOP(efectivo);
 
   const pendiente = Math.max(0, efectivo - cons);
-  setMoney('pendiente', pendiente);
+  $('pendiente').value = toCOP(pendiente);
 
-  const faltante = Math.max(0, venta - meta);
-  setMoney('faltante', faltante);
+  const faltante = Math.max(0, (venta - meta));
+  $('faltante').value = toCOP(faltante);
 }
 
 function bloquearFormulario(){
-  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{ const el=$(id); if(el) el.disabled=true; });
+  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{
+    const el=$(id); if(el) el.disabled=true;
+  });
   $('btnEnviar').disabled = true;
 }
 
@@ -275,10 +302,13 @@ function bloquearFormulario(){
 async function uploadFile(file){
   if(!file) return '';
   const base64=await new Promise((res,rej)=>{
-    const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);
+    const fr=new FileReader();
+    fr.onload=()=>res(String(fr.result).split(',')[1]);
+    fr.onerror=rej; fr.readAsDataURL(file);
   });
   const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})});
-  const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url;
+  const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir');
+  return j.url;
 }
 
 /* ========= Confirmación y envío ========= */
@@ -313,27 +343,25 @@ async function enviar(){
     const foto_url=await uploadFile($('foto').files[0]);
     const video_url=await uploadFile($('video').files[0]);
 
-    // Enviamos números LIMPIOS, no con formato
     const payload={
-      fecha: todayIso(), // el backend lo guardará como dd-MM-yyyy
+      fecha: todayIso(), // backend lo guarda dd-MM-yyyy
       ciudad_id:$('ciudad').value,
       sede_id:$('sede').value,
       maquina_id:$('maquina').value,
       asesor_id:$('asesorId').value,
-      marcado:readNumber('marcado')||0,
-      error:readNumber('error')||0,
-      tickets_vendidos: +$('tickets').value||0,
-      venta_total:readNumber('venta')||0,
-      meta_dia:readNumber('meta')||0,
-      gastos:readNumber('gastos')||0,
-      qr:readNumber('qr')||0,
-      efectivo:readNumber('efectivo')||0,
-      consignacion:readNumber('consignacion')||0,
-      pendiente_consignar:readNumber('pendiente')||0,
+      marcado:parseCOP($('marcado').value)||0,
+      error:parseCOP($('error').value)||0,
+      tickets_vendidos:Number($('tickets').value)||0,
+      venta_total:parseCOP($('venta').value)||0,
+      meta_dia:parseCOP($('meta').value)||0,
+      gastos:parseCOP($('gastos').value)||0,
+      qr:parseCOP($('qr').value)||0,
+      efectivo:parseCOP($('efectivo').value)||0,
+      consignacion:parseCOP($('consignacion').value)||0,
+      pendiente_consignar:parseCOP($('pendiente').value)||0,
       comentario:$('comentario').value||'',
       foto_url, video_url
     };
-
     const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
 
@@ -356,15 +384,16 @@ function initAdminSelectors(){
     fillSelect('del_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
     syncAdminPreview();
   });
+
   const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
   fillSelect('a_asesor', asesores,'id','nombre');
   fillSelect('del_asesor', asesores,'id','nombre');
 
+  // Fecha por defecto = hoy
+  $('a_fecha').value = todayIso();
+
   ['a_asesor','a_meta','a_fecha'].forEach(id=>$(id).addEventListener('input', syncAdminPreview));
   $('a_ciudad').dispatchEvent(new Event('change'));
-
-  // default: hoy
-  $('a_fecha').value = todayIso();
 
   $('btnAdminGuardar').addEventListener('click', adminGuardar);
   $('btnDelete').addEventListener('click', adminDeleteReport);
@@ -375,26 +404,27 @@ function syncAdminPreview(){
   const sede   = $('a_sede').options[$('a_sede').selectedIndex]?.text || '';
   const maq    = $('a_maquina').value || '';
   const asesor = $('a_asesor').options[$('a_asesor').selectedIndex]?.text || '';
-  const meta   = +($('a_meta').value||0);
-  const fecha  = $('a_fecha').value ? toDMY($('a_fecha').value) : toDMY(todayIso());
+  const meta   = parseCOP($('a_meta').value||0);
   $('adminPreview').innerHTML =
     `<div><b>Ciudad:</b> ${ciudad}</div>
      <div><b>Sede:</b> ${sede}</div>
      <div><b>Máquina:</b> ${maq}</div>
      <div><b>Asesor:</b> ${asesor}</div>
-     <div><b>Fecha:</b> ${fecha}</div>
-     <div><b>Meta del día:</b> ${fmtCOP(meta)}</div>`;
+     <div><b>Meta del día:</b> ${toCOP(meta)}</div>
+     <div><b>Fecha:</b> ${isoToDMY($('a_fecha').value)}</div>`;
 }
 async function adminGuardar(){
   const msg=$('adminMsg'); setMsg(msg,'Guardando...');
   try{
-    const fecha_dmy = toDMY($('a_fecha').value || todayIso());
     const q=new URLSearchParams({
       token:TOKEN,
-      ciudad_id:$('a_ciudad').value, sede_id:$('a_sede').value,
-      maquina_id:$('a_maquina').value, asesor_id:$('a_asesor').value,
-      meta_sugerida:String(+($('a_meta').value||0)),
-      fecha_dmy // << nueva fecha para guardar en Asignaciones
+      ciudad_id:$('a_ciudad').value,
+      sede_id:$('a_sede').value,
+      maquina_id:$('a_maquina').value,
+      asesor_id:$('a_asesor').value,
+      meta_sugerida:String(parseCOP($('a_meta').value)||0),
+      // mandamos dd-MM-yyyy para que el backend lo guarde así
+      fecha_dmy: isoToDMY($('a_fecha').value)
     });
     const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
@@ -412,14 +442,16 @@ async function adminDeleteReport(){
     });
     const r=await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
     const j=await r.json();
-
     if (!j.ok){
       setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
       return;
     }
-    const n = (j.removed_reports||0) + (j.removed_assignments||0);
-    if (n>0) setMsg(msg, `<span class="ok">✔ Reporte de HOY eliminado</span>`);
-    else setMsg(msg, `<span class="bad">❌ No hay reporte para eliminar</span>`);
+    const tot = (j.removed_reports||0) + (j.removed_assignments||0);
+    if (tot>0){
+      setMsg(msg, `<span class="ok">✔ Eliminado (${j.removed_reports||0} reporte(s), ${j.removed_assignments||0} asignación(es))</span>`);
+    } else {
+      setMsg(msg, `<span class="bad">❌ No hay reporte para eliminar</span>`);
+    }
   }catch(e){
     setMsg($('adminMsg'), `<span class="bad">❌ ${e.message || 'No hay reporte para eliminar'}</span>`);
   }
