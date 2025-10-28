@@ -295,8 +295,7 @@ function recalcAuto(){
     f.innerHTML = `🔺 <span class="money good">Sobre meta</span>: ${toCOP(Math.abs(faltante))}`;
   }else if (faltante > 0){
     f.className='flag under';
-    f.innerHTML = `🔻 <span class="money bad">Faltan</span> ${toCOP(faltante)} para la meta.`;
-  }else{
+    }else{
     f.className='flag hit';
     f.innerHTML = `✓ Meta cumplida. ¡Buen cierre!`;
   }
