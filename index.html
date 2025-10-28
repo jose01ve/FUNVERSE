@@ -265,6 +265,13 @@ function initMasksAndRecalc(){
    Pendiente = Efectivo - Consignación
    Faltante = Venta - Meta
 */
+/* ======= FÓRMULAS EXACTAS (versión con mensajes simples) =======
+   Venta = Marcado - Error
+   Tickets = TRUNC( Venta / 13 )
+   Efectivo = Venta - Gastos - QR
+   Pendiente = Efectivo - Consignación
+   Faltante = max( Venta - Meta, 0 )   // nunca negativo
+*/
 function recalcAuto(){
   const marcado = parseMoney($('marcado').value);
   const error   = parseMoney($('error').value);
@@ -273,33 +280,37 @@ function recalcAuto(){
   const cons    = parseMoney($('consignacion').value);
   const meta    = parseMoney($('meta').value);
 
+  // Venta total
   const venta = Math.max(0, marcado - error);
   $('venta').value = toCOP(venta);
 
+  // Tickets (entero)
   const tickets = Math.max(0, Math.trunc(venta / 13));
   $('tickets').value = tickets;
 
+  // Efectivo y Pendiente
   const efectivo = Math.max(0, venta - gastos - qr);
   $('efectivo').value = toCOP(efectivo);
 
   const pendiente = Math.max(0, efectivo - cons);
   $('pendiente').value = toCOP(pendiente);
 
-  const faltante = venta - meta; // puede ser negativo (sobre-meta)
+  // Faltante de Meta (nunca negativo)
+  const faltanteRaw = venta - meta;
+  const faltante    = Math.max(faltanteRaw, 0);
   $('faltante').value = toCOP(faltante);
 
-  // feedback visual
+  // Mensaje simple
   const f = $('flag');
-  if (faltante < 0){
-    f.className='flag over';
-    f.innerHTML = `🔺 <span class="money good">Te falto para cumplir la meta</span>: ${toCOP(Math.abs(faltante))}`;
-  }else if (faltante > 0){
-    f.className='flag under';
-    }else{
-    f.className='flag hit';
-    f.innerHTML = `✓ Meta cumplida. ¡Buen cierre!`;
+  if (faltante > 0){
+    f.className = 'flag under';
+    f.textContent = 'No cumpliste la meta';
+  } else {
+    f.className = 'flag hit';
+    f.textContent = '✓ Meta cumplida. ¡Buen cierre!';
   }
 }
+
 
 function bloquearFormulario(){
   ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{ const el=$(id); if(el) el.disabled=true; });
