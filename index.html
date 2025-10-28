@@ -152,7 +152,7 @@
 
 <script>
 /* ========= CONFIG ========= */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwk-gxpMvSVx59yCCTNCrEPZfFfPb6O7YbpwniwlTpsW5EvuvftAiy1vz5KnP8ggjM/exec'; // <-- REEMPLAZA
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxVgJCW3tDBvSPXIuisaVMosmoPUF5ZUQJZXtgDIrrFakko_B4qMnKFFcDGO4p2sYmj/exec'; // <-- REEMPLAZA
 
 // Precio por ticket para el cálculo: Venta / TICKET_PRICE
 const TICKET_PRICE = 13000; // 13.000 => así 390.000/13.000 = 30
@@ -426,29 +426,57 @@ async function adminGuardar(){
     setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
   }catch(e){ setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>'); }
 }
+<script>
+// --- helper: normaliza a dd-MM-yyyy (acepta YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY, Date) ---
+function toDMY(str){
+  if(!str) return '';
+  str = String(str).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) { const [y,m,d]=str.split('-'); return `${d}-${m}-${y}`; }
+  const s = str.replace(/\//g,'-');
+  if (/^\d{2}-\d{2}-\d{4}$/.test(s)) return s;
+  const dt = new Date(str);
+  if (!isNaN(dt)) {
+    const pad = n => String(n).padStart(2,'0');
+    return `${pad(dt.getDate())}-${pad(dt.getMonth()+1)}-${dt.getFullYear()}`;
+  }
+  return s;
+}
+
+// === REEMPLAZA COMPLETO tu función adminDeleteReport por esta ===
 async function adminDeleteReport(){
-  const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
+  const msg = $('adminMsg');
+  setMsg(msg,'Eliminando...');
+
   try{
-    const fechaDMY = toDMY($('del_fecha').value || todayISO());
-    const q=new URLSearchParams({
-      token:TOKEN,
-      asesor_id:$('del_asesor').value,
-      maquina_id:$('del_maquina').value||'',
-      fecha: fechaDMY
+    const asesor_id = $('del_asesor').value;
+    const maquina_id = $('del_maquina') ? $('del_maquina').value : '';
+    // Asegúrate que el input de fecha tenga id="del_fecha"
+    const fecha_raw = $('del_fecha') ? $('del_fecha').value : '';
+    const fecha_dmy = toDMY(fecha_raw);
+
+    const body = { token: TOKEN, asesor_id, maquina_id, fecha: fecha_dmy };
+
+    const r = await fetch(WEB_APP_URL+'?path=admin_delete', {
+      method: 'POST',
+      headers: { 'Content-Type':'text/plain' },
+      body: JSON.stringify(body)
     });
-    const r=await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
-    const j=await r.json();
+
+    // Si la red falló, r.ok no existe; si llega, parseamos el JSON
+    const j = await r.json();
 
     if (!j.ok){
-      setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
-      return;
+      throw new Error(j.error || 'No hay reporte para eliminar');
     }
-    const a=j.removed_asignaciones||0, b=j.removed_reportes||0;
-    setMsg(msg, `<span class="ok">✔ Eliminado. Asignaciones: ${a}, Reportes: ${b}</span>`);
+
+    setMsg(msg,
+      `<span class="ok">✔ Eliminado. Reportes: ${j.removed_reportes||0}, Asignaciones: ${j.removed_asignaciones||0}</span>`
+    );
   }catch(e){
-    setMsg($('adminMsg'), `<span class="bad">❌ ${e.message || 'No hay reporte para eliminar'}</span>`);
+    setMsg(msg, `<span class="bad">❌ ${e.message || 'Failed to fetch'}</span>`);
   }
 }
+</script>
 
 /* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
