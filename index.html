@@ -292,7 +292,7 @@ function recalcAuto(){
   const f = $('flag');
   if (faltante < 0){
     f.className='flag over';
-    f.innerHTML = `🔺 <span class="money good">Sobre meta</span>: ${toCOP(Math.abs(faltante))}`;
+    f.innerHTML = `🔺 <span class="money good">Te falto para cumplir la meta</span>: ${toCOP(Math.abs(faltante))}`;
   }else if (faltante > 0){
     f.className='flag under';
     }else{
