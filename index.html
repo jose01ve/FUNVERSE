@@ -196,6 +196,10 @@ async function login(){
       $('asesorId').value = USER.id;
       $('asesorNombre').value = USER.nombre;
       await cargarAsignacionDelDia();
+
+      const q = new URLSearchParams({ token: TOKEN });
+if (DATE_PARAM) q.set('date', DATE_PARAM);
+const r = await fetch(WEB_APP_URL+'?path=asignacion&'+q.toString());
       recalcAuto();
     }
 
@@ -452,6 +456,7 @@ async function adminDeleteReport(){
 
 /* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
+  const DATE_PARAM = url.searchParams.get('date') || null;
   const url = new URL(location.href);
   AID_PARAM = url.searchParams.get('aid') || null;
   $('btnLogin').addEventListener('click', login);
