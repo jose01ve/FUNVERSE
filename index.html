@@ -34,10 +34,10 @@
   .preview{background:#0b1224;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:.93rem}
   .preview b{color:#fff}
 
-  /* Desempeño (faltante de meta) */
+  /* Desempeño */
   input.negativo{ color:#ff4d4d !important; font-weight:bold; } /* sobrecumplió (faltante < 0) */
   input.positivo{ color:#34d399 !important; font-weight:bold; } /* falta para meta (faltante > 0) */
-  input.neutro  { color:#cbd5e1 !important; }                  /* exactamente meta */
+  input.neutro  { color:#cbd5e1 !important; }                  /* meta exacta */
   .desempeno-line{display:flex;align-items:center;gap:8px;font-size:.95rem}
   .desempeno-icon{font-size:1.1rem}
   .motiv{margin-top:4px}
@@ -67,11 +67,10 @@
       <div><label>Máquina</label><select id="a_maquina"></select></div>
       <div><label>Asesor</label><select id="a_asesor"></select></div>
 
-      <!-- NUEVO: Fecha editable por la administradora -->
+      <!-- Fecha editable por la administradora -->
       <div>
         <label>Fecha de la asignación (dd-MM-yyyy)</label>
         <input id="a_fecha" type="date" />
-        <!-- Nota: el front enviará dd-MM-yyyy al backend -->
       </div>
 
       <div>
@@ -130,7 +129,7 @@
       <div><label>Efectivo (auto)</label><input id="efectivo" readonly value="$ 0" /></div>
       <div><label>Pendiente por consignar (auto)</label><input id="pendiente" readonly value="$ 0" /></div>
 
-      <!-- NUEVO: Faltante de Meta + icono + motivación -->
+      <!-- Faltante de Meta + icono + motivación -->
       <div>
         <label>Faltante de Meta (auto = Venta – Meta)</label>
         <input id="faltante" readonly value="$ 0" />
@@ -171,8 +170,7 @@
 
 <script>
 /* ========= CONFIG ========= */
-/* Usa tu deploy activo */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx9a9f6dzunVlGeczUANIuFMoNo8drxjVQcuoCINCTiAZ5qV6zonjOFsCZMZiE4MP4/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyKy0vqLQ07atvP0IZ6LE56T7I0f6kT0sJvFYcEedEryZTyKH_x20DLIRB1tQt8mcwP/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -182,19 +180,19 @@ const todayISO = ()=> new Date().toISOString().slice(0,10);           // yyyy-MM
 const isoToDMY = iso => { if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}-${m}-${y}`; };
 const dmyToISO = dmy => { if(!dmy) return ''; const [d,m,y]=dmy.split('-'); return `${y}-${m}-${d}`; };
 
-// Permite escribir “18.000” o “18,000” y lo interpreta como 18000
+// Permite ingresar 18.000 / 18,000
 const toNumber = (str) => +String(str||'0').replace(/[.,\s]/g,'') || 0;
 
 // Formato moneda COP
 const toCOP = (n) => new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(Math.round(n||0));
 
-// Escribe dinero en un input (value visible con $, pero devuelve número con toNumber cuando lo leemos)
+// Escribe dinero en un input
 function setMoney(id, val){
   const el=$(id); if(!el) return;
-  el.value = toCOP(val).replace(/\s*/g,' '); // $ 47.000
+  el.value = toCOP(val).replace(/\s*/g,' ');
 }
 
-// Devuelve número a partir de inputs formateados o numéricos
+// Lee número desde input formateado
 function num(id){
   const el=$(id); if(!el) return 0;
   return toNumber(el.value);
@@ -221,7 +219,6 @@ async function login(){
       $('adminCard').classList.remove('hid');
       initAdminSelectors();
       syncAdminPreview();
-      // por defecto ponemos la fecha de hoy en el date picker
       $('a_fecha').value = dmyToISO(isoToDMY(todayISO()));
       $('del_fecha').value = dmyToISO(isoToDMY(todayISO()));
     }else{
@@ -252,7 +249,7 @@ function fillSelect(id,arr,valKey,txtKey){
   });
 }
 
-/* ========= ASESOR: obtener asignación del día (con fecha asignada) ========= */
+/* ========= ASESOR: asignación con fecha asignada ========= */
 async function cargarAsignacionDelDia(){
   try{
     const q = new URLSearchParams({ token: TOKEN });
@@ -262,18 +259,12 @@ async function cargarAsignacionDelDia(){
 
     const a = j.asignacion;
 
-    // Pintar selects bloqueados
     fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
     fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
     fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
 
-    // Fecha que definió la admin (dd-MM-yyyy)
-    $('fecha').value = a.fecha;
-
-    // Meta admin
+    $('fecha').value = a.fecha;           // dd-MM-yyyy
     setMoney('meta', a.meta_dia||0);
-
-    // Campo consignación sigue readonly
     setMoney('consignacion', 0);
 
     ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
@@ -289,7 +280,6 @@ async function cargarAsignacionDelDia(){
 
 /* ========= Cálculos encadenados + desempeño ========= */
 function recalcAuto(){
-  // Lectura de valores numéricos (el asesor puede escribir 18.000 y se convierte a 18000)
   const marcado = num('marcado');
   const error   = num('error');
   const gastos  = num('gastos');
@@ -301,29 +291,28 @@ function recalcAuto(){
   const venta = Math.max(0, marcado - error);
   setMoney('venta', venta);
 
-  // 2) Tickets vendidos (entero)
-  const tickets = Math.max(0, Math.trunc(venta / 13));
+  // 2) Tickets vendidos (ENTERO) ———— CAMBIO: divisor 13.000
+  const tickets = Math.max(0, Math.trunc(venta / 13000));
   $('tickets').value = tickets;
 
-  // 3) Efectivo y 4) Pendiente por consignar
+  // 3) Efectivo
   const efectivo = Math.max(0, venta - gastos - qr);
   setMoney('efectivo', efectivo);
 
+  // 4) Pendiente por consignar
   const pendiente = Math.max(0, efectivo - cons);
   setMoney('pendiente', pendiente);
 
-  // 5) Faltante de Meta = venta - meta (puede ser negativo)
+  // 5) Faltante de Meta (con signo)
   const faltante = venta - meta;
   setMoney('faltante', faltante);
 
-  // Color del input según signo
   const falt = $('faltante');
   falt.classList.remove('negativo','positivo','neutro');
-  if (faltante < 0) falt.classList.add('negativo');       // sobrecumplió
-  else if (faltante > 0) falt.classList.add('positivo');  // falta para meta
+  if (faltante < 0) falt.classList.add('negativo');
+  else if (faltante > 0) falt.classList.add('positivo');
   else falt.classList.add('neutro');
 
-  // Icono + texto de desempeño
   const desIcon = $('desIcon');
   const desTexto= $('desTexto');
   const motiv   = $('motivacion');
@@ -343,7 +332,6 @@ function recalcAuto(){
   }
 }
 
-// Escuchar cambios en campos editables del asesor
 ['marcado','error','gastos','qr'].forEach(id=>{
   document.addEventListener('input', e=>{ if(e.target && e.target.id===id) recalcAuto(); });
 });
@@ -422,7 +410,6 @@ async function enviar(){
 
 /* ========= ADMIN ========= */
 function initAdminSelectors(){
-  // Llenado de selects
   fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
   $('a_ciudad').addEventListener('change', ()=>{
     const cid=$('a_ciudad').value;
@@ -447,7 +434,6 @@ function initAdminSelectors(){
   syncAdminPreview();
 }
 
-// Texto de vista previa admin
 function syncAdminPreview(){
   const ciudad = $('a_ciudad').options[$('a_ciudad').selectedIndex]?.text || '';
   const sede   = $('a_sede').options[$('a_sede').selectedIndex]?.text || '';
@@ -489,13 +475,18 @@ async function adminDeleteReport(){
   const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
   try{
     const fechaDMY = isoToDMY($('del_fecha').value || todayISO());
-    const q=new URLSearchParams({
-      token:TOKEN,
-      asesor_id:$('del_asesor').value,
-      maquina_id:$('del_maquina').value||'',
+    // —— CAMBIO: usar POST para evitar “Failed to fetch”
+    const body = {
+      token: TOKEN,
+      asesor_id: $('del_asesor').value,
+      maquina_id: $('del_maquina').value||'',
       fecha: fechaDMY
+    };
+    const r=await fetch(WEB_APP_URL+'?path=admin_delete',{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify(body)
     });
-    const r=await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
     const j=await r.json();
 
     if (!j.ok){
@@ -518,7 +509,7 @@ async function adminDeleteReport(){
 /* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
   const url = new URL(location.href);
-  AID_PARAM = url.searchParams.get('aid') || null; // si vino desde email del asesor
+  AID_PARAM = url.searchParams.get('aid') || null;
   $('btnLogin').addEventListener('click', login);
   $('btnEnviar').addEventListener('click', abrirPreviewEnvio);
 });
