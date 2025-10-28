@@ -196,10 +196,6 @@ async function login(){
       $('asesorId').value = USER.id;
       $('asesorNombre').value = USER.nombre;
       await cargarAsignacionDelDia();
-
-      const q = new URLSearchParams({ token: TOKEN });
-if (DATE_PARAM) q.set('date', DATE_PARAM);
-const r = await fetch(WEB_APP_URL+'?path=asignacion&'+q.toString());
       recalcAuto();
     }
 
