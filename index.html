@@ -452,7 +452,6 @@ async function adminDeleteReport(){
 
 /* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
-  const DATE_PARAM = url.searchParams.get('date') || null;
   const url = new URL(location.href);
   AID_PARAM = url.searchParams.get('aid') || null;
   $('btnLogin').addEventListener('click', login);
