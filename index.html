@@ -51,7 +51,7 @@
     <div id="loginMsg" class="muted"></div>
   </div>
 
-  <!-- ADMIN -->
+  <!-- ADMIN (SIN CAMBIOS SALVO borrado que ya te dejé) -->
   <div class="card hid" id="adminCard">
     <h1>Admin · Asignación y Meta · FUNVENSER</h1>
     <div class="grid grid-2">
@@ -143,7 +143,7 @@
 
 <script>
 /* ========= CONFIG ========= */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwJQjdNdNb7ipz2ge5r_Cdn99snk_gr7gBiG0Qyz0JVB6mjgshzARj77bltg-4cZk74/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxYFW_u-CordSso3ce59LAr92dmYN8S2E8M9YkHHD9wLqnnTO4Lqwk6ZvLk9vH06l2e/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -154,10 +154,21 @@ const toDMY=(d)=>`${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`
 const fromDateInput=(val)=>{ if(!val) return ''; const [y,m,d]=val.split('-'); return `${d}-${m}-${y}`; };
 const toDateInput=(dmy)=>{ if(!dmy) return ''; const [d,m,y]=dmy.split('-'); return `${y}-${m}-${d}`; };
 const setMsg=(el,html)=>{ el.innerHTML = html; };
-
 const onlyDigits = s => (s||'').replace(/[^\d]/g,'');
 const parseCOP = s => Number(onlyDigits(String(s)))||0;
 const fmtCOP   = n => '$ ' + (Number(n)||0).toLocaleString('es-CO');
+
+// Normaliza dd-MM-yyyy si te llega ISO
+function normalizeFechaClient(val){
+  if(!val) return '';
+  if(/^\d{2}-\d{2}-\d{4}$/.test(val)) return val;
+  const m = String(val).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  try{
+    const d = new Date(val);
+    return toDMY(d);
+  }catch(_){ return val; }
+}
 
 function setMoneyInput(el, n){ el.dataset.raw = String(Number(n)||0); el.value = fmtCOP(n); }
 function getMoney(el){ if(!el) return 0; if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0; return parseCOP(el.value); }
@@ -181,7 +192,7 @@ async function login(){
     const body = { api_key };
     if (AID_PARAM) body.aid = AID_PARAM;
 
-    const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
+    const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
     TOKEN=j.token; USER=j.user;
 
@@ -228,7 +239,10 @@ async function cargarAsignacionDelDia(){
     fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
 
     setMoneyInput($('meta'), a.meta_dia||0);
-    $('fecha').value = a.fecha;
+
+    // NORMALIZAR Y MOSTRAR FECHA PARA ENVIAR EN dd-MM-yyyy
+    $('fecha').value = normalizeFechaClient(a.fecha);
+
     ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
   }catch(e){
     setMsg($('msg'), '<span class="bad">No tienes asignación vigente.</span>');
@@ -271,7 +285,7 @@ function recalcAuto(){
 });
 
 /* ========= Upload ========= */
-async function uploadFile(file){ if(!file) return ''; const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);}); const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url; }
+async function uploadFile(file){ if(!file) return ''; const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);}); const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir'); return j.url; }
 
 /* ========= Confirmación y envío ========= */
 function abrirPreviewEnvio(){
@@ -306,8 +320,11 @@ async function enviar(){
     const foto_url=await uploadFile($('foto').files[0]);
     const video_url=await uploadFile($('video').files[0]);
 
+    // Forzar fecha dd-MM-yyyy por si el input vino "raro"
+    const fechaDMY = normalizeFechaClient($('fecha').value);
+
     const payload={
-      fecha:$('fecha').value,
+      fecha:fechaDMY,
       ciudad_id:$('ciudad').value,
       sede_id:$('sede').value,
       maquina_id:$('maquina').value,
@@ -326,8 +343,17 @@ async function enviar(){
       comentario:$('comentario').value||'',
       foto_url, video_url
     };
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
+
+    // Intento 1: POST (robusto)
+    try{
+      const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,payload})});
+      const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
+    }catch(_postErr){
+      // Intento 2: GET (fallback) si algún navegador lanza "Failed to fetch"
+      const qp = new URLSearchParams({ token:TOKEN, payload: JSON.stringify(payload) });
+      const r2 = await fetch(WEB_APP_URL+'?path=reporte&'+qp.toString());
+      const j2 = await r2.json(); if(!j2.ok) throw new Error(j2.error||'No se pudo registrar');
+    }
 
     setMsg($('msg'),'<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
     bloquearFormulario();
@@ -340,6 +366,7 @@ function bloquearFormulario(){
 }
 
 /* ========= ADMIN ========= */
+/* (Se conserva lo ya entregado para borrar en POST + GET fallback) */
 function initAdminSelectors(){
   fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
   $('a_ciudad').addEventListener('change', ()=>{
@@ -400,42 +427,33 @@ async function adminGuardar(){
     setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
   }catch(e){ setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>'); }
 }
-
-/* ===== ELIMINAR REPORTE: POST + fallback GET ===== */
 async function adminDeleteReport(){
   const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
   const body = {
     token: TOKEN,
     asesor_id: $('del_asesor').value,
     maquina_id: $('del_maquina').value || '',
-    fecha: fromDateInput($('del_fecha').value) // dd-MM-yyyy (vacío => hoy en server)
+    fecha: fromDateInput($('del_fecha').value)
   };
-
   try{
-    // Intento 1: POST (robusto)
     const r = await fetch(WEB_APP_URL+'?path=admin_delete', {
-      method:'POST',
-      headers:{ 'Content-Type':'text/plain' },
-      body: JSON.stringify(body)
+      method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body)
     });
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || 'Fallo POST');
     setMsg(msg, `<span class="ok">✔ Eliminado: reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
   }catch(_postErr){
     try{
-      // Intento 2: GET (fallback si hubo “Failed to fetch”)
       const q = new URLSearchParams(body);
       const r2 = await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
       const j2 = await r2.json();
       if (!j2.ok) throw new Error(j2.error || 'No hay reporte para eliminar');
       setMsg(msg, `<span class="ok">✔ Eliminado: reportes=${j2.removed_reportes||0}, asignaciones=${j2.removed_asignaciones||0}</span>`);
     }catch(e2){
-      setMsg(msg, `<span class="bad">❌ ${e2.message || 'Fallo de red'}</span>`);
+      setMsg($('adminMsg'), `<span class="bad">❌ ${e2.message || 'Fallo de red'}</span>`);
     }
   }
 }
-/* ===== FIN ===== */
-
 /* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
   const url = new URL(location.href);
