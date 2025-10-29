@@ -145,8 +145,7 @@
 
 <script>
 /* ========= CONFIG ========= */
-/* ⬇️ URL /exec del deploy ACTIVO */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwXJaCXJ6qU3Kj4k5gVKUEADCbB0J0QSUYQCVXDV_T1lUSF36-0tB8EOplhs0siMXsG/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwLPkK6WD30OZN_bbUfT5V1yxEJMPGNdXBXP62Gy-rpLeO_jfRGCPEQTrCqeKZuvqdA/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -154,29 +153,16 @@ let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 const toDMY=(d)=>`${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`;
-const fromDateInput=(val)=>{ // yyyy-MM-dd -> dd-MM-yyyy
-  if(!val) return '';
-  const [y,m,d]=val.split('-'); return `${d}-${m}-${y}`;
-};
-const toDateInput=(dmy)=>{ // dd-MM-yyyy -> yyyy-MM-dd
-  if(!dmy) return '';
-  const [d,m,y]=dmy.split('-'); return `${y}-${m}-${d}`;
-};
+const fromDateInput=(val)=>{ if(!val) return ''; const [y,m,d]=val.split('-'); return `${d}-${m}-${y}`; };
+const toDateInput=(dmy)=>{ if(!dmy) return ''; const [d,m,y]=dmy.split('-'); return `${y}-${m}-${d}`; };
 const setMsg=(el,html)=>{ el.innerHTML = html; };
 
 const onlyDigits = s => (s||'').replace(/[^\d]/g,'');
 const parseCOP = s => Number(onlyDigits(String(s)))||0;
 const fmtCOP   = n => '$ ' + (Number(n)||0).toLocaleString('es-CO');
 
-function setMoneyInput(el, n){
-  el.dataset.raw = String(Number(n)||0);
-  el.value = fmtCOP(n);
-}
-function getMoney(el){
-  if(!el) return 0;
-  if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0;
-  return parseCOP(el.value);
-}
+function setMoneyInput(el, n){ el.dataset.raw = String(Number(n)||0); el.value = fmtCOP(n); }
+function getMoney(el){ if(!el) return 0; if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0; return parseCOP(el.value); }
 function attachMoneyMask(id){
   const el=$(id);
   const onFormat=()=>{
@@ -186,7 +172,6 @@ function attachMoneyMask(id){
   };
   el.addEventListener('input', ()=>{ el.dataset.raw = String(parseCOP(el.value)); });
   el.addEventListener('blur', onFormat);
-  // primera formateada
   onFormat();
 }
 
@@ -213,7 +198,6 @@ async function login(){
       $('asesorId').value = USER.id;
       $('asesorNombre').value = USER.nombre;
       await cargarAsignacionDelDia();
-      // máscaras para dinero
       ['marcado','error','gastos','qr'].forEach(attachMoneyMask);
       recalcAuto();
     }
@@ -241,21 +225,13 @@ async function cargarAsignacionDelDia(){
 
     const a = j.asignacion;
 
-    // Pintar
     fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
     fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
     fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
 
     setMoneyInput($('meta'), a.meta_dia||0);
-
-    // Fecha viene como dd-MM-yyyy desde backend
     $('fecha').value = a.fecha;
-
-    // Bloquear selects/meta para asesor
     ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
-
-    // Si ya envió hoy, bloquear todo (backend también valida)
-    // Se deja mensaje desde backend al llamar login si bloqueado
   }catch(e){
     setMsg($('msg'), '<span class="bad">No tienes asignación vigente.</span>');
   }
@@ -285,7 +261,6 @@ function recalcAuto(){
   const faltante = Math.max(0, meta - venta); // 0 si cumplió/superó
   setMoneyInput($('faltante'), faltante);
 
-  // feedback desempeño
   const fb = $('feedback');
   if (faltante === 0){
     fb.innerHTML = `<div class="pill ok">🔺 <b>Meta cumplida.</b> ¡Buen cierre!</div>`;
@@ -302,7 +277,7 @@ async function uploadFile(file){ if(!file) return ''; const base64=await new Pro
 
 /* ========= Confirmación y envío ========= */
 function abrirPreviewEnvio(){
-  recalcAuto(); // asegurar últimos cálculos
+  recalcAuto();
   const html = `
   <div><b>Asesor:</b> ${$('asesorNombre').value}</div>
   <div><b>Fecha:</b> ${$('fecha').value}</div>
@@ -334,7 +309,7 @@ async function enviar(){
     const video_url=await uploadFile($('video').files[0]);
 
     const payload={
-      fecha:$('fecha').value, // dd-MM-yyyy
+      fecha:$('fecha').value,
       ciudad_id:$('ciudad').value,
       sede_id:$('sede').value,
       maquina_id:$('maquina').value,
@@ -368,7 +343,6 @@ function bloquearFormulario(){
 
 /* ========= ADMIN ========= */
 function initAdminSelectors(){
-  // fills
   fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
   $('a_ciudad').addEventListener('change', ()=>{
     const cid=$('a_ciudad').value;
@@ -385,10 +359,7 @@ function initAdminSelectors(){
   fillSelect('a_asesor', asesores,'id','nombre');
   fillSelect('del_asesor', asesores,'id','nombre');
 
-  // máscaras para meta admin
   attachMoneyMask('a_meta');
-
-  // fecha por defecto hoy (date input)
   $('a_fecha').value = toDateInput(toDMY(new Date()));
 
   ['a_asesor','a_meta','a_fecha'].forEach(id=>$(id).addEventListener('input', syncAdminPreview));
@@ -431,51 +402,42 @@ async function adminGuardar(){
     setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
   }catch(e){ setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>'); }
 }
-<script>
-function toDMY(s){
-  if(!s) return '';
-  s = String(s).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) { const [y,m,d]=s.split('-'); return `${d}-${m}-${y}`; }
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) { const [d,m,y]=s.split('/'); return `${d}-${m}-${y}`; }
-  if (/^\d{2}-\d{2}-\d{4}$/.test(s)) return s;
-  return '';
-}
 
+/* ===== CAMBIO: DELETE por POST con JSON (evita “Failed to fetch”) ===== */
 async function adminDeleteReport(){
-  const msg = $('adminMsg');
-  setMsg(msg, 'Eliminando...');
-
+  const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
   try{
-    const fechaIn  = $('del_fecha').value;          // yyyy-MM-dd del <input type="date">
-    const fechaDMY = toDMY(fechaIn);                // -> dd-MM-yyyy
-    if (!fechaDMY) throw new Error('Fecha inválida. Usa el selector de fecha.');
-
     const body = {
       token: TOKEN,
       asesor_id: $('del_asesor').value,
       maquina_id: $('del_maquina').value || '',
-      fecha: fechaDMY
+      fecha: fromDateInput($('del_fecha').value) // dd-MM-yyyy (vacío => hoy en server)
     };
-
-    const r = await fetch(WEB_APP_URL + '?path=admin_delete', {
-      method: 'POST',
-      headers: { 'Content-Type':'text/plain' },
+    const r = await fetch(WEB_APP_URL+'?path=admin_delete', {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain' },
       body: JSON.stringify(body)
     });
+    const j = await r.json();
 
-    let j;
-    try { j = await r.json(); }
-    catch(_) { throw new Error('No se pudo interpretar la respuesta del servidor.'); }
-
-    if (!j.ok) throw new Error(j.error || 'No hay reporte para eliminar');
-
-    setMsg(msg, `<span class="ok">✔ Eliminado: reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0} (Fecha ${j.fecha})</span>`);
+    if (!j.ok){
+      setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
+      return;
+    }
+    setMsg(msg, `<span class="ok">✔ Eliminado: reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
   }catch(e){
-    setMsg(msg, `<span class="bad">❌ ${e.message || 'Fallo de red'}</span>`);
+    setMsg($('adminMsg'), `<span class="bad">❌ ${e.message || 'Fallo de red'}</span>`);
   }
 }
-</script>
+/* ===== FIN CAMBIO ===== */
 
-  
+/* ========= INIT ========= */
+document.addEventListener('DOMContentLoaded', ()=>{
+  const url = new URL(location.href);
+  AID_PARAM = url.searchParams.get('aid') || null;
+  $('btnLogin').addEventListener('click', login);
+  $('btnEnviar').addEventListener('click', abrirPreviewEnvio);
+});
+</script>
 </body>
 </html>
