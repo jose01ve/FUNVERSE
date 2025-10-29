@@ -146,7 +146,7 @@
 <script>
 /* ========= CONFIG ========= */
 /* ⬇️ URL /exec del deploy ACTIVO */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzmuYMWZ4xv2b-qZ4ruqyaRlNBxt1QHUs32NrGyGlfqeez1XK6Fg1TgbB5SAGoYDXuu/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwXJaCXJ6qU3Kj4k5gVKUEADCbB0J0QSUYQCVXDV_T1lUSF36-0tB8EOplhs0siMXsG/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -431,35 +431,51 @@ async function adminGuardar(){
     setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
   }catch(e){ setMsg($('adminMsg'),'<span class="bad">❌ '+e.message+'</span>'); }
 }
-async function adminDeleteReport(){
-  const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
-  try{
-    const q=new URLSearchParams({
-      token:TOKEN,
-      asesor_id:$('del_asesor').value,
-      maquina_id:$('del_maquina').value||'',
-      fecha: fromDateInput($('del_fecha').value)
-    });
-    const r=await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
-    const j=await r.json();
-
-    if (!j.ok){
-      setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
-      return;
-    }
-    setMsg(msg, `<span class="ok">✔ Eliminado: reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
-  }catch(e){
-    setMsg($('adminMsg'), `<span class="bad">❌ ${e.message || 'Fallo de red'}</span>`);
-  }
+<script>
+function toDMY(s){
+  if(!s) return '';
+  s = String(s).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) { const [y,m,d]=s.split('-'); return `${d}-${m}-${y}`; }
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) { const [d,m,y]=s.split('/'); return `${d}-${m}-${y}`; }
+  if (/^\d{2}-\d{2}-\d{4}$/.test(s)) return s;
+  return '';
 }
 
-/* ========= INIT ========= */
-document.addEventListener('DOMContentLoaded', ()=>{
-  const url = new URL(location.href);
-  AID_PARAM = url.searchParams.get('aid') || null; // si vino desde email del asesor
-  $('btnLogin').addEventListener('click', login);
-  $('btnEnviar').addEventListener('click', abrirPreviewEnvio);
-});
+async function adminDeleteReport(){
+  const msg = $('adminMsg');
+  setMsg(msg, 'Eliminando...');
+
+  try{
+    const fechaIn  = $('del_fecha').value;          // yyyy-MM-dd del <input type="date">
+    const fechaDMY = toDMY(fechaIn);                // -> dd-MM-yyyy
+    if (!fechaDMY) throw new Error('Fecha inválida. Usa el selector de fecha.');
+
+    const body = {
+      token: TOKEN,
+      asesor_id: $('del_asesor').value,
+      maquina_id: $('del_maquina').value || '',
+      fecha: fechaDMY
+    };
+
+    const r = await fetch(WEB_APP_URL + '?path=admin_delete', {
+      method: 'POST',
+      headers: { 'Content-Type':'text/plain' },
+      body: JSON.stringify(body)
+    });
+
+    let j;
+    try { j = await r.json(); }
+    catch(_) { throw new Error('No se pudo interpretar la respuesta del servidor.'); }
+
+    if (!j.ok) throw new Error(j.error || 'No hay reporte para eliminar');
+
+    setMsg(msg, `<span class="ok">✔ Eliminado: reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0} (Fecha ${j.fecha})</span>`);
+  }catch(e){
+    setMsg(msg, `<span class="bad">❌ ${e.message || 'Fallo de red'}</span>`);
+  }
+}
 </script>
+
+  
 </body>
 </html>
