@@ -146,7 +146,7 @@
 <script>
 /* ========= CONFIG ========= */
 /* ⬇️ URL /exec DEL WEB APP ACTIVO (la que me pediste usar) */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx9whjf3e1VVxNKWdrUd5uZ5sq8vrNHvl-Cp9kaJHDhmOg4l6ZSvvWM6amICXREK0_P/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyOB9VAFrf_kbpO-O2JK-2tU020pEa1_xFI7e-2-3aFsPsm99jJulMaDFcLezhW2OJC/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -437,22 +437,31 @@ async function adminGuardar(){
 async function adminDeleteReport(){
   const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
   try{
-    const q=new URLSearchParams({
-      token:TOKEN,
-      asesor_id:$('del_asesor').value,
-      maquina_id:$('del_maquina').value||'',
-      fecha: fromDateInput($('del_fecha').value)
+    const fechaDMY = normalizeToDMY($('del_fecha').value);
+
+    const body = {
+      token: TOKEN,
+      asesor_id: $('del_asesor').value,
+      maquina_id: $('del_maquina').value || '',
+      fecha: fechaDMY
+    };
+
+    // Usamos POST para evitar bloqueos de red/cache y mejorar compatibilidad
+    const r = await fetch(WEB_APP_URL+'?path=admin_delete', {
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify(body)
     });
-    const r=await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
-    const j=await r.json();
+
+    const j = await r.json();
 
     if (!j.ok){
       setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
       return;
     }
-    setMsg(msg, `<span class="ok">✔ Eliminado: reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
+    setMsg(msg, `<span class="ok">✔ Eliminado (${j.fecha}): reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
   }catch(e){
-    setMsg($('adminMsg'), `<span class="bad">❌ ${(e.message||'Failed to fetch')}</span>`);
+    setMsg($('adminMsg'), `<span class="bad">❌ ${(e.message || 'Failed to fetch')}</span>`);
   }
 }
 
