@@ -146,7 +146,7 @@
 <script>
 /* ========= CONFIG ========= */
 /* ⬇️ URL /exec DEL WEB APP ACTIVO (la que me pediste usar) */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyOB9VAFrf_kbpO-O2JK-2tU020pEa1_xFI7e-2-3aFsPsm99jJulMaDFcLezhW2OJC/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyO9vptEucmWbe-v95rFRA5O5SQ_0c1tIkfJneg8sN4CFq_cILvRpxrzc5stn63Ixjk/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -166,6 +166,24 @@ function setMoneyInput(el, n){
   el.dataset.raw = String(Number(n)||0);
   el.value = fmtCOP(n);
 }
+
+  // Normaliza valores de <input type="date"> y formatos locales a dd-MM-yyyy
+function normalizeToDMY(val){
+  if (!val) return '';
+  // Si viene como yyyy-MM-dd (valor estándar del input date)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)){
+    const [y,m,d] = val.split('-'); return `${d}-${m}-${y}`;
+  }
+  // Si viene como dd/MM/yyyy (algunos navegadores/regiones lo muestran así)
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)){
+    const [d,m,y] = val.split('/'); return `${d}-${m}-${y}`;
+  }
+  // Si ya está dd-MM-yyyy, lo dejamos igual
+  if (/^\d{2}-\d{2}-\d{4}$/.test(val)) return val;
+  // Fallback: regresar vacío para que el backend use hoy
+  return '';
+}
+
 function getMoney(el){
   if(!el) return 0;
   if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0;
