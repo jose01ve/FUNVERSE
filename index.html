@@ -29,7 +29,6 @@
   .pill.ok{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.08)}
   .pill.bad{border-color:rgba(251,113,133,.25);background:rgba(251,113,133,.08)}
 
-  /* modal */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
   .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:620px;width:100%;padding:16px}
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
@@ -145,8 +144,8 @@
 
 <script>
 /* ========= CONFIG ========= */
-/* ⬇️ URL /exec DEL WEB APP ACTIVO (la que me pediste usar) */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbypsTprrNn7exbJb2HZ-53bJlm_FzFD0ripLuEkDCMZkDYfdKc8zW5ZuPFcBxPgk8M9/exec';
+/* ⬇️ Reemplaza por tu /exec activo */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby-mE9iyGsGFiSbtCw-SxWfNvmp-wUNRl7H0cFNmfTcSrtdyPXmzRrBso8_r12YwKk/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -167,35 +166,19 @@ function setMoneyInput(el, n){
   el.value = fmtCOP(n);
 }
 
-  // Normaliza valores de <input type="date"> y formatos locales a dd-MM-yyyy
+// Normaliza valores de <input type="date"> a dd-MM-yyyy (evita que el backend use hoy por parsing)
 function normalizeToDMY(val){
   if (!val) return '';
-  // Si viene como yyyy-MM-dd (valor estándar del input date)
-  if (/^\d{4}-\d{2}-\d{2}$/.test(val)){
-    const [y,m,d] = val.split('-'); return `${d}-${m}-${y}`;
-  }
-  // Si viene como dd/MM/yyyy (algunos navegadores/regiones lo muestran así)
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)){
-    const [d,m,y] = val.split('/'); return `${d}-${m}-${y}`;
-  }
-  // Si ya está dd-MM-yyyy, lo dejamos igual
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)){ const [y,m,d]=val.split('-'); return `${d}-${m}-${y}`; }
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)){ const [d,m,y]=val.split('/'); return `${d}-${m}-${y}`; }
   if (/^\d{2}-\d{2}-\d{4}$/.test(val)) return val;
-  // Fallback: regresar vacío para que el backend use hoy
   return '';
 }
 
-function getMoney(el){
-  if(!el) return 0;
-  if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0;
-  return parseCOP(el.value);
-}
+function getMoney(el){ if(!el) return 0; if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0; return parseCOP(el.value); }
 function attachMoneyMask(id){
   const el=$(id);
-  const onFormat=()=>{
-    el.dataset.raw = String(parseCOP(el.value));
-    el.value = fmtCOP(el.dataset.raw);
-    recalcAuto();
-  };
+  const onFormat=()=>{ el.dataset.raw = String(parseCOP(el.value)); el.value = fmtCOP(el.dataset.raw); recalcAuto(); };
   el.addEventListener('input', ()=>{ el.dataset.raw = String(parseCOP(el.value)); });
   el.addEventListener('blur', onFormat);
   onFormat();
@@ -203,20 +186,14 @@ function attachMoneyMask(id){
 
 /* ========= LOGIN ========= */
 async function pingBack(){
-  try{
-    const r = await fetch(WEB_APP_URL+'?path=ping');
-    const j = await r.json();
-    return j && j.pong===true;
-  }catch{ return false; }
+  try{ const r=await fetch(WEB_APP_URL+'?path=ping'); const j=await r.json(); return j && j.pong===true; }
+  catch{ return false; }
 }
 async function login(){
   const api_key=$('apiKey').value.trim();
   setMsg($('loginMsg'),'Validando...');
   try{
-    // sanity check
-    if (!(await pingBack())){
-      throw new Error('Backend no responde (ping). Revisa que el WebApp esté desplegado y con acceso “Anyone”.');
-    }
+    if (!(await pingBack())) throw new Error('Backend no responde (ping). Revisa deploy y permisos “Anyone”.');
 
     const body = { api_key };
     if (AID_PARAM) body.aid = AID_PARAM;
@@ -248,14 +225,11 @@ async function login(){
 /* ========= LISTAS ========= */
 async function cargarListas(){
   const r=await fetch(WEB_APP_URL+'?path=listas'); const j=await r.json(); LISTAS=j;
-  fillSelect('ciudad', j.ciudades,'id','nombre');
-  $('ciudad').disabled = true;
+  fillSelect('ciudad', j.ciudades,'id','nombre'); $('ciudad').disabled = true;
 }
 function fillSelect(id,arr,valKey,txtKey){
   const sel=$(id); sel.innerHTML='';
-  (arr||[]).forEach(o=>{
-    const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);
-  });
+  (arr||[]).forEach(o=>{ const op=document.createElement('option'); op.value=o[valKey]; op.textContent=o[txtKey]; sel.appendChild(op); });
 }
 
 /* ========= ASESOR ========= */
@@ -309,7 +283,7 @@ function recalcAuto(){
   if (faltante === 0){
     fb.innerHTML = `<div class="pill ok">🔺 <b>Meta cumplida.</b> ¡Buen cierre!</div>`;
   }else{
-    fb.innerHTML = `<div class="pill bad">🔻 <b>No cumpliste la meta.</b> Vamos que se puede: ajusta estrategia y concéntrate en los picos de afluencia.</div>`;
+    fb.innerHTML = `<div class="pill bad">🔻 <b>No cumpliste la meta.</b> Vamos que se puede.</div>`;
   }
 }
 ['marcado','error','gastos','qr'].forEach(id=>{
@@ -366,7 +340,7 @@ async function enviar(){
       asesor_id:$('asesorId').value,
       marcado:getMoney($('marcado')),
       error:getMoney($('error')),
-      tickets_vendidos: Number($('tickets').value)||0, // server recalcula igual
+      tickets_vendidos: Number($('tickets').value)||0,
       venta_total:getMoney($('venta')),
       meta_dia:getMoney($('meta')),
       gastos:getMoney($('gastos')),
@@ -464,7 +438,6 @@ async function adminDeleteReport(){
       fecha: fechaDMY
     };
 
-    // Usamos POST para evitar bloqueos de red/cache y mejorar compatibilidad
     const r = await fetch(WEB_APP_URL+'?path=admin_delete', {
       method:'POST',
       headers:{'Content-Type':'text/plain'},
