@@ -5,14 +5,33 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FUNVENSER · Reportes</title>
 <style>
-  :root{--bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#7c83ff;--ok:#4ade80;--bad:#fb7185}
+  :root{
+    --bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;
+    --border:#24304a;--accent:#7c83ff;--ok:#4ade80;--bad:#fb7185
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1224);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
+  body{
+    margin:0;
+    background:linear-gradient(180deg,var(--bg),#0b1224);
+    color:var(--text);
+    font-family:system-ui,Segoe UI,Roboto,Arial
+  }
   .wrap{max-width:980px;margin:auto;padding:16px}
-  .card{background:rgba(17,24,39,.85);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter: blur(4px)}
+  .card{
+    background:rgba(17,24,39,.85);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
+    backdrop-filter: blur(4px)
+  }
   h1{margin:.4rem 0 1rem;font-size:1.2rem}
   label{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}
-  input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1224;color:var(--text)}
+  input,select,textarea,button{
+    width:100%;padding:10px;border-radius:10px;
+    border:1px solid var(--border);
+    background:#0b1224;color:var(--text)
+  }
   input[readonly], select:disabled, textarea[readonly]{opacity:.85;cursor:not-allowed}
   button{cursor:pointer;margin-top:14px;background:var(--accent);border-color:transparent}
   .grid{display:grid;gap:12px}
@@ -20,19 +39,40 @@
   .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
   .hid{display:none}
   .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px}
-  .logo{width:64px;height:64px;border-radius:16px;background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .logo{
+    width:64px;height:64px;border-radius:16px;
+    background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);
+    box-shadow:0 6px 18px rgba(0,0,0,.35)
+  }
   .title{font-weight:700;font-size:1.4rem}
   .subtitle{color:#9aa4bf;font-size:.95rem}
   .row{display:flex;gap:8px}
   .row>*{flex:1}
-  .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:#0b1224;font-size:.92rem;margin-top:8px}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 10px;border-radius:999px;
+    border:1px solid var(--border);background:#0b1224;
+    font-size:.92rem;margin-top:8px
+  }
   .pill.ok{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.08)}
   .pill.bad{border-color:rgba(251,113,133,.25);background:rgba(251,113,133,.08)}
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
-  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:620px;width:100%;padding:16px}
+
+  /* modal */
+  .modal{
+    position:fixed;inset:0;background:rgba(0,0,0,.55);
+    display:none;align-items:center;justify-content:center;
+    padding:16px;z-index:50
+  }
+  .modal .content{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:12px;max-width:620px;width:100%;padding:16px
+  }
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
   .btn-outline{background:transparent;border:1px solid var(--border)}
-  .preview{background:#0b1224;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:.93rem}
+  .preview{
+    background:#0b1224;border:1px solid var(--border);
+    border-radius:10px;padding:12px;font-size:.93rem
+  }
   .preview b{color:#fff}
 </style>
 </head>
@@ -143,8 +183,8 @@
 
 <script>
 /* ========= CONFIG ========= */
-/* ⚠ Pega aquí SIEMPRE la URL /exec de tu último deploy del script */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwHTKm4En7zhDSZUxkDYuaJzRB6WnCg1Ny2a_MUNyC4FjuOcz-osUfOv_csubUWmyqD/exec';
+/* ⚠️ Usa SIEMPRE el WebApp ACTIVO del script. Si despliegas uno nuevo, cambia esta constante. */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbztZQxOnra19imbc2aIwkk45HsFBRoXZqkV3Kf0FqxFv01jKJ2LZP89Lpjk4FeyG6XG/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -152,8 +192,18 @@ let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 const toDMY=(d)=>`${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`;
-const fromDateInput=(val)=>{ if(!val) return ''; const [y,m,d]=val.split('-'); return `${d}-${m}-${y}`; };
-const toDateInput=(dmy)=>{ if(!dmy) return ''; const [d,m,y]=dmy.split('-'); return `${y}-${m}-${d}`; };
+
+// yyyy-MM-dd -> dd-MM-yyyy
+const fromDateInput=(val)=>{
+  if(!val) return '';
+  const [y,m,d]=val.split('-'); return `${d}-${m}-${y}`;
+};
+// dd-MM-yyyy -> yyyy-MM-dd
+const toDateInput=(dmy)=>{
+  if(!dmy) return '';
+  const [d,m,y]=dmy.split('-'); return `${y}-${m}-${d}`;
+};
+
 const setMsg=(el,html)=>{ el.innerHTML = html; };
 
 const onlyDigits = s => (s||'').replace(/[^\d]/g,'');
@@ -166,8 +216,7 @@ function setMoneyInput(el, n){
 }
 function getMoney(el){
   if(!el) return 0;
-  if (el.dataset && el.dataset.raw !== undefined)
-    return Number(el.dataset.raw)||0;
+  if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0;
   return parseCOP(el.value);
 }
 function attachMoneyMask(id){
@@ -177,9 +226,11 @@ function attachMoneyMask(id){
     el.value = fmtCOP(el.dataset.raw);
     recalcAuto();
   };
-  el.addEventListener('input', ()=>{ el.dataset.raw = String(parseCOP(el.value)); });
+  el.addEventListener('input', ()=>{
+    el.dataset.raw = String(parseCOP(el.value));
+  });
   el.addEventListener('blur', onFormat);
-  onFormat();
+  onFormat(); // formateo inicial
 }
 
 /* ========= LOGIN ========= */
@@ -195,10 +246,12 @@ async function login(){
       headers:{'Content-Type':'text/plain'},
       body:JSON.stringify(body)
     });
+
     const j=await r.json();
     if(!j.ok) throw new Error(j.error||'Error de login');
 
     TOKEN=j.token; USER=j.user;
+
     await cargarListas();
 
     if((USER.rol||'').toLowerCase()==='admin'){
@@ -217,15 +270,14 @@ async function login(){
     $('loginCard').classList.add('hid');
     setMsg($('loginMsg'),'<span class="ok">Acceso concedido</span>');
   }catch(e){
-    setMsg($('loginMsg'),'<span class="bad">'+(e.message||'Failed to fetch')+'</span>');
+    setMsg($('loginMsg'),'<span class="bad">'+(e.message||'Error')+'</span>');
   }
 }
 
 /* ========= LISTAS ========= */
 async function cargarListas(){
   const r=await fetch(WEB_APP_URL+'?path=listas');
-  const j=await r.json();
-  LISTAS=j;
+  const j=await r.json(); LISTAS=j;
   fillSelect('ciudad', j.ciudades,'id','nombre');
   $('ciudad').disabled = true;
 }
@@ -233,7 +285,8 @@ function fillSelect(id,arr,valKey,txtKey){
   const sel=$(id); sel.innerHTML='';
   arr.forEach(o=>{
     const op=document.createElement('option');
-    op.value=o[valKey]; op.textContent=o[txtKey];
+    op.value=o[valKey];
+    op.textContent=o[txtKey];
     sel.appendChild(op);
   });
 }
@@ -248,16 +301,29 @@ async function cargarAsignacionDelDia(){
 
     const a = j.asignacion;
 
-    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
-    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
-    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
+    // Pintar selects de ciudad/sede/máquina
+    fillSelect('ciudad', LISTAS.ciudades,'id','nombre');
+    $('ciudad').value = a.ciudad_id;
+
+    fillSelect('sede',
+      LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),
+      'id','nombre');
+    $('sede').value = a.sede_id;
+
+    fillSelect('maquina',
+      LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),
+      'id','id');
+    $('maquina').value = a.maquina_id;
 
     setMoneyInput($('meta'), a.meta_dia||0);
+
+    // Fecha viene como dd-MM-yyyy desde backend
     $('fecha').value = a.fecha;
 
     ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
   }catch(e){
-    setMsg($('msg'), '<span class="bad">No tienes asignación vigente.</span>');
+    setMsg($('msg'),
+      '<span class="bad">No tienes asignación vigente.</span>');
   }
 }
 
@@ -273,8 +339,7 @@ function recalcAuto(){
   const venta = Math.max(0, marcado - error);
   setMoneyInput($('venta'), venta);
 
-  // ⚠ Tickets ENTERO: Venta / 13.000
-  const tickets = Math.max(0, Math.trunc(venta / 13000));
+  const tickets = Math.max(0, Math.trunc(venta / 13)); // ENTERO
   $('tickets').value = tickets;
 
   const efectivo = Math.max(0, venta - gastos - qr);
@@ -288,9 +353,12 @@ function recalcAuto(){
 
   const fb = $('feedback');
   if (faltante === 0){
-    fb.innerHTML = `<div class="pill ok">🔺 <b>Meta cumplida.</b> ¡Buen cierre!</div>`;
+    fb.innerHTML =
+      `<div class="pill ok">🔺 <b>Meta cumplida.</b> ¡Buen cierre!</div>`;
   }else{
-    fb.innerHTML = `<div class="pill bad">🔻 <b>No cumpliste la meta.</b> Vamos que se puede: ajusta estrategia y concéntrate en los picos de afluencia.</div>`;
+    fb.innerHTML =
+      `<div class="pill bad">🔻 <b>No cumpliste la meta.</b> `+
+      `Vamos que se puede: ajusta estrategia y concéntrate en los picos de afluencia.</div>`;
   }
 }
 ['marcado','error','gastos','qr'].forEach(id=>{
@@ -311,7 +379,12 @@ async function uploadFile(file){
   const r=await fetch(WEB_APP_URL+'?path=upload',{
     method:'POST',
     headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})
+    body:JSON.stringify({
+      token:TOKEN,
+      fileName:file.name,
+      mimeType:file.type,
+      data:base64
+    })
   });
   const j=await r.json();
   if(!j.ok) throw new Error(j.error||'No se pudo subir');
@@ -342,17 +415,20 @@ function abrirPreviewEnvio(){
   $('sendPreview').innerHTML = html;
   $('sendModal').style.display='flex';
   $('btnSendCancel').onclick = ()=> $('sendModal').style.display='none';
-  $('btnSendConfirm').onclick = ()=> { $('sendModal').style.display='none'; enviar(); };
+  $('btnSendConfirm').onclick = ()=> {
+    $('sendModal').style.display='none';
+    enviar();
+  };
 }
 
 async function enviar(){
   setMsg($('msg'),'Subiendo archivos y enviando...');
   try{
-    const foto_url=await uploadFile($('foto').files[0]);
-    const video_url=await uploadFile($('video').files[0]);
+    const foto_url = await uploadFile($('foto').files[0]);
+    const video_url= await uploadFile($('video').files[0]);
 
     const payload={
-      fecha:$('fecha').value,
+      fecha:$('fecha').value,      // dd-MM-yyyy
       ciudad_id:$('ciudad').value,
       sede_id:$('sede').value,
       maquina_id:$('maquina').value,
@@ -380,10 +456,12 @@ async function enviar(){
     const j=await r.json();
     if(!j.ok) throw new Error(j.error||'Error al registrar');
 
-    setMsg($('msg'),'<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
+    setMsg($('msg'),
+      '<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
     bloquearFormulario();
   }catch(e){
-    setMsg($('msg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
+    setMsg($('msg'),
+      '<span class="bad">❌ '+(e.message||'Fallo de red')+'</span>');
   }
 }
 
@@ -397,25 +475,35 @@ function bloquearFormulario(){
 /* ========= ADMIN ========= */
 function initAdminSelectors(){
   fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
+
   $('a_ciudad').addEventListener('change', ()=>{
     const cid=$('a_ciudad').value;
-    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre');
+    fillSelect('a_sede',
+      LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre');
     $('a_sede').dispatchEvent(new Event('change'));
   });
+
   $('a_sede').addEventListener('change', ()=>{
     const sid=$('a_sede').value;
-    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
-    fillSelect('del_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
+    fillSelect('a_maquina',
+      LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
+    fillSelect('del_maquina',
+      LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
     syncAdminPreview();
   });
+
   const asesores=(LISTAS.usuarios||[])
-    .filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
+    .filter(u=>(u.rol||'').toLowerCase()==='asesor' &&
+                String(u.activo).toLowerCase()==='true');
   fillSelect('a_asesor', asesores,'id','nombre');
   fillSelect('del_asesor', asesores,'id','nombre');
 
   attachMoneyMask('a_meta');
   $('a_fecha').value = toDateInput(toDMY(new Date()));
-  ['a_asesor','a_meta','a_fecha'].forEach(id=>$(id).addEventListener('input', syncAdminPreview));
+
+  ['a_asesor','a_meta','a_fecha'].forEach(id=>
+    $(id).addEventListener('input', syncAdminPreview)
+  );
   $('a_ciudad').dispatchEvent(new Event('change'));
 
   $('btnAdminGuardar').addEventListener('click', adminGuardar);
@@ -457,37 +545,50 @@ async function adminGuardar(){
     if(!j.ok) throw new Error(j.error||'No se pudo guardar');
     setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
   }catch(e){
-    setMsg($('adminMsg'),'<span class="bad">❌ '+(e.message||'Error')+'</span>');
+    setMsg($('adminMsg'),
+      '<span class="bad">❌ '+(e.message||'Error')+'</span>');
   }
 }
 
+/**
+ * Eliminar reporte (admin) usando POST para evitar problemas de red.
+ */
 async function adminDeleteReport(){
   const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
   try{
-    const q=new URLSearchParams({
-      token:TOKEN,
-      asesor_id:$('del_asesor').value,
-      maquina_id:$('del_maquina').value||'',
-      fecha: fromDateInput($('del_fecha').value)
+    const body = {
+      token     : TOKEN,
+      asesor_id : $('del_asesor').value,
+      maquina_id: $('del_maquina').value || '',
+      fecha     : fromDateInput($('del_fecha').value) // dd-MM-yyyy
+    };
+
+    const r = await fetch(WEB_APP_URL+'?path=admin_delete',{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify(body)
     });
-    // Eliminación vía GET (coincide con doGet -> adminDelete_)
-    const r=await fetch(WEB_APP_URL+'?path=admin_delete&'+q.toString());
-    const j=await r.json();
+
+    const j = await r.json();
 
     if (!j.ok){
-      setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
+      setMsg(msg,
+        `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
       return;
     }
-    setMsg(msg, `<span class="ok">✔ Eliminado: reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
+
+    setMsg(msg,
+      `<span class="ok">✔ Eliminado: reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
   }catch(e){
-    setMsg($('adminMsg'), `<span class="bad">❌ ${(e.message||'Failed to fetch')}</span>`);
+    setMsg($('adminMsg'),
+      `<span class="bad">❌ ${(e.message || 'Fallo de red')}</span>`);
   }
 }
 
 /* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
   const url = new URL(location.href);
-  AID_PARAM = url.searchParams.get('aid') || null;
+  AID_PARAM = url.searchParams.get('aid') || null; // enlace directo del asesor
   $('btnLogin').addEventListener('click', login);
   $('btnEnviar').addEventListener('click', abrirPreviewEnvio);
 });
