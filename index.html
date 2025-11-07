@@ -197,11 +197,12 @@ async function login(){
     const body = { api_key };
     if (AID_PARAM) body.aid = AID_PARAM;
 
-    const r=await fetch(WEB_APP_URL+'?path=login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body)
-    });
+    const r = await fetch(WEB_APP_URL + '?path=login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'text/plain' },   // 👈 importante
+  body: JSON.stringify(body)
+});
+
     const j=await r.json(); 
     if(!j.ok) throw new Error(j.error||'Error de login');
     TOKEN=j.token; USER=j.user;
@@ -311,15 +312,16 @@ async function uploadFile(file){
     fr.onerror=rej; 
     fr.readAsDataURL(file);
   });
-  const r=await fetch(WEB_APP_URL+'?path=upload',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})
-  });
-  const j=await r.json(); 
-  if(!j.ok) throw new Error(j.error||'No se pudo subir'); 
-  return j.url;
-}
+  const r = await fetch(WEB_APP_URL + '?path=upload', {
+  method: 'POST',
+  headers: { 'Content-Type': 'text/plain' },   // 👈 igual
+  body: JSON.stringify({
+    token: TOKEN,
+    fileName: file.name,
+    mimeType: file.type,
+    data: base64
+  })
+});
 
 /* ========= Confirmación y envío ========= */
 function abrirPreviewEnvio(){
@@ -375,11 +377,12 @@ async function enviar(){
       foto_url, 
       video_url
     };
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({token:TOKEN,payload})
-    });
+    const r = await fetch(WEB_APP_URL + '?path=reporte', {
+  method: 'POST',
+  headers: { 'Content-Type': 'text/plain' },   // 👈 igual
+  body: JSON.stringify({ token: TOKEN, payload })
+});
+
     const j=await r.json(); 
     if(!j.ok) throw new Error(j.error||'Error al registrar');
 
