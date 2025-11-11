@@ -28,8 +28,6 @@
   .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:#0b1224;font-size:.92rem;margin-top:8px}
   .pill.ok{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.08)}
   .pill.bad{border-color:rgba(251,113,133,.25);background:rgba(251,113,133,.08)}
-
-  /* modal */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
   .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:620px;width:100%;padding:16px}
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
@@ -145,17 +143,28 @@
 
 <script>
 /* ========= CONFIG ========= */
-/* ⬇️ URL /exec DEL WEB APP ACTIVO (la que me pediste usar) */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzAy5ETobTfabOQMap7XURDCSKHcKUQsTsltS9pW4Pud9C9LAQm7jgHIwKXUKZaqWYB/exec';
+/* ⬇️ Usa SIEMPRE el WebApp ACTIVO del script */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbylXDsiARMxx-8hUZkV8tjuvGFKz6qeVOB6OvjAboSS_Jf4S8LmQ-tIymCoCExm0x8_/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
 /* ========= HELPERS ========= */
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
-const toDMY=(d)=>`${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`;
-const fromDateInput=(val)=>{ if(!val) return ''; const [y,m,d]=val.split('-'); return `${d}-${m}-${y}`; };
-const toDateInput=(dmy)=>{ if(!dmy) return ''; const [d,m,y]=dmy.split('-'); return `${y}-${m}-${d}`; };
+const toDMY=d=>`${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`;
+
+const fromDateInput=val=>{
+  if(!val) return '';
+  const [y,m,d]=val.split('-');
+  return `${d}-${m}-${y}`;
+};
+
+const toDateInput=dmy=>{
+  if(!dmy) return '';
+  const [d,m,y]=dmy.split('-');
+  return `${y}-${m}-${d}`;
+};
+
 const setMsg=(el,html)=>{ el.innerHTML = html; };
 
 const onlyDigits = s => (s||'').replace(/[^\d]/g,'');
@@ -166,24 +175,6 @@ function setMoneyInput(el, n){
   el.dataset.raw = String(Number(n)||0);
   el.value = fmtCOP(n);
 }
-
-  // Normaliza valores de <input type="date"> y formatos locales a dd-MM-yyyy
-function normalizeToDMY(val){
-  if (!val) return '';
-  // Si viene como yyyy-MM-dd (valor estándar del input date)
-  if (/^\d{4}-\d{2}-\d{2}$/.test(val)){
-    const [y,m,d] = val.split('-'); return `${d}-${m}-${y}`;
-  }
-  // Si viene como dd/MM/yyyy (algunos navegadores/regiones lo muestran así)
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)){
-    const [d,m,y] = val.split('/'); return `${d}-${m}-${y}`;
-  }
-  // Si ya está dd-MM-yyyy, lo dejamos igual
-  if (/^\d{2}-\d{2}-\d{4}$/.test(val)) return val;
-  // Fallback: regresar vacío para que el backend use hoy
-  return '';
-}
-
 function getMoney(el){
   if(!el) return 0;
   if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0;
@@ -196,34 +187,31 @@ function attachMoneyMask(id){
     el.value = fmtCOP(el.dataset.raw);
     recalcAuto();
   };
-  el.addEventListener('input', ()=>{ el.dataset.raw = String(parseCOP(el.value)); });
+  el.addEventListener('input', ()=>{
+    el.dataset.raw = String(parseCOP(el.value));
+  });
   el.addEventListener('blur', onFormat);
   onFormat();
 }
 
 /* ========= LOGIN ========= */
-async function pingBack(){
-  try{
-    const r = await fetch(WEB_APP_URL+'?path=ping');
-    const j = await r.json();
-    return j && j.pong===true;
-  }catch{ return false; }
-}
 async function login(){
   const api_key=$('apiKey').value.trim();
   setMsg($('loginMsg'),'Validando...');
   try{
-    // sanity check
-    if (!(await pingBack())){
-      throw new Error('Backend no responde (ping). Revisa que el WebApp esté desplegado y con acceso “Anyone”.');
-    }
-
     const body = { api_key };
     if (AID_PARAM) body.aid = AID_PARAM;
 
-    const r=await fetch(WEB_APP_URL+'?path=login',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error de login');
-    TOKEN=j.token; USER=j.user;
+    const r=await fetch(WEB_APP_URL+'?path=login',{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify(body)
+    });
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'Error de login');
+
+    TOKEN=j.token;
+    USER=j.user;
 
     await cargarListas();
 
@@ -242,23 +230,32 @@ async function login(){
 
     $('loginCard').classList.add('hid');
     setMsg($('loginMsg'),'<span class="ok">Acceso concedido</span>');
-  }catch(e){ setMsg($('loginMsg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>'); }
+  }catch(e){
+    setMsg($('loginMsg'),'<span class="bad">'+(e.message||'Error')+'</span>');
+  }
 }
 
 /* ========= LISTAS ========= */
 async function cargarListas(){
-  const r=await fetch(WEB_APP_URL+'?path=listas'); const j=await r.json(); LISTAS=j;
+  const r=await fetch(WEB_APP_URL+'?path=listas');
+  const j=await r.json();
+  LISTAS=j;
   fillSelect('ciudad', j.ciudades,'id','nombre');
   $('ciudad').disabled = true;
 }
+
 function fillSelect(id,arr,valKey,txtKey){
-  const sel=$(id); sel.innerHTML='';
-  (arr||[]).forEach(o=>{
-    const op=document.createElement('option');op.value=o[valKey];op.textContent=o[txtKey];sel.appendChild(op);
+  const sel=$(id);
+  sel.innerHTML='';
+  arr.forEach(o=>{
+    const op=document.createElement('option');
+    op.value=o[valKey];
+    op.textContent=o[txtKey];
+    sel.appendChild(op);
   });
 }
 
-/* ========= ASESOR ========= */
+/* ========= ASESOR: obtener asignación ========= */
 async function cargarAsignacionDelDia(){
   try{
     const q = new URLSearchParams({ token: TOKEN });
@@ -268,12 +265,18 @@ async function cargarAsignacionDelDia(){
 
     const a = j.asignacion;
 
-    fillSelect('ciudad', LISTAS.ciudades,'id','nombre'); $('ciudad').value = a.ciudad_id;
-    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre'); $('sede').value = a.sede_id;
-    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id'); $('maquina').value = a.maquina_id;
+    fillSelect('ciudad', LISTAS.ciudades,'id','nombre');
+    $('ciudad').value = a.ciudad_id;
+
+    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre');
+    $('sede').value = a.sede_id;
+
+    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id');
+    $('maquina').value = a.maquina_id;
 
     setMoneyInput($('meta'), a.meta_dia||0);
-    $('fecha').value = a.fecha; // dd-MM-yyyy EXACTA asignada
+
+    $('fecha').value = a.fecha;
 
     ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
   }catch(e){
@@ -309,19 +312,26 @@ function recalcAuto(){
   if (faltante === 0){
     fb.innerHTML = `<div class="pill ok">🔺 <b>Meta cumplida.</b> ¡Buen cierre!</div>`;
   }else{
-    fb.innerHTML = `<div class="pill bad">🔻 <b>No cumpliste la meta.</b> Vamos que se puede: ajusta estrategia y concéntrate en los picos de afluencia.</div>`;
+    fb.innerHTML = `<div class="pill bad">🔻 <b>No cumpliste la meta.</b> ¡Sé que puedes lograrlo mañana!</div>`;
   }
 }
-['marcado','error','gastos','qr'].forEach(id=>{
-  document.addEventListener('input', e=>{ if(e.target && e.target.id===id) recalcAuto(); });
-});
 
-/* ========= Upload a Drive ========= */
+/* ========= Upload ========= */
 async function uploadFile(file){
   if(!file) return '';
-  const base64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(file);});
-  const r=await fetch(WEB_APP_URL+'?path=upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})});
-  const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo subir');
+  const base64=await new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>res(String(fr.result).split(',')[1]);
+    fr.onerror=rej;
+    fr.readAsDataURL(file);
+  });
+  const r=await fetch(WEB_APP_URL+'?path=upload',{
+    method:'POST',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})
+  });
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error||'No se pudo subir');
   return j.url;
 }
 
@@ -359,14 +369,14 @@ async function enviar(){
     const video_url=await uploadFile($('video').files[0]);
 
     const payload={
-      fecha:$('fecha').value, // dd-MM-yyyy
+      fecha:$('fecha').value,
       ciudad_id:$('ciudad').value,
       sede_id:$('sede').value,
       maquina_id:$('maquina').value,
       asesor_id:$('asesorId').value,
       marcado:getMoney($('marcado')),
       error:getMoney($('error')),
-      tickets_vendidos: Number($('tickets').value)||0, // server recalcula igual
+      tickets_vendidos: Number($('tickets').value)||0,
       venta_total:getMoney($('venta')),
       meta_dia:getMoney($('meta')),
       gastos:getMoney($('gastos')),
@@ -378,16 +388,27 @@ async function enviar(){
       comentario:$('comentario').value||'',
       foto_url, video_url
     };
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({token:TOKEN,payload})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error al registrar');
+
+    const r=await fetch(WEB_APP_URL+'?path=reporte',{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({token:TOKEN,payload})
+    });
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'Error al registrar');
 
     setMsg($('msg'),'<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
     bloquearFormulario();
-  }catch(e){ setMsg($('msg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>'); }
+  }catch(e){
+    setMsg($('msg'),'<span class="bad">❌ '+(e.message||'Error')+'</span>');
+  }
 }
 
 function bloquearFormulario(){
-  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{ const el=$(id); if(el) el.disabled=true; });
+  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{
+    const el=$(id);
+    if(el) el.disabled=true;
+  });
   $('btnEnviar').disabled = true;
 }
 
@@ -405,20 +426,27 @@ function initAdminSelectors(){
     fillSelect('del_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
     syncAdminPreview();
   });
-  const asesores=(LISTAS.usuarios||[]).filter(u=>(u.rol||'').toLowerCase()==='asesor' && String(u.activo).toLowerCase()==='true');
+
+  const asesores=(LISTAS.usuarios||[])
+    .filter(u=>(u.rol||'').toLowerCase()==='asesor' &&
+                String(u.activo).toLowerCase()==='true');
   fillSelect('a_asesor', asesores,'id','nombre');
   fillSelect('del_asesor', asesores,'id','nombre');
 
   attachMoneyMask('a_meta');
+
   $('a_fecha').value = toDateInput(toDMY(new Date()));
 
-  ['a_asesor','a_meta','a_fecha'].forEach(id=>$(id).addEventListener('input', syncAdminPreview));
+  ['a_asesor','a_meta','a_fecha'].forEach(id=>
+    $(id).addEventListener('input', syncAdminPreview)
+  );
   $('a_ciudad').dispatchEvent(new Event('change'));
 
   $('btnAdminGuardar').addEventListener('click', adminGuardar);
   $('btnDelete').addEventListener('click', adminDeleteReport);
   syncAdminPreview();
 }
+
 function syncAdminPreview(){
   const ciudad = $('a_ciudad').options[$('a_ciudad').selectedIndex]?.text || '';
   const sede   = $('a_sede').options[$('a_sede').selectedIndex]?.text || '';
@@ -435,8 +463,10 @@ function syncAdminPreview(){
      <div><b>Asesor:</b> ${asesor}</div>
      <div><b>Meta del día:</b> ${fmtCOP(meta)}</div>`;
 }
+
 async function adminGuardar(){
-  const msg=$('adminMsg'); setMsg(msg,'Guardando...');
+  const msg=$('adminMsg');
+  setMsg(msg,'Guardando...');
   try{
     const q=new URLSearchParams({
       token:TOKEN,
@@ -448,45 +478,45 @@ async function adminGuardar(){
       fecha: fromDateInput($('a_fecha').value)
     });
     const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'No se pudo guardar');
     setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
-  }catch(e){ setMsg($('adminMsg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>'); }
+  }catch(e){
+    setMsg($('adminMsg'),'<span class="bad">❌ '+(e.message||'Error')+'</span>');
+  }
 }
+
 async function adminDeleteReport(){
-  const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
+  const msg=$('adminMsg');
+  setMsg(msg,'Eliminando...');
   try{
-    const fechaDMY = normalizeToDMY($('del_fecha').value);
-
-    const body = {
-      token: TOKEN,
-      asesor_id: $('del_asesor').value,
-      maquina_id: $('del_maquina').value || '',
-      fecha: fechaDMY
+    const body={
+      token:TOKEN,
+      asesor_id:$('del_asesor').value,
+      maquina_id:$('del_maquina').value||'',
+      fecha: fromDateInput($('del_fecha').value)
     };
-
-    // Usamos POST para evitar bloqueos de red/cache y mejorar compatibilidad
-    const r = await fetch(WEB_APP_URL+'?path=admin_delete', {
+    const r=await fetch(WEB_APP_URL+'?path=admin_delete',{
       method:'POST',
       headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify(body)
+      body:JSON.stringify(body)
     });
-
-    const j = await r.json();
+    const j=await r.json();
 
     if (!j.ok){
       setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
       return;
     }
-    setMsg(msg, `<span class="ok">✔ Eliminado (${j.fecha}): reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
+    setMsg(msg, `<span class="ok">✔ Eliminado: reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
   }catch(e){
-    setMsg($('adminMsg'), `<span class="bad">❌ ${(e.message || 'Failed to fetch')}</span>`);
+    setMsg($('adminMsg'), `<span class="bad">❌ ${(e.message||'Error')}</span>`);
   }
 }
 
 /* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
   const url = new URL(location.href);
-  AID_PARAM = url.searchParams.get('aid') || null; // si llegó desde el email al asesor
+  AID_PARAM = url.searchParams.get('aid') || null;
   $('btnLogin').addEventListener('click', login);
   $('btnEnviar').addEventListener('click', abrirPreviewEnvio);
 });
