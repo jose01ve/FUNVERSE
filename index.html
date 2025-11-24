@@ -5,14 +5,27 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FUNVENSER · Reportes</title>
 <style>
-  :root{--bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;--border:#24304a;--accent:#7c83ff;--ok:#4ade80;--bad:#fb7185}
+  :root{
+    --bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;
+    --border:#24304a;--accent:#7c83ff;--ok:#4ade80;--bad:#fb7185
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1224);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
+  body{
+    margin:0;background:linear-gradient(180deg,var(--bg),#0b1224);
+    color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial
+  }
   .wrap{max-width:980px;margin:auto;padding:16px}
-  .card{background:rgba(17,24,39,.85);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter: blur(4px)}
+  .card{
+    background:rgba(17,24,39,.85);border:1px solid var(--border);
+    border-radius:16px;padding:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter: blur(4px)
+  }
   h1{margin:.4rem 0 1rem;font-size:1.2rem}
   label{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}
-  input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1224;color:var(--text)}
+  input,select,textarea,button{
+    width:100%;padding:10px;border-radius:10px;
+    border:1px solid var(--border);background:#0b1224;color:var(--text)
+  }
   input[readonly], select:disabled, textarea[readonly]{opacity:.85;cursor:not-allowed}
   button{cursor:pointer;margin-top:14px;background:var(--accent);border-color:transparent}
   .grid{display:grid;gap:12px}
@@ -20,24 +33,44 @@
   .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
   .hid{display:none}
   .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px}
-  .logo{width:64px;height:64px;border-radius:16px;background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .logo{
+    width:64px;height:64px;border-radius:16px;
+    background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);
+    box-shadow:0 6px 18px rgba(0,0,0,.35)
+  }
   .title{font-weight:700;font-size:1.4rem}
   .subtitle{color:#9aa4bf;font-size:.95rem}
   .row{display:flex;gap:8px}
   .row>*{flex:1}
-  .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:#0b1224;font-size:.92rem;margin-top:8px}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 10px;border-radius:999px;border:1px solid var(--border);
+    background:#0b1224;font-size:.92rem;margin-top:8px
+  }
   .pill.ok{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.08)}
   .pill.bad{border-color:rgba(251,113,133,.25);background:rgba(251,113,133,.08)}
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
-  .modal .content{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:620px;width:100%;padding:16px}
+
+  .modal{
+    position:fixed;inset:0;background:rgba(0,0,0,.55);
+    display:none;align-items:center;justify-content:center;
+    padding:16px;z-index:50
+  }
+  .modal .content{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:12px;max-width:620px;width:100%;padding:16px
+  }
   .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
   .btn-outline{background:transparent;border:1px solid var(--border)}
-  .preview{background:#0b1224;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:.93rem}
+  .preview{
+    background:#0b1224;border:1px solid var(--border);
+    border-radius:10px;padding:12px;font-size:.93rem
+  }
   .preview b{color:#fff}
 </style>
 </head>
 <body>
 <div class="wrap">
+
   <!-- LOGIN -->
   <div class="card" id="loginCard">
     <div class="hero">
@@ -143,28 +176,19 @@
 
 <script>
 /* ========= CONFIG ========= */
-/* ⬇️ Usa SIEMPRE el WebApp ACTIVO del script */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw0mTppN_wNpPOvcOP54FJL7e6EzNBOKcUgb9NjtI-Hd8RvGPMf9zBq5pQkCf-TlVpa/exec';
+// ⬇️ REEMPLAZA ESTA LÍNEA CON TU URL /exec DEL WEB APP
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxPDxnq8pCJ92dtuXR1xr9NXDe5I3dx_lcmiTM8G-934RHdJYCEPxqJlbC95d1X20wV/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
 /* ========= HELPERS ========= */
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
-const toDMY=d=>`${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`;
-
-const fromDateInput=val=>{
+const toDMY=(d)=>`${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`;
+const fromDateInput=(val)=>{
   if(!val) return '';
-  const [y,m,d]=val.split('-');
-  return `${d}-${m}-${y}`;
+  const [y,m,d]=val.split('-'); return `${d}-${m}-${y}`;
 };
-
-const toDateInput=dmy=>{
-  if(!dmy) return '';
-  const [d,m,y]=dmy.split('-');
-  return `${y}-${m}-${d}`;
-};
-
 const setMsg=(el,html)=>{ el.innerHTML = html; };
 
 const onlyDigits = s => (s||'').replace(/[^\d]/g,'');
@@ -175,6 +199,19 @@ function setMoneyInput(el, n){
   el.dataset.raw = String(Number(n)||0);
   el.value = fmtCOP(n);
 }
+
+function normalizeToDMY(val){
+  if (!val) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)){
+    const [y,m,d] = val.split('-'); return `${d}-${m}-${y}`;
+  }
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)){
+    const [d,m,y] = val.split('/'); return `${d}-${m}-${y}`;
+  }
+  if (/^\d{2}-\d{2}-\d{4}$/.test(val)) return val;
+  return '';
+}
+
 function getMoney(el){
   if(!el) return 0;
   if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0;
@@ -187,18 +224,28 @@ function attachMoneyMask(id){
     el.value = fmtCOP(el.dataset.raw);
     recalcAuto();
   };
-  el.addEventListener('input', ()=>{
-    el.dataset.raw = String(parseCOP(el.value));
-  });
+  el.addEventListener('input', ()=>{ el.dataset.raw = String(parseCOP(el.value)); });
   el.addEventListener('blur', onFormat);
   onFormat();
 }
 
 /* ========= LOGIN ========= */
+async function pingBack(){
+  try{
+    const r = await fetch(WEB_APP_URL+'?path=ping');
+    const j = await r.json();
+    return j && j.pong===true;
+  }catch{ return false; }
+}
+
 async function login(){
   const api_key=$('apiKey').value.trim();
   setMsg($('loginMsg'),'Validando...');
   try{
+    if (!(await pingBack())){
+      throw new Error('Backend no responde (ping). Verifica el WebApp y permisos "Anyone".');
+    }
+
     const body = { api_key };
     if (AID_PARAM) body.aid = AID_PARAM;
 
@@ -209,9 +256,7 @@ async function login(){
     });
     const j=await r.json();
     if(!j.ok) throw new Error(j.error||'Error de login');
-
-    TOKEN=j.token;
-    USER=j.user;
+    TOKEN=j.token; USER=j.user;
 
     await cargarListas();
 
@@ -231,31 +276,27 @@ async function login(){
     $('loginCard').classList.add('hid');
     setMsg($('loginMsg'),'<span class="ok">Acceso concedido</span>');
   }catch(e){
-    setMsg($('loginMsg'),'<span class="bad">'+(e.message||'Error')+'</span>');
+    setMsg($('loginMsg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
   }
 }
 
 /* ========= LISTAS ========= */
 async function cargarListas(){
   const r=await fetch(WEB_APP_URL+'?path=listas');
-  const j=await r.json();
-  LISTAS=j;
+  const j=await r.json(); LISTAS=j;
   fillSelect('ciudad', j.ciudades,'id','nombre');
   $('ciudad').disabled = true;
 }
-
 function fillSelect(id,arr,valKey,txtKey){
-  const sel=$(id);
-  sel.innerHTML='';
-  arr.forEach(o=>{
+  const sel=$(id); sel.innerHTML='';
+  (arr||[]).forEach(o=>{
     const op=document.createElement('option');
-    op.value=o[valKey];
-    op.textContent=o[txtKey];
+    op.value=o[valKey];op.textContent=o[txtKey];
     sel.appendChild(op);
   });
 }
 
-/* ========= ASESOR: obtener asignación ========= */
+/* ========= ASESOR ========= */
 async function cargarAsignacionDelDia(){
   try{
     const q = new URLSearchParams({ token: TOKEN });
@@ -267,16 +308,13 @@ async function cargarAsignacionDelDia(){
 
     fillSelect('ciudad', LISTAS.ciudades,'id','nombre');
     $('ciudad').value = a.ciudad_id;
-
     fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre');
     $('sede').value = a.sede_id;
-
     fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id');
     $('maquina').value = a.maquina_id;
 
     setMoneyInput($('meta'), a.meta_dia||0);
-
-    $('fecha').value = a.fecha;
+    $('fecha').value = a.fecha; // dd-MM-yyyy
 
     ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
   }catch(e){
@@ -312,18 +350,17 @@ function recalcAuto(){
   if (faltante === 0){
     fb.innerHTML = `<div class="pill ok">🔺 <b>Meta cumplida.</b> ¡Buen cierre!</div>`;
   }else{
-    fb.innerHTML = `<div class="pill bad">🔻 <b>No cumpliste la meta.</b> ¡Sé que puedes lograrlo mañana!</div>`;
+    fb.innerHTML = `<div class="pill bad">🔻 <b>No cumpliste la meta.</b> Ajusta estrategia para mañana.</div>`;
   }
 }
 
-/* ========= Upload ========= */
+/* ========= Upload a Drive ========= */
 async function uploadFile(file){
   if(!file) return '';
   const base64=await new Promise((res,rej)=>{
     const fr=new FileReader();
     fr.onload=()=>res(String(fr.result).split(',')[1]);
-    fr.onerror=rej;
-    fr.readAsDataURL(file);
+    fr.onerror=rej; fr.readAsDataURL(file);
   });
   const r=await fetch(WEB_APP_URL+'?path=upload',{
     method:'POST',
@@ -388,7 +425,6 @@ async function enviar(){
       comentario:$('comentario').value||'',
       foto_url, video_url
     };
-
     const r=await fetch(WEB_APP_URL+'?path=reporte',{
       method:'POST',
       headers:{'Content-Type':'text/plain'},
@@ -400,15 +436,13 @@ async function enviar(){
     setMsg($('msg'),'<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
     bloquearFormulario();
   }catch(e){
-    setMsg($('msg'),'<span class="bad">❌ '+(e.message||'Error')+'</span>');
+    setMsg($('msg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
   }
 }
 
 function bloquearFormulario(){
-  ['marcado','error','gastos','qr','comentario','foto','video'].forEach(id=>{
-    const el=$(id);
-    if(el) el.disabled=true;
-  });
+  ['marcado','error','gastos','qr','comentario','foto','video']
+    .forEach(id=>{ const el=$(id); if(el) el.disabled=true; });
   $('btnEnviar').disabled = true;
 }
 
@@ -426,20 +460,20 @@ function initAdminSelectors(){
     fillSelect('del_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
     syncAdminPreview();
   });
-
   const asesores=(LISTAS.usuarios||[])
     .filter(u=>(u.rol||'').toLowerCase()==='asesor' &&
-                String(u.activo).toLowerCase()==='true');
+                 String(u.activo).toLowerCase()==='true');
   fillSelect('a_asesor', asesores,'id','nombre');
   fillSelect('del_asesor', asesores,'id','nombre');
 
   attachMoneyMask('a_meta');
+  $('a_fecha').value = (()=>{
+    const d=new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  })();
 
-  $('a_fecha').value = toDateInput(toDMY(new Date()));
-
-  ['a_asesor','a_meta','a_fecha'].forEach(id=>
-    $(id).addEventListener('input', syncAdminPreview)
-  );
+  ['a_asesor','a_meta','a_fecha']
+    .forEach(id=>$(id).addEventListener('input', syncAdminPreview));
   $('a_ciudad').dispatchEvent(new Event('change'));
 
   $('btnAdminGuardar').addEventListener('click', adminGuardar);
@@ -465,8 +499,7 @@ function syncAdminPreview(){
 }
 
 async function adminGuardar(){
-  const msg=$('adminMsg');
-  setMsg(msg,'Guardando...');
+  const msg=$('adminMsg'); setMsg(msg,'Guardando...');
   try{
     const q=new URLSearchParams({
       token:TOKEN,
@@ -478,38 +511,38 @@ async function adminGuardar(){
       fecha: fromDateInput($('a_fecha').value)
     });
     const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.error||'No se pudo guardar');
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
     setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
   }catch(e){
-    setMsg($('adminMsg'),'<span class="bad">❌ '+(e.message||'Error')+'</span>');
+    setMsg($('adminMsg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
   }
 }
 
 async function adminDeleteReport(){
-  const msg=$('adminMsg');
-  setMsg(msg,'Eliminando...');
+  const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
   try{
-    const body={
-      token:TOKEN,
-      asesor_id:$('del_asesor').value,
-      maquina_id:$('del_maquina').value||'',
-      fecha: fromDateInput($('del_fecha').value)
+    const fechaDMY = normalizeToDMY($('del_fecha').value);
+    const body = {
+      token: TOKEN,
+      asesor_id: $('del_asesor').value,
+      maquina_id: $('del_maquina').value || '',
+      fecha: fechaDMY
     };
-    const r=await fetch(WEB_APP_URL+'?path=admin_delete',{
+
+    const r = await fetch(WEB_APP_URL+'?path=admin_delete', {
       method:'POST',
       headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify(body)
+      body: JSON.stringify(body)
     });
-    const j=await r.json();
+    const j = await r.json();
 
     if (!j.ok){
       setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
       return;
     }
-    setMsg(msg, `<span class="ok">✔ Eliminado: reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
+    setMsg(msg, `<span class="ok">✔ Eliminado (${j.fecha}): reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
   }catch(e){
-    setMsg($('adminMsg'), `<span class="bad">❌ ${(e.message||'Error')}</span>`);
+    setMsg($('adminMsg'), `<span class="bad">❌ ${(e.message || 'Failed to fetch')}</span>`);
   }
 }
 
