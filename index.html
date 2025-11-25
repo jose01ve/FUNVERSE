@@ -508,33 +508,40 @@ function normalizeToDMY(val){
 }
 
 async function adminDeleteReport(){
-  const msg=$('adminMsg'); setMsg(msg,'Eliminando...');
+  const msg = $('adminMsg');
+  setMsg(msg,'Eliminando...');
+
   try{
     const fechaDMY = normalizeToDMY($('del_fecha').value);
-    const body = {
+
+    // Igual que adminGuardar: armamos query y usamos GET
+    const q = new URLSearchParams({
       token: TOKEN,
       asesor_id: $('del_asesor').value,
       maquina_id: $('del_maquina').value || '',
       fecha: fechaDMY
-    };
-
-    const r = await fetch(WEB_APP_URL+'?path=admin_delete', {
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify(body)
     });
+
+    const r = await fetch(WEB_APP_URL + '?path=admin_delete&' + q.toString());
     const j = await r.json();
 
     if (!j.ok){
       setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
       return;
     }
-    setMsg(msg, `<span class="ok">✔ Eliminado (${j.fecha}): reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
+
+    setMsg(
+      msg,
+      `<span class="ok">✔ Eliminado (${j.fecha}): ` +
+      `reportes=${j.removed_reportes||0}, ` +
+      `asignaciones=${j.removed_asignaciones||0}</span>`
+    );
   }catch(e){
     console.error(e);
-    setMsg($('adminMsg'), `<span class="bad">❌ ${(e.message || 'Failed to fetch')}</span>`);
+    setMsg(msg, `<span class="bad">❌ ${(e.message || 'Failed to fetch')}</span>`);
   }
 }
+
 
 /* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
