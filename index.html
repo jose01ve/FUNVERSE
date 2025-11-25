@@ -177,7 +177,7 @@
 <script>
 /* ========= CONFIG ========= */
 // ⬇️ REEMPLAZA ESTA LÍNEA CON TU URL /exec DEL WEB APP
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxc_MFoOZPAHxZoqtwh1fPLvYCLUYGFYPnfoEETb1V3KcNb9XnWnDrC6GAT6bDtp1Xv/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxGsXxyDhGyI-z7ippGXpjH8ylPSRvdqEjiKxfbcvEHgm56XNvg-GaC__jo5OMZHTQ/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -199,19 +199,6 @@ function setMoneyInput(el, n){
   el.dataset.raw = String(Number(n)||0);
   el.value = fmtCOP(n);
 }
-
-function normalizeToDMY(val){
-  if (!val) return '';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(val)){
-    const [y,m,d] = val.split('-'); return `${d}-${m}-${y}`;
-  }
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)){
-    const [d,m,y] = val.split('/'); return `${d}-${m}-${y}`;
-  }
-  if (/^\d{2}-\d{2}-\d{4}$/.test(val)) return val;
-  return '';
-}
-
 function getMoney(el){
   if(!el) return 0;
   if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0;
@@ -230,22 +217,10 @@ function attachMoneyMask(id){
 }
 
 /* ========= LOGIN ========= */
-async function pingBack(){
-  try{
-    const r = await fetch(WEB_APP_URL+'?path=ping');
-    const j = await r.json();
-    return j && j.pong===true;
-  }catch{ return false; }
-}
-
 async function login(){
   const api_key=$('apiKey').value.trim();
   setMsg($('loginMsg'),'Validando...');
   try{
-    if (!(await pingBack())){
-      throw new Error('Backend no responde (ping). Verifica el WebApp y permisos "Anyone".');
-    }
-
     const body = { api_key };
     if (AID_PARAM) body.aid = AID_PARAM;
 
@@ -256,8 +231,8 @@ async function login(){
     });
     const j=await r.json();
     if(!j.ok) throw new Error(j.error||'Error de login');
-    TOKEN=j.token; USER=j.user;
 
+    TOKEN=j.token; USER=j.user;
     await cargarListas();
 
     if((USER.rol||'').toLowerCase()==='admin'){
@@ -276,6 +251,7 @@ async function login(){
     $('loginCard').classList.add('hid');
     setMsg($('loginMsg'),'<span class="ok">Acceso concedido</span>');
   }catch(e){
+    console.error(e);
     setMsg($('loginMsg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
   }
 }
@@ -314,10 +290,11 @@ async function cargarAsignacionDelDia(){
     $('maquina').value = a.maquina_id;
 
     setMoneyInput($('meta'), a.meta_dia||0);
-    $('fecha').value = a.fecha; // dd-MM-yyyy
+    $('fecha').value = a.fecha;
 
     ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
   }catch(e){
+    console.error(e);
     setMsg($('msg'), '<span class="bad">No tienes asignación vigente.</span>');
   }
 }
@@ -436,6 +413,7 @@ async function enviar(){
     setMsg($('msg'),'<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
     bloquearFormulario();
   }catch(e){
+    console.error(e);
     setMsg($('msg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
   }
 }
@@ -467,10 +445,8 @@ function initAdminSelectors(){
   fillSelect('del_asesor', asesores,'id','nombre');
 
   attachMoneyMask('a_meta');
-  $('a_fecha').value = (()=>{
-    const d=new Date();
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  })();
+  const d=new Date();
+  $('a_fecha').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
   ['a_asesor','a_meta','a_fecha']
     .forEach(id=>$(id).addEventListener('input', syncAdminPreview));
@@ -514,8 +490,21 @@ async function adminGuardar(){
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
     setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
   }catch(e){
+    console.error(e);
     setMsg($('adminMsg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
   }
+}
+
+function normalizeToDMY(val){
+  if (!val) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)){
+    const [y,m,d] = val.split('-'); return `${d}-${m}-${y}`;
+  }
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)){
+    const [d,m,y] = val.split('/'); return `${d}-${m}-${y}`;
+  }
+  if (/^\d{2}-\d{2}-\d{4}$/.test(val)) return val;
+  return '';
 }
 
 async function adminDeleteReport(){
@@ -542,6 +531,7 @@ async function adminDeleteReport(){
     }
     setMsg(msg, `<span class="ok">✔ Eliminado (${j.fecha}): reportes=${j.removed_reportes||0}, asignaciones=${j.removed_asignaciones||0}</span>`);
   }catch(e){
+    console.error(e);
     setMsg($('adminMsg'), `<span class="bad">❌ ${(e.message || 'Failed to fetch')}</span>`);
   }
 }
