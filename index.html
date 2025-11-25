@@ -509,54 +509,45 @@ function normalizeToDMY(val){
 
 async function adminDeleteReport(){
   const msg = $('adminMsg');
-  setMsg(msg,'Eliminando...');
+  setMsg(msg,'Enviando solicitud de eliminación...');
 
   try{
     const fechaDMY = normalizeToDMY($('del_fecha').value);
 
-    // Igual que adminGuardar: enviamos todo por GET en la query
-    const q = new URLSearchParams({
+    const body = {
       token: TOKEN,
       asesor_id: $('del_asesor').value,
       maquina_id: $('del_maquina').value || '',
       fecha: fechaDMY
+    };
+
+    // 💡 Truco: usamos POST + mode: 'no-cors'
+    // para que el navegador no bloquee nada.
+    // No intentamos leer la respuesta, solo enviamos la orden.
+    await fetch(WEB_APP_URL + '?path=admin_delete', {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(body)
     });
 
-    const resp = await fetch(WEB_APP_URL + '?path=admin_delete&' + q.toString());
-
-    // Leemos como texto primero para poder detectar si viene HTML de error
-    const text = await resp.text();
-    let j;
-    try {
-      j = JSON.parse(text);
-    } catch(err){
-      // Si no es JSON, mostramos lo que vino (recortado) para entender el error real
-      throw new Error('Respuesta no válida del servidor: ' + text.slice(0,120));
-    }
-
-    if (!j.ok){
-      setMsg(
-        msg,
-        `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`
-      );
-      return;
-    }
-
+    // Si llegamos aquí, la petición se envió al WebApp.
     setMsg(
       msg,
-      `<span class="ok">✔ Eliminado (${j.fecha}): ` +
-      `reportes=${j.removed_reportes||0}, ` +
-      `asignaciones=${j.removed_asignaciones||0}</span>`
+      `<span class="ok">✔ Solicitud enviada. ` +
+      `Verifica en las hojas "Reportes" y "Asignaciones" que los registros de ` +
+      `${fechaDMY} para ese asesor/máquina ya no estén.</span>`
     );
 
   }catch(e){
     console.error(e);
     setMsg(
       msg,
-      `<span class="bad">❌ ${(e.message || 'Failed to fetch')}</span>`
+      `<span class="bad">❌ No se pudo enviar la solicitud: ${(e.message || '')}</span>`
     );
   }
 }
+
 
 
 
