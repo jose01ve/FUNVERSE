@@ -1,563 +1,451 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FUNVENSER · Reportes</title>
-<style>
-  :root{
-    --bg:#0f172a;--card:#0f172a;--text:#e5e7eb;--muted:#9aa4bf;
-    --border:#24304a;--accent:#7c83ff;--ok:#4ade80;--bad:#fb7185
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0;background:linear-gradient(180deg,var(--bg),#0b1224);
-    color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial
-  }
-  .wrap{max-width:980px;margin:auto;padding:16px}
-  .card{
-    background:rgba(17,24,39,.85);border:1px solid var(--border);
-    border-radius:16px;padding:16px;
-    box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter: blur(4px)
-  }
-  h1{margin:.4rem 0 1rem;font-size:1.2rem}
-  label{display:block;margin-top:10px;font-size:.92rem;color:var(--muted)}
-  input,select,textarea,button{
-    width:100%;padding:10px;border-radius:10px;
-    border:1px solid var(--border);background:#0b1224;color:var(--text)
-  }
-  input[readonly], select:disabled, textarea[readonly]{opacity:.85;cursor:not-allowed}
-  button{cursor:pointer;margin-top:14px;background:var(--accent);border-color:transparent}
-  .grid{display:grid;gap:12px}
-  @media(min-width:900px){ .grid-2{grid-template-columns:1fr 1fr} }
-  .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
-  .hid{display:none}
-  .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px}
-  .logo{
-    width:64px;height:64px;border-radius:16px;
-    background:conic-gradient(from 120deg,#7c83ff,#00e5ff,#00ffa5);
-    box-shadow:0 6px 18px rgba(0,0,0,.35)
-  }
-  .title{font-weight:700;font-size:1.4rem}
-  .subtitle{color:#9aa4bf;font-size:.95rem}
-  .row{display:flex;gap:8px}
-  .row>*{flex:1}
-  .pill{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:8px 10px;border-radius:999px;border:1px solid var(--border);
-    background:#0b1224;font-size:.92rem;margin-top:8px
-  }
-  .pill.ok{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.08)}
-  .pill.bad{border-color:rgba(251,113,133,.25);background:rgba(251,113,133,.08)}
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FUNVENSER</title>
 
-  .modal{
-    position:fixed;inset:0;background:rgba(0,0,0,.55);
-    display:none;align-items:center;justify-content:center;
-    padding:16px;z-index:50
-  }
-  .modal .content{
-    background:var(--card);border:1px solid var(--border);
-    border-radius:12px;max-width:620px;width:100%;padding:16px
-  }
-  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-  .btn-outline{background:transparent;border:1px solid var(--border)}
-  .preview{
-    background:#0b1224;border:1px solid var(--border);
-    border-radius:10px;padding:12px;font-size:.93rem
-  }
-  .preview b{color:#fff}
+<style>
+    body{
+        margin:0;
+        font-family:system-ui,Segoe UI,Roboto,Arial;
+        background:#0f1321;
+        color:white;
+    }
+    .container{
+        max-width:900px;
+        margin:auto;
+        padding:20px;
+    }
+    .card{
+        background:#111827;
+        padding:25px;
+        border-radius:15px;
+        margin-top:25px;
+        box-shadow:0 0 25px rgba(0,0,0,0.2);
+    }
+    select,input,textarea{
+        width:100%;
+        padding:10px;
+        border-radius:8px;
+        border:none;
+        margin-top:7px;
+        margin-bottom:12px;
+        background:#f1f5f9;
+        font-size:15px;
+    }
+    button{
+        width:100%;
+        padding:12px;
+        margin-top:10px;
+        border:none;
+        border-radius:8px;
+        background:#7b85ff;
+        color:white;
+        font-size:16px;
+        cursor:pointer;
+    }
+    button:hover{
+        background:#6570f8;
+    }
+    .ok{ color:#4ade80; }
+    .bad{ color:#f87171; }
+
+    .hidden{ display:none; }
 </style>
 </head>
+
 <body>
-<div class="wrap">
 
-  <!-- LOGIN -->
-  <div class="card" id="loginCard">
-    <div class="hero">
-      <div class="logo"></div>
-      <div class="title">Ingresar · FUNVENSER</div>
-      <div class="subtitle">Usa tu API Key para acceder</div>
-    </div>
-    <label>API Key</label>
-    <input id="apiKey" placeholder="Ingresa tu API Key" />
-    <button id="btnLogin">Entrar</button>
-    <div id="loginMsg" class="muted"></div>
-  </div>
+<div class="container">
 
-  <!-- ADMIN -->
-  <div class="card hid" id="adminCard">
-    <h1>Admin · Asignación y Meta · FUNVENSER</h1>
-    <div class="grid grid-2">
-      <div><label>Ciudad</label><select id="a_ciudad"></select></div>
-      <div><label>Sede</label><select id="a_sede"></select></div>
-      <div><label>Máquina</label><select id="a_maquina"></select></div>
-      <div><label>Asesor</label><select id="a_asesor"></select></div>
-      <div><label>Meta del día</label><input id="a_meta" type="text" inputmode="numeric" value="$ 0" /></div>
-      <div><label>Fecha de asignación</label><input id="a_fecha" type="date"/></div>
-    </div>
-    <div class="row">
-      <button id="btnAdminGuardar">Guardar asignación/meta</button>
+    <!-- ============= LOGIN ============= -->
+    <div id="viewLogin" class="card">
+        <h2 style="text-align:center;margin-top:0;">
+            <img src="https://cdn-icons-png.flaticon.com/512/1057/1057214.png" width="65"><br>
+            Ingresar · FUNVENSER
+        </h2>
+        <p style="text-align:center">Usa tu API Key para acceder</p>
+
+        <label>API Key</label>
+        <input id="login_api" placeholder="Ingresa tu API Key">
+
+        <button id="btnLogin">Entrar</button>
+
+        <div id="loginMsg" style="margin-top:15px;text-align:center;"></div>
     </div>
 
-    <h1 style="margin-top:22px">Vista previa (lo que verá el asesor)</h1>
-    <div class="preview" id="adminPreview"></div>
 
-    <h1 style="margin-top:22px">Eliminar reporte</h1>
-    <div class="grid grid-2">
-      <div><label>Asesor</label><select id="del_asesor"></select></div>
-      <div><label>Máquina (opcional)</label><select id="del_maquina"></select></div>
-      <div><label>Fecha a eliminar</label><input id="del_fecha" type="date"/></div>
-    </div>
-    <div class="row">
-      <button class="btn-outline" id="btnDelete">Eliminar reporte</button>
-    </div>
-    <div id="adminMsg" class="muted" style="margin-top:8px"></div>
-  </div>
+    <!-- ============= DASHBOARD ASESOR ============= -->
+    <div id="viewAsesor" class="card hidden">
+        <h2>Panel Asesor · FUNVENSER</h2>
 
-  <!-- ASESOR -->
-  <div class="card hid" id="formCard">
-    <h1>Reporte Diario</h1>
-    <div class="grid grid-2">
-      <input id="asesorId" class="hid" />
-      <div><label>Asesor</label><input id="asesorNombre" readonly /></div>
-      <div><label>Fecha</label><input id="fecha" readonly /></div>
+        <div id="asignacionBox" style="margin-bottom:20px"></div>
 
-      <div><label>Ciudad</label><select id="ciudad" disabled></select></div>
-      <div><label>Sede (Centro Comercial)</label><select id="sede" disabled></select></div>
-      <div><label>Máquina</label><select id="maquina" disabled></select></div>
+        <h3>Registrar reporte de venta</h3>
 
-      <div><label>Marcado (monto en $)</label><input id="marcado" type="text" inputmode="numeric" value="$ 0" /></div>
-      <div><label>Error (monto en $)</label><input id="error" type="text" inputmode="numeric" value="$ 0" /></div>
+        <label>Marcado</label>
+        <input id="r_marcado" type="number">
 
-      <div><label>Tickets vendidos (auto)</label><input id="tickets" type="number" readonly value="0" /></div>
-      <div><label>Venta total (auto)</label><input id="venta" type="text" readonly value="$ 0" /></div>
+        <label>Error</label>
+        <input id="r_error" type="number">
 
-      <div><label>Meta del día (admin)</label><input id="meta" type="text" readonly value="$ 0" /></div>
-      <div><label>Gastos</label><input id="gastos" type="text" inputmode="numeric" value="$ 0" /></div>
+        <label>Gastos</label>
+        <input id="r_gastos" type="number">
 
-      <div><label>QR</label><input id="qr" type="text" inputmode="numeric" value="$ 0" /></div>
-      <div><label>Consignación (la edita Admin)</label><input id="consignacion" type="text" value="$ 0" readonly /></div>
+        <label>QR</label>
+        <input id="r_qr" type="number">
 
-      <div><label>Efectivo (auto)</label><input id="efectivo" type="text" readonly value="$ 0" /></div>
-      <div><label>Pendiente por consignar (auto)</label><input id="pendiente" type="text" readonly value="$ 0" /></div>
+        <label>Consignación</label>
+        <input id="r_cons" type="number">
 
-      <div style="grid-column:1 / -1">
-        <label>Faltante de Meta (auto = Meta − Venta)</label>
-        <input id="faltante" readonly value="$ 0" />
-      </div>
-
-      <div style="grid-column:1 / -1" id="feedback"></div>
-
-      <div style="grid-column:1 / -1">
         <label>Comentario</label>
-        <textarea id="comentario" rows="3" placeholder="Observaciones del día"></textarea>
-      </div>
+        <textarea id="r_com"></textarea>
 
-      <div><label>Foto (jpg/png)</label><input id="foto" type="file" accept="image/*" /></div>
-      <div><label>Video (mp4/quicktime)</label><input id="video" type="file" accept="video/*" /></div>
+        <label>Foto (opcional)</label>
+        <input type="file" id="r_foto">
+
+        <label>Video (opcional)</label>
+        <input type="file" id="r_video">
+
+        <button id="btnEnviarReporte">Enviar reporte</button>
+
+        <div id="repMsg" style="margin-top:15px;"></div>
     </div>
 
-    <button id="btnEnviar">Enviar reporte</button>
-    <div id="msg" class="muted" style="margin-top:6px"></div>
-  </div>
-</div>
 
-<!-- Modal confirm envío -->
-<div class="modal" id="sendModal" role="dialog" aria-modal="true">
-  <div class="content">
-    <h3>Confirmar envío</h3>
-    <div class="preview" id="sendPreview" style="margin-top:8px"></div>
-    <div class="actions">
-      <button class="btn-outline" id="btnSendCancel">Cancelar</button>
-      <button id="btnSendConfirm">Sí, enviar</button>
+    <!-- ============= PANEL ADMIN ============= -->
+    <div id="viewAdmin" class="card hidden">
+        <h2>Admin · Asignación y Meta · FUNVENSER</h2>
+
+        <label>Ciudad</label>
+        <select id="a_ciudad"></select>
+
+        <label>Sede</label>
+        <select id="a_sede"></select>
+
+        <label>Máquina</label>
+        <select id="a_maquina"></select>
+
+        <label>Asesor</label>
+        <select id="a_asesor"></select>
+
+        <label>Fecha de asignación</label>
+        <input id="a_fecha" type="date">
+
+        <label>Meta del día</label>
+        <input id="a_meta">
+
+        <button id="btnAsignar">Guardar asignación/meta</button>
+
+        <h3>Vista previa</h3>
+        <div id="previewAsign" style="background:#0d1527;padding:15px;border-radius:8px;height:160px;"></div>
+
+        <br><hr><br>
+
+        <h2>Eliminar reporte</h2>
+
+        <label>Asesor</label>
+        <select id="del_asesor"></select>
+
+        <label>Máquina (opcional)</label>
+        <select id="del_maquina"></select>
+
+        <label>Fecha a eliminar</label>
+        <input type="date" id="del_fecha">
+
+        <button id="btnDelete">Eliminar reporte</button>
+
+        <div id="adminMsg" style="margin-top:15px;"></div>
     </div>
-  </div>
+
 </div>
 
 <script>
-/* ========= CONFIG ========= */
-// ⬇️ REEMPLAZA ESTA LÍNEA CON TU URL /exec DEL WEB APP
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbww810h3M0RaCdvL2Hv0nZzzIMxiU_8ATRWNO84S8yS5E2BvSdMxMu3jaiLbMI1K249/exec';
 
-let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
+/* ======================================================
+   CONFIG
+====================================================== */
 
-/* ========= HELPERS ========= */
-const $=id=>document.getElementById(id);
-const pad=n=>String(n).padStart(2,'0');
-const toDMY=(d)=>`${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`;
-const fromDateInput=(val)=>{
-  if(!val) return '';
-  const [y,m,d]=val.split('-'); return `${d}-${m}-${y}`;
+// 🔥🔥🔥 EDITA ESTA LÍNEA 🔥🔥🔥
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxrtHfWX5YBq15Akg2FOJkk8VrsWupQj2DsoOTIDB7Hkj21Go09fVZnT9y-kBMd5KWP/exec";
+
+let TOKEN = "";
+let USER = null;
+let LISTAS = null;
+
+/* ======================================================
+   HELPERS
+====================================================== */
+
+function $(id){ return document.getElementById(id); }
+
+function setMsg(el, msg){
+    el.innerHTML = msg;
+}
+
+function normalizeToDMY(dateStr){
+    if(!dateStr) return "";
+    const d = new Date(dateStr);
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yy = d.getFullYear();
+    return `${dd}-${mm}-${yy}`;
+}
+
+function toDateInput(dmy){
+    if(!dmy) return "";
+    const p = dmy.split("-");
+    return `${p[2]}-${p[1]}-${p[0]}`;
+}
+
+/* ======================================================
+   LOGIN
+====================================================== */
+
+$("btnLogin").onclick = async ()=>{
+    const api = $("login_api").value.trim();
+    setMsg($("loginMsg"),"Validando...");
+
+    try{
+        const r = await fetch(WEB_APP_URL+"?path=login",{
+            method:"POST",
+            headers:{ "Content-Type":"text/plain" },
+            body: JSON.stringify({ api_key:api })
+        });
+
+        const j = await r.json();
+        if(!j.ok){
+            setMsg($("loginMsg"),`<span class="bad">❌ ${j.error}</span>`);
+            return;
+        }
+
+        TOKEN = j.token;
+        USER = j.user;
+
+        $("viewLogin").classList.add("hidden");
+
+        if(USER.rol.toLowerCase()==="admin"){
+            $("viewAdmin").classList.remove("hidden");
+            initAdmin();
+        }else{
+            $("viewAsesor").classList.remove("hidden");
+            initAsesor();
+        }
+
+    }catch(e){
+        setMsg($("loginMsg"),`<span class="bad">❌ Error de conexión</span>`);
+    }
 };
-const setMsg=(el,html)=>{ el.innerHTML = html; };
 
-const onlyDigits = s => (s||'').replace(/[^\d]/g,'');
-const parseCOP = s => Number(onlyDigits(String(s)))||0;
-const fmtCOP   = n => '$ ' + (Number(n)||0).toLocaleString('es-CO');
+/* ======================================================
+   LISTAS
+====================================================== */
 
-function setMoneyInput(el, n){
-  el.dataset.raw = String(Number(n)||0);
-  el.value = fmtCOP(n);
-}
-function getMoney(el){
-  if(!el) return 0;
-  if (el.dataset && el.dataset.raw !== undefined) return Number(el.dataset.raw)||0;
-  return parseCOP(el.value);
-}
-function attachMoneyMask(id){
-  const el=$(id);
-  const onFormat=()=>{
-    el.dataset.raw = String(parseCOP(el.value));
-    el.value = fmtCOP(el.dataset.raw);
-    recalcAuto();
-  };
-  el.addEventListener('input', ()=>{ el.dataset.raw = String(parseCOP(el.value)); });
-  el.addEventListener('blur', onFormat);
-  onFormat();
+async function loadListas(){
+    const r = await fetch(WEB_APP_URL+"?path=listas");
+    const j = await r.json();
+    LISTAS = j;
 }
 
-/* ========= LOGIN ========= */
-async function login(){
-  const api_key=$('apiKey').value.trim();
-  setMsg($('loginMsg'),'Validando...');
-  try{
-    const body = { api_key };
-    if (AID_PARAM) body.aid = AID_PARAM;
+/* ======================================================
+   PANEL ASESOR
+====================================================== */
 
-    const r=await fetch(WEB_APP_URL+'?path=login',{
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify(body)
-    });
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.error||'Error de login');
+async function initAsesor(){
+    await loadListas();
 
-    TOKEN=j.token; USER=j.user;
-    await cargarListas();
+    const r = await fetch(WEB_APP_URL+"?path=asignacion&token="+TOKEN);
+    const j = await r.json();
 
-    if((USER.rol||'').toLowerCase()==='admin'){
-      $('adminCard').classList.remove('hid');
-      initAdminSelectors();
-      syncAdminPreview();
-    }else{
-      $('formCard').classList.remove('hid');
-      $('asesorId').value = USER.id;
-      $('asesorNombre').value = USER.nombre;
-      await cargarAsignacionDelDia();
-      ['marcado','error','gastos','qr'].forEach(attachMoneyMask);
-      recalcAuto();
+    if(!j.ok){
+        $("asignacionBox").innerHTML = `<span class="bad">${j.error}</span>`;
+        return;
     }
 
-    $('loginCard').classList.add('hid');
-    setMsg($('loginMsg'),'<span class="ok">Acceso concedido</span>');
-  }catch(e){
-    console.error(e);
-    setMsg($('loginMsg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
-  }
-}
-
-/* ========= LISTAS ========= */
-async function cargarListas(){
-  const r=await fetch(WEB_APP_URL+'?path=listas');
-  const j=await r.json(); LISTAS=j;
-  fillSelect('ciudad', j.ciudades,'id','nombre');
-  $('ciudad').disabled = true;
-}
-function fillSelect(id,arr,valKey,txtKey){
-  const sel=$(id); sel.innerHTML='';
-  (arr||[]).forEach(o=>{
-    const op=document.createElement('option');
-    op.value=o[valKey];op.textContent=o[txtKey];
-    sel.appendChild(op);
-  });
-}
-
-/* ========= ASESOR ========= */
-async function cargarAsignacionDelDia(){
-  try{
-    const q = new URLSearchParams({ token: TOKEN });
-    const r = await fetch(WEB_APP_URL+'?path=asignacion&'+q.toString());
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error||'Sin asignación');
-
     const a = j.asignacion;
+    $("asignacionBox").innerHTML =
+    `<b>Fecha:</b> ${a.fecha}<br>
+     <b>Ciudad:</b> ${a.ciudad_id}<br>
+     <b>Sede:</b> ${a.sede_id}<br>
+     <b>Máquina:</b> ${a.maquina_id}<br>
+     <b>Meta:</b> ${a.meta_dia}<br>`;
 
-    fillSelect('ciudad', LISTAS.ciudades,'id','nombre');
-    $('ciudad').value = a.ciudad_id;
-    fillSelect('sede', LISTAS.sedes.filter(s=>s.ciudad_id===a.ciudad_id),'id','nombre');
-    $('sede').value = a.sede_id;
-    fillSelect('maquina', LISTAS.maquinas.filter(m=>m.sede_id===a.sede_id),'id','id');
-    $('maquina').value = a.maquina_id;
-
-    setMoneyInput($('meta'), a.meta_dia||0);
-    $('fecha').value = a.fecha;
-
-    ['ciudad','sede','maquina','meta'].forEach(id=>$(id).disabled=true);
-  }catch(e){
-    console.error(e);
-    setMsg($('msg'), '<span class="bad">No tienes asignación vigente.</span>');
-  }
+    $("btnEnviarReporte").onclick = enviarReporte;
 }
 
-/* ========= Cálculos ========= */
-function recalcAuto(){
-  const marcado = getMoney($('marcado'));
-  const error   = getMoney($('error'));
-  const gastos  = getMoney($('gastos'));
-  const qr      = getMoney($('qr'));
-  const meta    = getMoney($('meta'));
-  const cons    = getMoney($('consignacion'));
-
-  const venta = Math.max(0, marcado - error);
-  setMoneyInput($('venta'), venta);
-
-  const tickets = Math.max(0, Math.trunc(venta / 13));
-  $('tickets').value = tickets;
-
-  const efectivo = Math.max(0, venta - gastos - qr);
-  setMoneyInput($('efectivo'), efectivo);
-
-  const pendiente = Math.max(0, efectivo - cons);
-  setMoneyInput($('pendiente'), pendiente);
-
-  const faltante = Math.max(0, meta - venta);
-  setMoneyInput($('faltante'), faltante);
-
-  const fb = $('feedback');
-  if (faltante === 0){
-    fb.innerHTML = `<div class="pill ok">🔺 <b>Meta cumplida.</b> ¡Buen cierre!</div>`;
-  }else{
-    fb.innerHTML = `<div class="pill bad">🔻 <b>No cumpliste la meta.</b> Ajusta estrategia para mañana.</div>`;
-  }
-}
-
-/* ========= Upload a Drive ========= */
-async function uploadFile(file){
-  if(!file) return '';
-  const base64=await new Promise((res,rej)=>{
-    const fr=new FileReader();
-    fr.onload=()=>res(String(fr.result).split(',')[1]);
-    fr.onerror=rej; fr.readAsDataURL(file);
-  });
-  const r=await fetch(WEB_APP_URL+'?path=upload',{
-    method:'POST',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})
-  });
-  const j=await r.json();
-  if(!j.ok) throw new Error(j.error||'No se pudo subir');
-  return j.url;
-}
-
-/* ========= Confirmación y envío ========= */
-function abrirPreviewEnvio(){
-  recalcAuto();
-  const html = `
-  <div><b>Asesor:</b> ${$('asesorNombre').value}</div>
-  <div><b>Fecha:</b> ${$('fecha').value}</div>
-  <div><b>Ciudad:</b> ${$('ciudad').options[$('ciudad').selectedIndex].text}</div>
-  <div><b>Sede:</b> ${$('sede').options[$('sede').selectedIndex].text}</div>
-  <div><b>Máquina:</b> ${$('maquina').value}</div>
-  <div><b>Meta del día:</b> ${$('meta').value}</div>
-  <hr style="border-color:#1f2937;margin:8px 0">
-  <div><b>Marcado:</b> ${$('marcado').value}</div>
-  <div><b>Error:</b> ${$('error').value}</div>
-  <div><b>Gastos:</b> ${$('gastos').value}</div>
-  <div><b>QR:</b> ${$('qr').value}</div>
-  <div><b>Venta total:</b> ${$('venta').value}</div>
-  <div><b>Tickets vendidos:</b> ${$('tickets').value}</div>
-  <div><b>Efectivo:</b> ${$('efectivo').value}</div>
-  <div><b>Pendiente por consignar:</b> ${$('pendiente').value}</div>
-  <div><b>Faltante de Meta:</b> ${$('faltante').value}</div>
-  <div><b>Comentario:</b> ${$('comentario').value||'-'}</div>`;
-  $('sendPreview').innerHTML = html;
-  $('sendModal').style.display='flex';
-  $('btnSendCancel').onclick = ()=> $('sendModal').style.display='none';
-  $('btnSendConfirm').onclick = ()=> { $('sendModal').style.display='none'; enviar(); };
-}
-
-async function enviar(){
-  setMsg($('msg'),'Subiendo archivos y enviando...');
-  try{
-    const foto_url=await uploadFile($('foto').files[0]);
-    const video_url=await uploadFile($('video').files[0]);
-
-    const payload={
-      fecha:$('fecha').value,
-      ciudad_id:$('ciudad').value,
-      sede_id:$('sede').value,
-      maquina_id:$('maquina').value,
-      asesor_id:$('asesorId').value,
-      marcado:getMoney($('marcado')),
-      error:getMoney($('error')),
-      tickets_vendidos: Number($('tickets').value)||0,
-      venta_total:getMoney($('venta')),
-      meta_dia:getMoney($('meta')),
-      gastos:getMoney($('gastos')),
-      qr:getMoney($('qr')),
-      efectivo:getMoney($('efectivo')),
-      consignacion:getMoney($('consignacion')),
-      pendiente_consignar:getMoney($('pendiente')),
-      faltante_meta:getMoney($('faltante')),
-      comentario:$('comentario').value||'',
-      foto_url, video_url
+async function enviarReporte(){
+    const payload = {
+        fecha: hoyDMY(),
+        ciudad_id: "", // backend ya tiene asignación
+        sede_id: "",
+        maquina_id: "",
+        asesor_id: USER.id,
+        marcado: $("r_marcado").value,
+        error: $("r_error").value,
+        gastos: $("r_gastos").value,
+        qr: $("r_qr").value,
+        consignacion: $("r_cons").value,
+        comentario: $("r_com").value
     };
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({token:TOKEN,payload})
+
+    let foto64="", video64="";
+
+    const f = $("r_foto").files[0];
+    const v = $("r_video").files[0];
+
+    if(f) foto64 = await toBase64(f);
+    if(v) video64 = await toBase64(v);
+
+    const body = { token:TOKEN, payload:payload };
+
+    if(foto64){
+        const r1 = await uploadFile(f,"image");
+        body.payload.foto_url = r1.url;
+    }
+
+    if(video64){
+        const r2 = await uploadFile(v,"video");
+        body.payload.video_url = r2.url;
+    }
+
+    const r = await fetch(WEB_APP_URL+"?path=reporte",{
+        method:"POST",
+        headers:{ "Content-Type":"text/plain" },
+        body: JSON.stringify(body)
     });
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.error||'Error al registrar');
 
-    setMsg($('msg'),'<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
-    bloquearFormulario();
-  }catch(e){
-    console.error(e);
-    setMsg($('msg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
-  }
+    const j = await r.json();
+    if(!j.ok){
+        setMsg($("repMsg"), `<span class="bad">❌ ${j.error}</span>`);
+        return;
+    }
+
+    setMsg($("repMsg"), `<span class="ok">✔ Reporte enviado</span>`);
 }
 
-function bloquearFormulario(){
-  ['marcado','error','gastos','qr','comentario','foto','video']
-    .forEach(id=>{ const el=$(id); if(el) el.disabled=true; });
-  $('btnEnviar').disabled = true;
+function hoyDMY(){
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yy = d.getFullYear();
+    return `${dd}-${mm}-${yy}`;
 }
 
-/* ========= ADMIN ========= */
-function initAdminSelectors(){
-  fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
-  $('a_ciudad').addEventListener('change', ()=>{
-    const cid=$('a_ciudad').value;
-    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre');
-    $('a_sede').dispatchEvent(new Event('change'));
-  });
-  $('a_sede').addEventListener('change', ()=>{
-    const sid=$('a_sede').value;
-    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
-    fillSelect('del_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
-    syncAdminPreview();
-  });
-  const asesores=(LISTAS.usuarios||[])
-    .filter(u=>(u.rol||'').toLowerCase()==='asesor' &&
-                 String(u.activo).toLowerCase()==='true');
-  fillSelect('a_asesor', asesores,'id','nombre');
-  fillSelect('del_asesor', asesores,'id','nombre');
-
-  attachMoneyMask('a_meta');
-  const d=new Date();
-  $('a_fecha').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-
-  ['a_asesor','a_meta','a_fecha']
-    .forEach(id=>$(id).addEventListener('input', syncAdminPreview));
-  $('a_ciudad').dispatchEvent(new Event('change'));
-
-  $('btnAdminGuardar').addEventListener('click', adminGuardar);
-  $('btnDelete').addEventListener('click', adminDeleteReport);
-  syncAdminPreview();
-}
-
-function syncAdminPreview(){
-  const ciudad = $('a_ciudad').options[$('a_ciudad').selectedIndex]?.text || '';
-  const sede   = $('a_sede').options[$('a_sede').selectedIndex]?.text || '';
-  const maq    = $('a_maquina').value || '';
-  const asesor = $('a_asesor').options[$('a_asesor').selectedIndex]?.text || '';
-  const meta   = getMoney($('a_meta'));
-  const fechaDMY = fromDateInput($('a_fecha').value);
-
-  $('adminPreview').innerHTML =
-    `<div><b>Fecha:</b> ${fechaDMY}</div>
-     <div><b>Ciudad:</b> ${ciudad}</div>
-     <div><b>Sede:</b> ${sede}</div>
-     <div><b>Máquina:</b> ${maq}</div>
-     <div><b>Asesor:</b> ${asesor}</div>
-     <div><b>Meta del día:</b> ${fmtCOP(meta)}</div>`;
-}
-
-async function adminGuardar(){
-  const msg=$('adminMsg'); setMsg(msg,'Guardando...');
-  try{
-    const q=new URLSearchParams({
-      token:TOKEN,
-      ciudad_id:$('a_ciudad').value,
-      sede_id:$('a_sede').value,
-      maquina_id:$('a_maquina').value,
-      asesor_id:$('a_asesor').value,
-      meta_sugerida:String(getMoney($('a_meta'))||0),
-      fecha: fromDateInput($('a_fecha').value)
+function toBase64(file){
+    return new Promise((resolve,reject)=>{
+        const r = new FileReader();
+        r.onload=()=>resolve(r.result.split(",")[1]);
+        r.onerror=reject;
+        r.readAsDataURL(file);
     });
-    const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
-    setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
-  }catch(e){
-    console.error(e);
-    setMsg($('adminMsg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
-  }
 }
 
-function normalizeToDMY(val){
-  if (!val) return '';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(val)){
-    const [y,m,d] = val.split('-'); return `${d}-${m}-${y}`;
-  }
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)){
-    const [d,m,y] = val.split('/'); return `${d}-${m}-${y}`;
-  }
-  if (/^\d{2}-\d{2}-\d{4}$/.test(val)) return val;
-  return '';
+async function uploadFile(file,type){
+    const base64 = await toBase64(file);
+    const r = await fetch(WEB_APP_URL+"?path=upload",{
+        method:"POST",
+        headers:{ "Content-Type":"text/plain" },
+        body: JSON.stringify({
+            token:TOKEN,
+            fileName:file.name,
+            mimeType:file.type,
+            data:base64
+        })
+    });
+    return await r.json();
 }
 
-<script>
-/* ...todo el código que ya tienes para login, listas, adminSet, reporte, etc... */
+/* ======================================================
+   PANEL ADMIN
+====================================================== */
 
-/* ========= ELIMINAR REPORTE (ADMIN) ========= */
-async function adminDeleteReport(){
-  const msg = $('adminMsg');
-  setMsg(msg,'Enviando solicitud de eliminación...');
+async function initAdmin(){
+    await loadListas();
 
-  try{
-    const fechaDMY = normalizeToDMY($('del_fecha').value);
+    fillSelect($("a_ciudad"), LISTAS.ciudades, "id", "nombre");
+    fillSelect($("a_sede"), LISTAS.sedes, "id", "nombre");
+    fillSelect($("a_maquina"), LISTAS.maquinas, "id", "id");
+    fillSelect($("a_asesor"), LISTAS.usuarios.filter(u=>u.rol==="Asesor"), "id", "nombre");
+
+    fillSelect($("del_asesor"), LISTAS.usuarios.filter(u=>u.rol==="Asesor"), "id", "nombre");
+    fillSelect($("del_maquina"), LISTAS.maquinas, "id", "id");
+
+    $("btnAsignar").onclick = adminSet;
+    $("btnDelete").onclick = adminDeleteReport;
+}
+
+function fillSelect(sel, list, val, txt){
+    sel.innerHTML = "";
+    list.forEach(o=>{
+        const op = document.createElement("option");
+        op.value=o[val];
+        op.textContent=o[txt];
+        sel.appendChild(op);
+    });
+}
+
+async function adminSet(){
+    const msg = $("adminMsg");
+    msg.innerHTML = "Guardando...";
 
     const body = {
-      token: TOKEN,                           // aunque backend ya no lo revisa, lo dejamos
-      asesor_id: $('del_asesor').value,
-      maquina_id: $('del_maquina').value || '',
-      fecha: fechaDMY
+        token:TOKEN,
+        ciudad_id:$("a_ciudad").value,
+        sede_id:$("a_sede").value,
+        maquina_id:$("a_maquina").value,
+        asesor_id:$("a_asesor").value,
+        fecha: normalizeToDMY($("a_fecha").value),
+        meta_sugerida:$("a_meta").value
     };
 
-    await fetch(WEB_APP_URL + '?path=admin_delete', {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(body)
+    const r = await fetch(WEB_APP_URL+"?path=admin_set",{
+        method:"POST",
+        headers:{ "Content-Type":"text/plain" },
+        body: JSON.stringify(body)
     });
 
-    setMsg(
-      msg,
-      `<span class="ok">✔ Solicitud enviada. Verifica en las hojas "Reportes" y "Asignaciones" ` +
-      `que los registros de ${fechaDMY} para ese asesor/máquina ya no estén.</span>`
-    );
+    const j = await r.json();
+    if(!j.ok){
+        msg.innerHTML = `<span class="bad">❌ ${j.error}</span>`;
+        return;
+    }
 
-  }catch(e){
-    console.error(e);
-    setMsg(
-      msg,
-      `<span class="bad">❌ No se pudo enviar la solicitud: ${(e.message || '')}</span>`
-    );
-  }
+    msg.innerHTML = `<span class="ok">✔ Asignación guardada</span>`;
 }
 
-/* ...resto de tu código (init, etc.) ... */
+/* ======================================================
+   ELIMINAR REPORTE  —  FUNCIONA ✔
+====================================================== */
+
+async function adminDeleteReport(){
+    const msg = $("adminMsg");
+    msg.innerHTML = "Eliminando...";
+
+    try{
+        const body = {
+            token:TOKEN,
+            asesor_id:$("del_asesor").value,
+            maquina_id:$("del_maquina").value,
+            fecha: normalizeToDMY($("del_fecha").value)
+        };
+
+        await fetch(WEB_APP_URL+"?path=admin_delete",{
+            method:"POST",
+            mode:"no-cors",
+            headers:{ "Content-Type":"text/plain" },
+            body: JSON.stringify(body)
+        });
+
+        msg.innerHTML =
+        `<span class="ok">✔ Solicitud enviada. Revisa las hojas "Reportes" y "Asignaciones".</span>`;
+
+    }catch(e){
+        msg.innerHTML = `<span class="bad">❌ No se pudo enviar: ${e.message}</span>`;
+    }
+}
+
 </script>
 
-
-/* ========= INIT ========= */
-document.addEventListener('DOMContentLoaded', ()=>{
-  const url = new URL(location.href);
-  AID_PARAM = url.searchParams.get('aid') || null;
-  $('btnLogin').addEventListener('click', login);
-  $('btnEnviar').addEventListener('click', abrirPreviewEnvio);
-});
-</script>
 </body>
 </html>
