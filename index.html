@@ -507,6 +507,10 @@ function normalizeToDMY(val){
   return '';
 }
 
+<script>
+/* ...todo el código que ya tienes para login, listas, adminSet, reporte, etc... */
+
+/* ========= ELIMINAR REPORTE (ADMIN) ========= */
 async function adminDeleteReport(){
   const msg = $('adminMsg');
   setMsg(msg,'Enviando solicitud de eliminación...');
@@ -515,15 +519,12 @@ async function adminDeleteReport(){
     const fechaDMY = normalizeToDMY($('del_fecha').value);
 
     const body = {
-      token: TOKEN,
+      token: TOKEN,                           // aunque backend ya no lo revisa, lo dejamos
       asesor_id: $('del_asesor').value,
       maquina_id: $('del_maquina').value || '',
       fecha: fechaDMY
     };
 
-    // 💡 Truco: usamos POST + mode: 'no-cors'
-    // para que el navegador no bloquee nada.
-    // No intentamos leer la respuesta, solo enviamos la orden.
     await fetch(WEB_APP_URL + '?path=admin_delete', {
       method: 'POST',
       mode: 'no-cors',
@@ -531,12 +532,10 @@ async function adminDeleteReport(){
       body: JSON.stringify(body)
     });
 
-    // Si llegamos aquí, la petición se envió al WebApp.
     setMsg(
       msg,
-      `<span class="ok">✔ Solicitud enviada. ` +
-      `Verifica en las hojas "Reportes" y "Asignaciones" que los registros de ` +
-      `${fechaDMY} para ese asesor/máquina ya no estén.</span>`
+      `<span class="ok">✔ Solicitud enviada. Verifica en las hojas "Reportes" y "Asignaciones" ` +
+      `que los registros de ${fechaDMY} para ese asesor/máquina ya no estén.</span>`
     );
 
   }catch(e){
@@ -548,8 +547,8 @@ async function adminDeleteReport(){
   }
 }
 
-
-
+/* ...resto de tu código (init, etc.) ... */
+</script>
 
 
 /* ========= INIT ========= */
