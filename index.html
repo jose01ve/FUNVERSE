@@ -509,10 +509,14 @@ function normalizeToDMY(val){
 
 async function adminDeleteReport(){
   const msg = $('adminMsg');
-  setMsg(msg,'Enviando solicitud de eliminación...');
+  setMsg(msg, 'Eliminando...');
 
   try{
     const fechaDMY = normalizeToDMY($('del_fecha').value);
+    if (!fechaDMY){
+      setMsg(msg, '<span class="bad">❌ Selecciona una fecha válida</span>');
+      return;
+    }
 
     const body = {
       token: TOKEN,
@@ -521,34 +525,45 @@ async function adminDeleteReport(){
       fecha: fechaDMY
     };
 
-    // 💡 Truco: usamos POST + mode: 'no-cors'
-    // para que el navegador no bloquee nada.
-    // No intentamos leer la respuesta, solo enviamos la orden.
-    await fetch(WEB_APP_URL + '?path=admin_delete', {
+    // Igual que login / reporte: POST normal, leemos la respuesta
+    const resp = await fetch(WEB_APP_URL + '?path=admin_delete', {
       method: 'POST',
-      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(body)
     });
 
-    // Si llegamos aquí, la petición se envió al WebApp.
+    const text = await resp.text();
+    let j;
+    try {
+      j = JSON.parse(text);
+    } catch (err) {
+      throw new Error('Respuesta no válida del servidor: ' + text.slice(0,120));
+    }
+
+    if (!j.ok){
+      setMsg(
+        msg,
+        `<span class="bad">❌ ${j.error || 'No se encontró reporte/asignación para eliminar'}</span>`
+      );
+      return;
+    }
+
     setMsg(
       msg,
-      `<span class="ok">✔ Solicitud enviada. ` +
-      `Verifica en las hojas "Reportes" y "Asignaciones" que los registros de ` +
-      `${fechaDMY} para ese asesor/máquina ya no estén.</span>`
+      `<span class="ok">✔ Eliminado. Reportes: ${j.removed_reportes || 0}, ` +
+      `Asignaciones: ${j.removed_asignaciones || 0} (fecha ${j.fecha})</span>`
     );
 
   }catch(e){
     console.error(e);
     setMsg(
       msg,
-      `<span class="bad">❌ No se pudo enviar la solicitud: ${(e.message || '')}</span>`
+      `<span class="bad">❌ ${e.message || 'Error al eliminar'}</span>`
     );
   }
 }
 
-
+  
 /* ========= INIT ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
   const url = new URL(location.href);
