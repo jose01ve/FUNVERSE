@@ -509,44 +509,39 @@ function normalizeToDMY(val){
 
 async function adminDeleteReport(){
   const msg = $('adminMsg');
-  setMsg(msg,'Enviando solicitud de eliminación...');
+  setMsg(msg,'Eliminando...');
 
   try{
     const fechaDMY = normalizeToDMY($('del_fecha').value);
 
-    const body = {
+    // Igual que adminGuardar: armamos query y usamos GET
+    const q = new URLSearchParams({
       token: TOKEN,
       asesor_id: $('del_asesor').value,
       maquina_id: $('del_maquina').value || '',
       fecha: fechaDMY
-    };
-
-    // 💡 Truco: usamos POST + mode: 'no-cors'
-    // para que el navegador no bloquee nada.
-    // No intentamos leer la respuesta, solo enviamos la orden.
-    await fetch(WEB_APP_URL + '?path=admin_delete', {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(body)
     });
 
-    // Si llegamos aquí, la petición se envió al WebApp.
+    const r = await fetch(WEB_APP_URL + '?path=admin_delete&' + q.toString());
+    const j = await r.json();
+
+    if (!j.ok){
+      setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
+      return;
+    }
+
     setMsg(
       msg,
-      `<span class="ok">✔ Solicitud enviada. ` +
-      `Verifica en las hojas "Reportes" y "Asignaciones" que los registros de ` +
-      `${fechaDMY} para ese asesor/máquina ya no estén.</span>`
+      `<span class="ok">✔ Eliminado (${j.fecha}): ` +
+      `reportes=${j.removed_reportes||0}, ` +
+      `asignaciones=${j.removed_asignaciones||0}</span>`
     );
-
   }catch(e){
     console.error(e);
-    setMsg(
-      msg,
-      `<span class="bad">❌ No se pudo enviar la solicitud: ${(e.message || '')}</span>`
-    );
+    setMsg(msg, `<span class="bad">❌ ${(e.message || 'Failed to fetch')}</span>`);
   }
 }
+
 
 
 /* ========= INIT ========= */
