@@ -378,167 +378,71 @@ function abrirPreviewEnvio(){
 
 async function enviar(){
   setMsg($('msg'),'Subiendo archivos y enviando...');
-  try{
-    const foto_url=await uploadFile($('foto').files[0]);
-    const video_url=await uploadFile($('video').files[0]);
-
-    const payload={
-      fecha:$('fecha').value,
-      ciudad_id:$('ciudad').value,
-      sede_id:$('sede').value,
-      maquina_id:$('maquina').value,
-      asesor_id:$('asesorId').value,
-      marcado:getMoney($('marcado')),
-      error:getMoney($('error')),
-      tickets_vendidos: Number($('tickets').value)||0,
-      venta_total:getMoney($('venta')),
-      meta_dia:getMoney($('meta')),
-      gastos:getMoney($('gastos')),
-      qr:getMoney($('qr')),
-      efectivo:getMoney($('efectivo')),
-      consignacion:getMoney($('consignacion')),
-      pendiente_consignar:getMoney($('pendiente')),
-      faltante_meta:getMoney($('faltante')),
-      comentario:$('comentario').value||'',
-      foto_url, video_url
-    };
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({token:TOKEN,payload})
-    });
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.error||'Error al registrar');
-
-    setMsg($('msg'),'<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
-    bloquearFormulario();
-  }catch(e){
-    console.error(e);
-    setMsg($('msg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
-  }
-}
-
-function bloquearFormulario(){
-  ['marcado','error','gastos','qr','comentario','foto','video']
-    .forEach(id=>{ const el=$(id); if(el) el.disabled=true; });
-  $('btnEnviar').disabled = true;
-}
-
-/* ========= ADMIN ========= */
-function initAdminSelectors(){
-  fillSelect('a_ciudad', LISTAS.ciudades,'id','nombre');
-  $('a_ciudad').addEventListener('change', ()=>{
-    const cid=$('a_ciudad').value;
-    fillSelect('a_sede', LISTAS.sedes.filter(s=>s.ciudad_id===cid),'id','nombre');
-    $('a_sede').dispatchEvent(new Event('change'));
-  });
-  $('a_sede').addEventListener('change', ()=>{
-    const sid=$('a_sede').value;
-    fillSelect('a_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
-    fillSelect('del_maquina', LISTAS.maquinas.filter(m=>m.sede_id===sid),'id','id');
-    syncAdminPreview();
-  });
-  const asesores=(LISTAS.usuarios||[])
-    .filter(u=>(u.rol||'').toLowerCase()==='asesor' &&
-                 String(u.activo).toLowerCase()==='true');
-  fillSelect('a_asesor', asesores,'id','nombre');
-  fillSelect('del_asesor', asesores,'id','nombre');
-
-  attachMoneyMask('a_meta');
-  const d=new Date();
-  $('a_fecha').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-
-  ['a_asesor','a_meta','a_fecha']
-    .forEach(id=>$(id).addEventListener('input', syncAdminPreview));
-  $('a_ciudad').dispatchEvent(new Event('change'));
-
-  $('btnAdminGuardar').addEventListener('click', adminGuardar);
-  $('btnDelete').addEventListener('click', adminDeleteReport);
-  syncAdminPreview();
-}
-
-function syncAdminPreview(){
-  const ciudad = $('a_ciudad').options[$('a_ciudad').selectedIndex]?.text || '';
-  const sede   = $('a_sede').options[$('a_sede').selectedIndex]?.text || '';
-  const maq    = $('a_maquina').value || '';
-  const asesor = $('a_asesor').options[$('a_asesor').selectedIndex]?.text || '';
-  const meta   = getMoney($('a_meta'));
-  const fechaDMY = fromDateInput($('a_fecha').value);
-
-  $('adminPreview').innerHTML =
-    `<div><b>Fecha:</b> ${fechaDMY}</div>
-     <div><b>Ciudad:</b> ${ciudad}</div>
-     <div><b>Sede:</b> ${sede}</div>
-     <div><b>Máquina:</b> ${maq}</div>
-     <div><b>Asesor:</b> ${asesor}</div>
-     <div><b>Meta del día:</b> ${fmtCOP(meta)}</div>`;
-}
-
-async function adminGuardar(){
-  const msg=$('adminMsg'); setMsg(msg,'Guardando...');
-  try{
-    const q=new URLSearchParams({
-      token:TOKEN,
-      ciudad_id:$('a_ciudad').value,
-      sede_id:$('a_sede').value,
-      maquina_id:$('a_maquina').value,
-      asesor_id:$('a_asesor').value,
-      meta_sugerida:String(getMoney($('a_meta'))||0),
-      fecha: fromDateInput($('a_fecha').value)
-    });
-    const r=await fetch(WEB_APP_URL+'?path=admin_set&'+q.toString());
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'No se pudo guardar');
-    setMsg(msg,'<span class="ok">✔ Guardado y notificado por email</span>');
-  }catch(e){
-    console.error(e);
-    setMsg($('adminMsg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
-  }
-}
-
-function normalizeToDMY(val){
-  if (!val) return '';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(val)){
-    const [y,m,d] = val.split('-'); return `${d}-${m}-${y}`;
-  }
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)){
-    const [d,m,y] = val.split('/'); return `${d}-${m}-${y}`;
-  }
-  if (/^\d{2}-\d{2}-\d{4}$/.test(val)) return val;
-  return '';
-}
-
-async function adminDeleteReport(){
-  const msg = $('adminMsg');
-  setMsg(msg,'Eliminando...');
 
   try{
-    const fechaDMY = normalizeToDMY($('del_fecha').value);
+    // 1) Subir archivos (si hay)
+    let foto_url = '';
+    let video_url = '';
 
-    // Igual que adminGuardar: armamos query y usamos GET
-    const q = new URLSearchParams({
-      token: TOKEN,
-      asesor_id: $('del_asesor').value,
-      maquina_id: $('del_maquina').value || '',
-      fecha: fechaDMY
-    });
-
-    const r = await fetch(WEB_APP_URL + '?path=admin_delete&' + q.toString());
-    const j = await r.json();
-
-    if (!j.ok){
-      setMsg(msg, `<span class="bad">❌ ${j.error || 'No hay reporte para eliminar'}</span>`);
-      return;
+    try{
+      foto_url  = await uploadFile($('foto').files[0]);
+      video_url = await uploadFile($('video').files[0]);
+    }catch(upErr){
+      console.error('Error subiendo archivos:', upErr);
+      // NO frenamos el envío del reporte por fallo de archivo,
+      // solo avisamos en el mensaje.
+      setMsg($('msg'),
+        '<span class="bad">⚠ Hubo un problema subiendo la foto o el video, ' +
+        'pero se intentará enviar el reporte sin adjuntos.</span>'
+      );
     }
 
+    // 2) Construir payload a partir de los campos de la UI
+    const payload = {
+      fecha              : $('fecha').value,
+      ciudad_id          : $('ciudad').value,
+      sede_id            : $('sede').value,
+      maquina_id         : $('maquina').value,
+      asesor_id          : $('asesorId').value,
+      marcado            : getMoney($('marcado')),
+      error              : getMoney($('error')),
+      tickets_vendidos   : Number($('tickets').value)||0,
+      venta_total        : getMoney($('venta')),
+      meta_dia           : getMoney($('meta')),
+      gastos             : getMoney($('gastos')),
+      qr                 : getMoney($('qr')),
+      efectivo           : getMoney($('efectivo')),
+      consignacion       : getMoney($('consignacion')),
+      pendiente_consignar: getMoney($('pendiente')),
+      faltante_meta      : getMoney($('faltante')),
+      comentario         : $('comentario').value || '',
+      foto_url,
+      video_url
+    };
+
+    // 3) Enviar al WebApp (modo compatibilidad, sin leer JSON)
+    await fetch(WEB_APP_URL + '?path=reporte', {
+      method : 'POST',
+      mode   : 'no-cors',              // 🔹 igual que en adminDelete
+      headers: { 'Content-Type':'text/plain' },
+      body   : JSON.stringify({ token:TOKEN, payload })
+    });
+
+    // Si llegamos aquí, la petición se envió al WebApp.
     setMsg(
-      msg,
-      `<span class="ok">✔ Eliminado (${j.fecha}): ` +
-      `reportes=${j.removed_reportes||0}, ` +
-      `asignaciones=${j.removed_asignaciones||0}</span>`
+      $('msg'),
+      '<span class="ok">✅ Reporte enviado. ' +
+      'Verifica en la hoja "Reportes" que haya quedado registrado.</span>'
     );
+    bloquearFormulario();
+
   }catch(e){
-    console.error(e);
-    setMsg(msg, `<span class="bad">❌ ${(e.message || 'Failed to fetch')}</span>`);
+    console.error('Error general en enviar():', e);
+    setMsg(
+      $('msg'),
+      '<span class="bad">❌ No se pudo enviar el reporte: ' +
+      (e.message || 'Failed to fetch') + '</span>'
+    );
   }
 }
 
