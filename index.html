@@ -177,7 +177,7 @@
 <script>
 /* ========= CONFIG ========= */
 // ⬇️ REEMPLAZA ESTA LÍNEA CON TU URL /exec DEL WEB APP
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxRubN-ZjTVQQbbKkRxqe1IdiVe46Mc_GjyQscVDk_XJX_5iJyEhLbTjUg-urM0Aj3u/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwKakSkp1qV9goR3wbAY0eklRY48rQCoT7Jb8lnnveXOaYPGylkraVUCoBWww5HuEdZ/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -397,17 +397,18 @@ function abrirPreviewEnvio(){
 }
 
 async function enviar(){
-  setMsg($('msg'),'Subiendo archivos y enviando...');
+  const msgEl = $('msg');
+  setMsg(msgEl,'Subiendo archivos y enviando...');
 
   try{
-    // 1) Subir evidencias (silencioso si falla)
+    // 1) Subir evidencias (si hay). Si falla, seguimos sin URL.
     const fotoFile  = $('foto').files[0];
     const videoFile = $('video').files[0];
 
     const foto_url  = await uploadFile(fotoFile);
     const video_url = await uploadFile(videoFile);
 
-    // 2) Construir payload
+    // 2) Construir payload desde el formulario
     const payload = {
       fecha              : $('fecha').value,
       ciudad_id          : $('ciudad').value,
@@ -430,27 +431,45 @@ async function enviar(){
       video_url
     };
 
-    // 3) Enviar al WebApp en modo "no-cors" para evitar el maldito CORS/Failed to fetch
-    await fetch(WEB_APP_URL + '?path=reporte', {
+    // Validación rápida en el front para no mandar basura
+    if (!payload.ciudad_id || !payload.sede_id || !payload.maquina_id || !payload.asesor_id){
+      setMsg(msgEl,'<span class="bad">❌ Faltan datos de asignación (ciudad / sede / máquina / asesor).</span>');
+      return;
+    }
+
+    // 3) Enviar al WebApp como POST normal y leer la respuesta JSON
+    const resp = await fetch(WEB_APP_URL + '?path=reporte', {
       method : 'POST',
-      mode   : 'no-cors',              // 👈 clave para evitar el "Failed to fetch"
       headers: { 'Content-Type':'text/plain' },
       body   : JSON.stringify({ token:TOKEN, payload })
     });
 
-    // Si llegamos aquí, la petición salió del navegador hacia el WebApp.
-    // No podemos leer la respuesta (por no-cors), así que asumimos OK.
+    const text = await resp.text();
+    let j;
+    try{
+      j = JSON.parse(text);
+    }catch(parseErr){
+      console.error('Respuesta no JSON:', text);
+      throw new Error('Respuesta no válida del servidor: ' + text.slice(0,120));
+    }
+
+    if (!j.ok){
+      // El Apps Script respondió, pero con error
+      throw new Error(j.error || 'Error al registrar el reporte');
+    }
+
+    // 4) Todo OK → se escribió en la hoja
     setMsg(
-      $('msg'),
-      '<span class="ok">✅ Reporte enviado. ' +
-      'Verifica en la hoja "Reportes" que haya quedado registrado.</span>'
+      msgEl,
+      '<span class="ok">✅ Reporte registrado correctamente. ' +
+      'Tu reporte ya debe aparecer en la hoja "Reportes".</span>'
     );
     bloquearFormulario();
 
   }catch(e){
     console.error('Error general en enviar():', e);
     setMsg(
-      $('msg'),
+      msgEl,
       '<span class="bad">❌ No se pudo enviar el reporte: ' +
       (e.message || 'Failed to fetch') + '</span>'
     );
