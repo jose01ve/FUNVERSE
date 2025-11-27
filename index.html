@@ -509,79 +509,42 @@ function normalizeToDMY(val){
 
 async function adminDeleteReport(){
   const msg = $('adminMsg');
-  setMsg(msg, 'Eliminando...');
-
-  const fechaDMY = normalizeToDMY($('del_fecha').value);
-  if (!fechaDMY){
-    setMsg(msg, '<span class="bad">❌ Selecciona una fecha válida</span>');
-    return;
-  }
-
-  const body = {
-    token: TOKEN,
-    asesor_id: $('del_asesor').value,
-    maquina_id: $('del_maquina').value || '',
-    fecha: fechaDMY
-  };
-
-  // Función auxiliar para el modo compatibilidad (no-cors)
-  async function fallbackNoCors(){
-    try{
-      await fetch(WEB_APP_URL + '?path=admin_delete', {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(body)
-      });
-      setMsg(
-        msg,
-        `<span class="ok">✔ Solicitud enviada en modo compatibilidad. ` +
-        `Revisa en las hojas "Reportes" y "Asignaciones" los registros de ${fechaDMY}.</span>`
-      );
-    }catch(e2){
-      console.error('fallback error', e2);
-      setMsg(msg, `<span class="bad">❌ No se pudo eliminar: ${(e2.message || 'Error de red')}</span>`);
-    }
-  }
+  setMsg(msg,'Enviando solicitud de eliminación...');
 
   try{
-    // Intento 1: petición normal, leyendo JSON
-    const resp = await fetch(WEB_APP_URL + '?path=admin_delete', {
+    const fechaDMY = normalizeToDMY($('del_fecha').value);
+
+    const body = {
+      token: TOKEN,
+      asesor_id: $('del_asesor').value,
+      maquina_id: $('del_maquina').value || '',
+      fecha: fechaDMY
+    };
+
+    // 💡 Truco: usamos POST + mode: 'no-cors'
+    // para que el navegador no bloquee nada.
+    // No intentamos leer la respuesta, solo enviamos la orden.
+    await fetch(WEB_APP_URL + '?path=admin_delete', {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(body)
     });
 
-    const text = await resp.text();
-    let j = null;
-    try {
-      j = JSON.parse(text);
-    } catch(parseErr){
-      // Si la respuesta no es JSON (por ejemplo HTML de error),
-      // usamos el modo compatibilidad.
-      console.warn('Respuesta no JSON, usando fallback:', text.slice(0,120));
-      return fallbackNoCors();
-    }
-
-    if (!j || j.ok !== true){
-      // El backend respondió pero dijo que no eliminó nada
-      const msgErr = (j && j.error) ? j.error : 'No se encontraron registros para eliminar';
-      setMsg(msg, `<span class="bad">❌ ${msgErr}</span>`);
-      return;
-    }
-
-    // Todo OK, tenemos los contadores
+    // Si llegamos aquí, la petición se envió al WebApp.
     setMsg(
       msg,
-      `<span class="ok">✔ Eliminado. Reportes: ${j.removed_reportes || 0}, ` +
-      `Asignaciones: ${j.removed_asignaciones || 0} (fecha ${j.fecha})</span>`
+      `<span class="ok">✔ Solicitud enviada. ` +
+      `Verifica en las hojas "Reportes" y "Asignaciones" que los registros de ` +
+      `${fechaDMY} para ese asesor/máquina ya no estén.</span>`
     );
 
   }catch(e){
-    // Si el fetch normal falla (TypeError: Failed to fetch), usamos fallback
-    console.error('Error en fetch normal (usando fallback):', e);
-    setMsg(msg, `<span class="bad">⚠ Error de red, reintentando en modo compatibilidad...</span>`);
-    await fallbackNoCors();
+    console.error(e);
+    setMsg(
+      msg,
+      `<span class="bad">❌ No se pudo enviar la solicitud: ${(e.message || '')}</span>`
+    );
   }
 }
 
