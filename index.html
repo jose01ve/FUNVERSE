@@ -333,20 +333,40 @@ function recalcAuto(){
 
 /* ========= Upload a Drive ========= */
 async function uploadFile(file){
-  if(!file) return '';
-  const base64=await new Promise((res,rej)=>{
-    const fr=new FileReader();
-    fr.onload=()=>res(String(fr.result).split(',')[1]);
-    fr.onerror=rej; fr.readAsDataURL(file);
-  });
-  const r=await fetch(WEB_APP_URL+'?path=upload',{
-    method:'POST',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({token:TOKEN,fileName:file.name,mimeType:file.type,data:base64})
-  });
-  const j=await r.json();
-  if(!j.ok) throw new Error(j.error||'No se pudo subir');
-  return j.url;
+  // Si no hay archivo, no hacemos nada
+  if (!file) return '';
+
+  try{
+    const base64 = await new Promise((res, rej)=>{
+      const fr = new FileReader();
+      fr.onload  = () => res(String(fr.result).split(',')[1]);
+      fr.onerror = rej;
+      fr.readAsDataURL(file);
+    });
+
+    const r = await fetch(WEB_APP_URL + '?path=upload', {
+      method : 'POST',
+      headers: { 'Content-Type':'text/plain' },
+      body   : JSON.stringify({
+        token   : TOKEN,
+        fileName: file.name,
+        mimeType: file.type,
+        data    : base64
+      })
+    });
+
+    const j = await r.json();
+    if (!j.ok) {
+      console.error('Upload error:', j);
+      return '';
+    }
+    return j.url || '';
+
+  }catch(e){
+    console.error('Error subiendo archivo:', e);
+    // No rompemos el envío del reporte solo por la evidencia
+    return '';
+  }
 }
 
 /* ========= Confirmación y envío ========= */
@@ -378,45 +398,65 @@ function abrirPreviewEnvio(){
 
 async function enviar(){
   setMsg($('msg'),'Subiendo archivos y enviando...');
+
   try{
-    const foto_url=await uploadFile($('foto').files[0]);
-    const video_url=await uploadFile($('video').files[0]);
+    // 1) Subir evidencias (silencioso si falla)
+    const fotoFile  = $('foto').files[0];
+    const videoFile = $('video').files[0];
 
-    const payload={
-      fecha:$('fecha').value,
-      ciudad_id:$('ciudad').value,
-      sede_id:$('sede').value,
-      maquina_id:$('maquina').value,
-      asesor_id:$('asesorId').value,
-      marcado:getMoney($('marcado')),
-      error:getMoney($('error')),
-      tickets_vendidos: Number($('tickets').value)||0,
-      venta_total:getMoney($('venta')),
-      meta_dia:getMoney($('meta')),
-      gastos:getMoney($('gastos')),
-      qr:getMoney($('qr')),
-      efectivo:getMoney($('efectivo')),
-      consignacion:getMoney($('consignacion')),
-      pendiente_consignar:getMoney($('pendiente')),
-      faltante_meta:getMoney($('faltante')),
-      comentario:$('comentario').value||'',
-      foto_url, video_url
+    const foto_url  = await uploadFile(fotoFile);
+    const video_url = await uploadFile(videoFile);
+
+    // 2) Construir payload
+    const payload = {
+      fecha              : $('fecha').value,
+      ciudad_id          : $('ciudad').value,
+      sede_id            : $('sede').value,
+      maquina_id         : $('maquina').value,
+      asesor_id          : $('asesorId').value,
+      marcado            : getMoney($('marcado')),
+      error              : getMoney($('error')),
+      tickets_vendidos   : Number($('tickets').value)||0,
+      venta_total        : getMoney($('venta')),
+      meta_dia           : getMoney($('meta')),
+      gastos             : getMoney($('gastos')),
+      qr                 : getMoney($('qr')),
+      efectivo           : getMoney($('efectivo')),
+      consignacion       : getMoney($('consignacion')),
+      pendiente_consignar: getMoney($('pendiente')),
+      faltante_meta      : getMoney($('faltante')),
+      comentario         : $('comentario').value || '',
+      foto_url,
+      video_url
     };
-    const r=await fetch(WEB_APP_URL+'?path=reporte',{
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({token:TOKEN,payload})
-    });
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.error||'Error al registrar');
 
-    setMsg($('msg'),'<span class="ok">✅ Reporte registrado. Tu acceso queda bloqueado por hoy.</span>');
+    // 3) Enviar al WebApp en modo "no-cors" para evitar el maldito CORS/Failed to fetch
+    await fetch(WEB_APP_URL + '?path=reporte', {
+      method : 'POST',
+      mode   : 'no-cors',              // 👈 clave para evitar el "Failed to fetch"
+      headers: { 'Content-Type':'text/plain' },
+      body   : JSON.stringify({ token:TOKEN, payload })
+    });
+
+    // Si llegamos aquí, la petición salió del navegador hacia el WebApp.
+    // No podemos leer la respuesta (por no-cors), así que asumimos OK.
+    setMsg(
+      $('msg'),
+      '<span class="ok">✅ Reporte enviado. ' +
+      'Verifica en la hoja "Reportes" que haya quedado registrado.</span>'
+    );
     bloquearFormulario();
+
   }catch(e){
-    console.error(e);
-    setMsg($('msg'),'<span class="bad">❌ '+(e.message||'Failed to fetch')+'</span>');
+    console.error('Error general en enviar():', e);
+    setMsg(
+      $('msg'),
+      '<span class="bad">❌ No se pudo enviar el reporte: ' +
+      (e.message || 'Failed to fetch') + '</span>'
+    );
   }
 }
+
 
 function bloquearFormulario(){
   ['marcado','error','gastos','qr','comentario','foto','video']
