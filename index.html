@@ -446,6 +446,51 @@ async function enviar(){
   }
 }
 
+function initAdminSelectors(){
+
+  // Llenar Ciudad
+  const selCiudad = $('adm_ciudad');
+  selCiudad.innerHTML = '<option value="">--</option>';
+  DB.ciudades.forEach(c=>{
+    selCiudad.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+  });
+
+  // Llenar Sede
+  const selSede = $('adm_sede');
+  selSede.innerHTML = '<option value="">--</option>';
+  DB.sedes.forEach(s=>{
+    selSede.innerHTML += `<option value="${s.id}">${s.nombre}</option>`;
+  });
+
+  // Llenar Máquinas
+  const selMaq = $('adm_maquina');
+  selMaq.innerHTML = '<option value="">--</option>';
+  DB.maquinas.forEach(m=>{
+    selMaq.innerHTML += `<option value="${m.id}">${m.codigo}</option>`;
+  });
+
+  // Llenar Asesores
+  const selAs = $('adm_asesor');
+  selAs.innerHTML = '<option value="">--</option>';
+  DB.asesores.forEach(a=>{
+    selAs.innerHTML += `<option value="${a.id}">${a.nombre}</option>`;
+  });
+
+  // Eliminar reporte – Asesores
+  const selDelAs = $('del_asesor');
+  selDelAs.innerHTML = '<option value="">--</option>';
+  DB.asesores.forEach(a=>{
+    selDelAs.innerHTML += `<option value="${a.id}">${a.nombre}</option>`;
+  });
+
+  // Eliminar reporte – Máquinas
+  const selDelMaq = $('del_maquina');
+  selDelMaq.innerHTML = '<option value="">--</option>';
+  DB.maquinas.forEach(m=>{
+    selDelMaq.innerHTML += `<option value="${m.id}">${m.codigo}</option>`;
+  });
+
+}
 
 
 /* ========= INIT ========= */
