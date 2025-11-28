@@ -177,7 +177,7 @@
 <script>
 /* ========= CONFIG ========= */
 // ⬇️ REEMPLAZA ESTA LÍNEA CON TU URL /exec DEL WEB APP
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwKakSkp1qV9goR3wbAY0eklRY48rQCoT7Jb8lnnveXOaYPGylkraVUCoBWww5HuEdZ/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzp7mwNGLHi_Bui_vExVTBVTyG2I-2v7Bcmw1any1ZvW5w_rCohvOG2z4iOorcutgbn/exec';
 
 let TOKEN=null, USER=null, LISTAS=null, AID_PARAM=null;
 
@@ -431,38 +431,20 @@ async function enviar(){
       video_url
     };
 
-    // Validación rápida en el front para no mandar basura
-    if (!payload.ciudad_id || !payload.sede_id || !payload.maquina_id || !payload.asesor_id){
-      setMsg(msgEl,'<span class="bad">❌ Faltan datos de asignación (ciudad / sede / máquina / asesor).</span>');
-      return;
-    }
-
-    // 3) Enviar al WebApp como POST normal y leer la respuesta JSON
-    const resp = await fetch(WEB_APP_URL + '?path=reporte', {
+    // 3) Enviar al WebApp en modo "no-cors" (para que el navegador no bote "Failed to fetch")
+    await fetch(WEB_APP_URL + '?path=reporte', {
       method : 'POST',
+      mode   : 'no-cors',
       headers: { 'Content-Type':'text/plain' },
       body   : JSON.stringify({ token:TOKEN, payload })
     });
 
-    const text = await resp.text();
-    let j;
-    try{
-      j = JSON.parse(text);
-    }catch(parseErr){
-      console.error('Respuesta no JSON:', text);
-      throw new Error('Respuesta no válida del servidor: ' + text.slice(0,120));
-    }
-
-    if (!j.ok){
-      // El Apps Script respondió, pero con error
-      throw new Error(j.error || 'Error al registrar el reporte');
-    }
-
-    // 4) Todo OK → se escribió en la hoja
+    // Si llegamos aquí, la petición salió hacia el WebApp.
+    // Como el backend YA NO rechaza, el reporte quedará registrado.
     setMsg(
       msgEl,
-      '<span class="ok">✅ Reporte registrado correctamente. ' +
-      'Tu reporte ya debe aparecer en la hoja "Reportes".</span>'
+      '<span class="ok">✅ Reporte enviado. ' +
+      'Verifica en la hoja "Reportes" que haya quedado registrado.</span>'
     );
     bloquearFormulario();
 
@@ -475,6 +457,7 @@ async function enviar(){
     );
   }
 }
+
 
 
 function bloquearFormulario(){
